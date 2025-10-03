@@ -1,0 +1,1 @@
+//funçoes genéricas e utilitárias

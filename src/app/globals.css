@@ -1,8 +1,12 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ...restante CSS personalizado... */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000414;      /* Azul muito escuro */
+  --foreground: #fffce6;      /* Branco */
 }
 
 @theme inline {
@@ -14,8 +18,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #000414;    /* Mantém azul escuro no modo dark */
+    --foreground: #fffce6;    /* Mantém branco no modo dark */
   }
 }
 
@@ -23,4 +27,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden; /* Evita scroll horizontal */
+  box-sizing: border-box;
 }
