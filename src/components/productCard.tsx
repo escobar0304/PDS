@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
 
 interface Product {
   _id: string;
@@ -23,32 +24,24 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const { addItem } = useCart();
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsAdding(true);
 
-    try {
-      const response = await fetch('/api/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: product._id,
-          quantity: 1,
-        }),
-      });
+    const cartItem = {
+      _id: product._id,
+      name: product.name,
+      slug: product.slug,
+      price: product.price,
+      image: product.images[0] || '',
+      stock: product.stock,
+    };
 
-      if (response.ok) {
-        // Atualizar contador do carrinho
-        window.dispatchEvent(new CustomEvent('cart-updated'));
-      }
-    } catch (error) {
-      console.error('Erro ao adicionar ao carrinho:', error);
-    } finally {
-      setTimeout(() => setIsAdding(false), 1000);
-    }
+    addItem(cartItem, 1);
+
+    setTimeout(() => setIsAdding(false), 1000);
   };
 
   const imageUrl = !imageError && product.images && product.images.length > 0

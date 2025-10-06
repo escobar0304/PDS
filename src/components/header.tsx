@@ -4,12 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ShoppingCart, User, Menu, X } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { useCart } from '@/contexts/CartContext';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(2);
-  const pathname = usePathname();
+  const { itemCount, openCart } = useCart();
 
   const navLinks = [
     { href: '/', label: 'Início' },
@@ -24,7 +23,7 @@ export default function Header() {
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo maior e menos margem lateral */}
           <Link href="/" className="flex items-center transition-smooth hover:opacity-80 pl-1 md:pl-2">
-            <div className="relative w-40 h-16 md:w-48 md:h-20">
+            <div className="relative w-32 h-32 md:w-36 md:h-36">
               <Image
                 src="/images/logo-icon.svg"
                 alt="Pétalas de Sonho"
@@ -35,34 +34,24 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Links centrados */}
-          <nav className="hidden md:flex flex-1 justify-center items-center">
-            <div className="flex gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-lg font-medium transition-smooth px-2 py-1 rounded"
-                >
-                  <span
-                    className={
-                      pathname === link.href
-                        ? 'text-[#ffffbd] font-bold' // Apenas cor da palavra ativa
-                        : 'hover:text-[#ffffbd] transition-smooth'
-                    }
-                  >
-                    {link.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-white text-lg font-medium transition-smooth hover:text-[#4a1e5c]"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
-          {/* Icons com menos margem lateral */}
+          {/* Right Icons */}
           <div className="flex items-center gap-4 pr-1 md:pr-2">
             <Link
               href="/area-pessoal"
-              className="p-2 text-[#fffce6] hover:text-[#ffffbd] transition-smooth"
+              className="p-2 text-white hover:text-[#4a1e5c] transition-smooth"
               aria-label="Área Pessoal"
             >
               <User className="w-6 h-6 md:w-7 md:h-7" />
@@ -70,20 +59,20 @@ export default function Header() {
             
             <Link
               href="/carrinho"
-              className="p-2 text-[#fffce6] hover:text-[#ffffbd] transition-smooth relative"
+              className="p-2 text-white hover:text-[#4a1e5c] transition-smooth relative"
               aria-label="Carrinho de Compras"
             >
               <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
-              {cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-[#ffffbd] text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
+              {itemCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-[#4a1e5c] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {itemCount}
                 </span>
               )}
             </Link>
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-[#fffce6] hover:text-[#ffffbd] transition-smooth"
+              className="md:hidden p-2 text-white hover:text-[#4a1e5c] transition-smooth"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu"
               aria-expanded={mobileMenuOpen}
@@ -105,18 +94,10 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="w-full max-w-xs text-base font-medium py-3 px-2 rounded-lg transition-smooth"
+                  className="w-full max-w-xs text-base font-medium py-3 px-2 rounded-lg transition-smooth hover:text-[#4a1e5c] text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <span
-                    className={
-                      pathname === link.href
-                        ? 'text-[#ffffbd] font-bold'
-                        : 'hover:text-[#ffffbd] transition-smooth'
-                    }
-                  >
-                    {link.label}
-                  </span>
+                  <span className="block">{link.label}</span>
                 </Link>
               ))}
             </div>

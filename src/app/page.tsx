@@ -33,7 +33,10 @@ export default function Home() {
                 <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-6 md:mb-8 font-light max-w-2xl mx-auto">
                   Descubra pedras preciosas e cristais para a sua jornada espiritual !
                 </p>
-                <Link href="/loja" className="btn-primary inline-block text-sm md:text-base">
+                <Link
+                  href="/loja"
+                  className="inline-block border border-white text-white px-8 py-3 rounded-md text-lg font-medium transition-colors duration-200 hover:bg-white hover:text-[#000414]"
+                >
                   Descobrir Mais
                 </Link>
               </div>

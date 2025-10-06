@@ -39,6 +39,7 @@ export interface IProduct extends Document {
 }
 
 export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId; // <── adiciona isto
   name: string;
   email: string;
   password: string;
@@ -52,6 +53,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 export interface IOrder extends Document {
   userId?: mongoose.Types.ObjectId;
