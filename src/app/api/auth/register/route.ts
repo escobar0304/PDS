@@ -1,6 +1,6 @@
 // src/app/api/auth/register/route.ts
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
+import { hash } from 'argon2';
 import connectDB from '@/lib/db';
 import { User } from '@/lib/models';
 
@@ -44,8 +44,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash da password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Hash da password com Argon2id
+    const hashedPassword = await hash(password, { type: 2 }); // 2 = argon2id
 
     // Criar user
     const user = await User.create({

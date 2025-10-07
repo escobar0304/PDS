@@ -7,6 +7,7 @@ import clientPromise from '@/lib/mongodb';
 import connectDB from '@/lib/db';
 import { User } from '@/lib/models';
 import bcrypt from 'bcryptjs';
+import { verify as argon2Verify } from 'argon2';
 
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -38,11 +39,16 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Utilizador não encontrado');
         }
 
-        // Verificar password
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+        // Verificar password (bcrypt antigo ou Argon2id)
+        let isPasswordValid = false;
+
+        if (user.password.startsWith('$2')) {
+          // bcrypt
+          isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+        } else {
+          // Argon2id
+          isPasswordValid = await argon2Verify(user.password, credentials.password);
+        }
 
         if (!isPasswordValid) {
           throw new Error('Password incorreta');
@@ -61,13 +67,12 @@ export const authOptions: NextAuthOptions = {
   
   callbacks: {
     async jwt({ token, user, account }) {
-      // Adicionar role e userId ao token
       if (user) {
         token.role = user.role || 'USER';
         token.userId = user.id;
       }
-      
-      // Se login com Google, atualizar role na BD
+
+      // Atualizar token se login via Google
       if (account?.provider === 'google' && user) {
         await connectDB();
         const dbUser = await User.findOne({ email: user.email });
@@ -76,12 +81,11 @@ export const authOptions: NextAuthOptions = {
           token.userId = dbUser._id.toString();
         }
       }
-      
+
       return token;
     },
     
     async session({ session, token }) {
-      // Adicionar role e userId à session
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.userId as string;
@@ -90,14 +94,11 @@ export const authOptions: NextAuthOptions = {
     },
     
     async signIn({ user, account }) {
-      // Se login com Google, criar/atualizar user na BD custom
       if (account?.provider === 'google') {
         await connectDB();
-        
         const existingUser = await User.findOne({ email: user.email });
         
         if (!existingUser) {
-          // Criar novo user
           await User.create({
             name: user.name,
             email: user.email,
@@ -107,7 +108,6 @@ export const authOptions: NextAuthOptions = {
           });
         }
       }
-      
       return true;
     }
   },
@@ -126,5 +126,4 @@ export const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };

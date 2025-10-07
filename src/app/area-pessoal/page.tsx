@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { User, Package, Heart, LogOut, Settings } from 'lucide-react';
@@ -19,28 +21,21 @@ interface Order {
 }
 
 export default function AreaPessoal() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'perfil' | 'encomendas' | 'favoritos'>('perfil');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Simular verificação de login
   useEffect(() => {
-    const checkAuth = () => {
-      const user = localStorage.getItem('user');
-      setIsLoggedIn(!!user);
-      setLoading(false);
-    };
-    checkAuth();
-  }, []);
+    if (status === 'unauthenticated') {
+      router.push('/auth/login?callbackUrl=/area-pessoal');
+    }
+  }, [status, router]);
 
-  // Carregar encomendas (simulado)
   useEffect(() => {
-    if (isLoggedIn && activeTab === 'encomendas') {
-      // Aqui seria a chamada à API real
-      // fetchOrders();
-      
-      // Dados simulados
+    if (status === 'authenticated' && activeTab === 'encomendas') {
+      // Dados simulados - substituir por API real
       const mockOrders: Order[] = [
         {
           _id: '1',
@@ -64,86 +59,27 @@ export default function AreaPessoal() {
       ];
       setOrders(mockOrders);
     }
-  }, [isLoggedIn, activeTab]);
+    setLoading(false);
+  }, [status, activeTab]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    window.location.href = '/';
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/' });
   };
 
-  // Se não estiver logado, mostrar form de login
-  if (!isLoggedIn && !loading) {
+  if (status === 'loading' || loading) {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-[#9f9c9c] py-12">
-          <div className="container-custom">
-            <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-soft">
-              <div className="text-center mb-8">
-                <User className="w-16 h-16 mx-auto text-[#4a1e5c] mb-4" />
-                <h1 className="text-3xl font-serif text-[#4a1e5c] mb-2">
-                  Área Pessoal
-                </h1>
-                <p className="text-[#6b6b6b]">
-                  Faça login para aceder à sua conta
-                </p>
-              </div>
-
-              <form className="space-y-4" onSubmit={(e) => {
-                e.preventDefault();
-                // Simular login
-                localStorage.setItem('user', JSON.stringify({ 
-                  name: 'Cliente Teste',
-                  email: 'cliente@teste.com' 
-                }));
-                setIsLoggedIn(true);
-              }}>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
-                    placeholder="seu@email.com"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
-                    placeholder="••••••••"
-                  />
-                </div>
-
-                <button type="submit" className="btn-primary w-full">
-                  Entrar
-                </button>
-              </form>
-
-              <div className="mt-6 text-center">
-                <p className="text-sm text-[#6b6b6b]">
-                  Ainda não tem conta?{' '}
-                  <button className="text-[#4a1e5c] font-medium hover:underline">
-                    Criar Conta
-                  </button>
-                </p>
-              </div>
-            </div>
-          </div>
+        <main className="min-h-screen bg-[#faf8f5] py-12 flex items-center justify-center">
+          <div className="loading"></div>
         </main>
         <Footer />
       </>
     );
+  }
+
+  if (!session) {
+    return null;
   }
 
   const statusMap: Record<string, { label: string; color: string }> = {

@@ -39,7 +39,7 @@ export interface IProduct extends Document {
 }
 
 export interface IUser extends Document {
-  _id: mongoose.Types.ObjectId; // <── adiciona isto
+  _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
   password: string;
@@ -53,7 +53,6 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-
 
 export interface IOrder extends Document {
   userId?: mongoose.Types.ObjectId;
@@ -119,8 +118,7 @@ const categorySchema = new Schema<ICategory>(
   }
 );
 
-categorySchema.index({ slug: 1 });
-categorySchema.index({ order: 1 });
+categorySchema.index({ order: 1 }); // mantém índice extra
 
 const productSchema = new Schema<IProduct>(
   {
@@ -187,7 +185,7 @@ const productSchema = new Schema<IProduct>(
   }
 );
 
-productSchema.index({ slug: 1 });
+// Mantém índices extras, remove índice duplicado do slug
 productSchema.index({ categoryId: 1 });
 productSchema.index({ featured: -1 });
 productSchema.index({ active: 1 });
@@ -247,7 +245,7 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-userSchema.index({ email: 1 });
+// Mantém índice extra do role
 userSchema.index({ role: 1 });
 
 const orderSchema = new Schema<IOrder>(
@@ -357,6 +355,7 @@ const orderSchema = new Schema<IOrder>(
   }
 );
 
+// Mantém índices extras
 orderSchema.index({ userId: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
