@@ -1,3 +1,4 @@
+//src/app/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -80,9 +81,6 @@ export default function Home() {
                 </div>
               </div>
               <div className="order-1 md:order-2 space-y-5">
-                <p className="text-lg md:text-xl text-gray-200 leading-relaxed">
-                  Os nossos especialistas em gemologia oferecem avaliações detalhadas para garantir a autenticidade e qualidade de cada pedra preciosa.
-                </p>
                 <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
                   Combinando conhecimento técnico e sensibilidade espiritual, avaliamos cada peça para que possa fazer uma escolha consciente e energética.
                 </p>

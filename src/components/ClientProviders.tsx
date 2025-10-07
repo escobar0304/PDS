@@ -1,4 +1,4 @@
-'use client'; // 🚨 obrigatoriamente no topo do ficheiro
+'use client';
 
 import { ReactNode } from 'react';
 import { CartProvider } from '@/contexts/CartContext';

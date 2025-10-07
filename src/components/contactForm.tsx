@@ -56,10 +56,10 @@ export default function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5 md:space-y-6">
       {/* Nome */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
           Nome *
         </label>
         <input
@@ -69,14 +69,14 @@ export default function ContactForm() {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 bg-[#1a0b2e] border border-purple-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
           placeholder="O seu nome"
         />
       </div>
 
       {/* Email */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
           Email *
         </label>
         <input
@@ -86,14 +86,14 @@ export default function ContactForm() {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 bg-[#1a0b2e] border border-purple-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
           placeholder="seuemail@exemplo.com"
         />
       </div>
 
       {/* Telefone */}
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="phone" className="block text-sm font-medium text-white mb-2">
           Telefone
         </label>
         <input
@@ -102,14 +102,14 @@ export default function ContactForm() {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 bg-[#1a0b2e] border border-purple-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
           placeholder="+351 xxx xxx xxx"
         />
       </div>
 
       {/* Assunto */}
       <div>
-        <label htmlFor="subject" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="subject" className="block text-sm font-medium text-white mb-2">
           Assunto *
         </label>
         <select
@@ -118,19 +118,19 @@ export default function ContactForm() {
           value={formData.subject}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 bg-[#1a0b2e] border border-purple-900/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
         >
-          <option value="">Selecione um assunto</option>
-          <option value="informacao">Informação sobre produtos</option>
-          <option value="encomenda">Dúvida sobre encomenda</option>
-          <option value="personalizado">Pedido personalizado</option>
-          <option value="outro">Outro</option>
+          <option value="" className="bg-[#1a0b2e]">Selecione um assunto</option>
+          <option value="informacao" className="bg-[#1a0b2e]">Informação sobre produtos</option>
+          <option value="encomenda" className="bg-[#1a0b2e]">Dúvida sobre encomenda</option>
+          <option value="personalizado" className="bg-[#1a0b2e]">Pedido personalizado</option>
+          <option value="outro" className="bg-[#1a0b2e]">Outro</option>
         </select>
       </div>
 
       {/* Mensagem */}
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="message" className="block text-sm font-medium text-white mb-2">
           Mensagem *
         </label>
         <textarea
@@ -140,23 +140,23 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={5}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth resize-none"
+          className="w-full px-4 py-3 bg-[#1a0b2e] border border-purple-900/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 resize-none"
           placeholder="Escreva a sua mensagem aqui..."
         />
       </div>
 
       {/* Mensagens de sucesso/erro */}
       {success && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800">
+        <div className="p-4 bg-green-900/20 border border-green-500/30 rounded-lg backdrop-blur-sm">
+          <p className="text-sm text-green-300">
             ✅ Mensagem enviada com sucesso! Entraremos em contacto em breve.
           </p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">
+        <div className="p-4 bg-red-900/20 border border-red-500/30 rounded-lg backdrop-blur-sm">
+          <p className="text-sm text-red-300">
             ❌ {error}
           </p>
         </div>
@@ -166,7 +166,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-purple-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
       >
         {loading ? 'Enviando...' : 'Enviar Mensagem'}
       </button>
