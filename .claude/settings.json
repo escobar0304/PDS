@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(md|json\\)$\")",
+      "PowerShell(cd \"c:\\\\Users\\\\escob\\\\Desktop\\\\repos\\\\petalasdesonho\\\\petalas-de-sonho\"; $files = @\\('src\\\\app\\\\api\\\\checkout\\\\route.ts','src\\\\app\\\\api\\\\admin\\\\orders\\\\[id]\\\\route.ts','src\\\\app\\\\api\\\\admin\\\\orders\\\\route.ts','src\\\\app\\\\api\\\\admin\\\\products\\\\[id]\\\\route.ts','src\\\\app\\\\api\\\\admin\\\\products\\\\route.ts','src\\\\app\\\\api\\\\admin\\\\stats\\\\route.ts','src\\\\app\\\\api\\\\user\\\\profile\\\\route.ts','src\\\\app\\\\api\\\\orders\\\\route.ts'\\); foreach \\($f in $files\\) { \\(Get-Content $f\\) -replace \"from '@/app/api/auth/\\\\[\\\\.\\\\.\\\\.nextauth\\\\]/route'\", \"from '@/lib/auth'\" | Set-Content $f }; Write-Output \"Done\")",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/loja)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/checkout)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/carrinho)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/sucesso)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/falha)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/admin/produtos)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/admin/encomendas)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/area-pessoal)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/catalogo)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/sobre-nos)",
+      "Bash(curl -s http://localhost:3000/api/categories)",
+      "Bash(curl -s \"http://localhost:3000/api/products?sort=featured&limit=5\")",
+      "Bash(curl -s \"http://localhost:3000/api/products?sort=price-asc\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -sv http://localhost:3000/api/categories)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\({path:'.env.local'}\\); console.log\\('URI starts:', process.env.MONGODB_URI?.substring\\(0,40\\)\\)\")",
+      "Bash(node -e ' *)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\escob\\.claude\\projects\\c--Users-escob-Desktop-repos-petalasdesonho-petalas-de-sonho\\memory"
+    ]
+  }
+}

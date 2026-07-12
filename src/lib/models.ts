@@ -322,6 +322,7 @@ const orderSchema = new Schema<IOrder>(
     notes: {
       type: String,
       trim: true,
+      maxlength: [500, 'Notas não podem exceder 500 caracteres'],
     },
     items: [
       {
@@ -355,11 +356,11 @@ const orderSchema = new Schema<IOrder>(
   }
 );
 
-// Mantém índices extras
 orderSchema.index({ userId: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ stripePaymentId: 1 }, { sparse: true });
 
 // ============================================
 // EXPORTAR MODELOS
