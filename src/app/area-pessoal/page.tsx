@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { User, Package, Heart, LogOut, Settings, CheckCircle } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
+import { apiFetch, ApiError } from '@/lib/api';
 import Link from 'next/link';
 
 interface Order {
@@ -59,22 +61,19 @@ export default function AreaPessoal() {
 
     const fetchProfile = async () => {
       try {
-        const res = await fetch('/api/user/profile');
-        if (res.ok) {
-          const data = await res.json();
-          setProfile(data);
-          setProfileForm({
-            name: data.name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            address: data.address || '',
-            city: data.city || '',
-            postalCode: data.postalCode || '',
-            country: data.country || 'Portugal',
-          });
-        }
-      } catch (err) {
-        console.error(err);
+        const data = await apiFetch<UserProfile>('/api/user/profile');
+        setProfile(data);
+        setProfileForm({
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          city: data.city || '',
+          postalCode: data.postalCode || '',
+          country: data.country || 'Portugal',
+        });
+      } catch {
+        // perfil não carregou — form fica vazio mas não bloqueia a página
       } finally {
         setLoading(false);
       }
@@ -88,13 +87,10 @@ export default function AreaPessoal() {
 
     const fetchOrders = async () => {
       try {
-        const res = await fetch('/api/orders');
-        if (res.ok) {
-          const data = await res.json();
-          setOrders(data);
-        }
-      } catch (err) {
-        console.error(err);
+        const data = await apiFetch<Order[]>('/api/orders');
+        setOrders(Array.isArray(data) ? data : []);
+      } catch {
+        setOrders([]);
       }
     };
 
@@ -112,23 +108,16 @@ export default function AreaPessoal() {
     setSaveError('');
 
     try {
-      const res = await fetch('/api/user/profile', {
+      const data = await apiFetch<UserProfile>('/api/user/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileForm),
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
-      } else {
-        const err = await res.json();
-        setSaveError(err.error || 'Erro ao guardar');
-      }
-    } catch {
-      setSaveError('Erro de ligação');
+      setProfile(data);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      setSaveError(err instanceof ApiError ? err.message : 'Erro de ligação');
     } finally {
       setSaving(false);
     }
@@ -143,7 +132,7 @@ export default function AreaPessoal() {
       <>
         <Header />
         <main className="min-h-screen bg-[#faf8f5] py-12 flex items-center justify-center">
-          <div className="loading" />
+          <Spinner size={36} className="text-[#4a1e5c]" />
         </main>
         <Footer />
       </>

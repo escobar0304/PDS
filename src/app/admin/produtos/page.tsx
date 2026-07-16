@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Package, LayoutGrid, ListOrdered, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Package, LayoutGrid, ListOrdered, Plus, Pencil, Trash2, Search, ChevronLeft, ChevronRight, X, AlertTriangle, RefreshCw } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
+import { apiFetch, ApiError } from '@/lib/api';
 
 interface Category {
   _id: string;
@@ -50,6 +52,7 @@ export default function AdminProdutos() {
   const [pages, setPages] = useState(1);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
@@ -65,21 +68,25 @@ export default function AdminProdutos() {
   }, [status, session, router]);
 
   useEffect(() => {
-    fetch('/api/categories').then((r) => r.json()).then(setCategories).catch(console.error);
+    apiFetch<Category[]>('/api/categories').then((data) => {
+      setCategories(Array.isArray(data) ? data : []);
+    }).catch(console.error);
   }, []);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const params = new URLSearchParams({ page: String(page), limit: '15' });
       if (search) params.set('search', search);
-      const res = await fetch(`/api/admin/products?${params}`);
-      const data = await res.json();
+      const data = await apiFetch<{ products: Product[]; total: number; pages: number }>(
+        `/api/admin/products?${params}`
+      );
       setProducts(data.products || []);
       setTotal(data.total || 0);
       setPages(data.pages || 1);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -111,14 +118,10 @@ export default function AdminProdutos() {
       images: product.images.join(', '),
     });
 
-    // Fetch full product data
+    // Fetch full product data (description not included in list)
     try {
-      const res = await fetch(`/api/admin/products/${product._id}`);
-      const data = await res.json();
-      setForm((prev) => ({
-        ...prev,
-        description: data.description || '',
-      }));
+      const data = await apiFetch<{ description?: string }>(`/api/admin/products/${product._id}`);
+      setForm((prev) => ({ ...prev, description: data.description || '' }));
     } catch {}
     setShowModal(true);
   };
@@ -155,22 +158,15 @@ export default function AdminProdutos() {
     try {
       const url = editingId ? `/api/admin/products/${editingId}` : '/api/admin/products';
       const method = editingId ? 'PUT' : 'POST';
-      const res = await fetch(url, {
+      await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        setFormError(err.error || 'Erro ao guardar');
-        return;
-      }
-
       setShowModal(false);
       fetchProducts();
-    } catch {
-      setFormError('Erro de ligação');
+    } catch (err) {
+      setFormError(err instanceof ApiError ? err.message : 'Erro de ligação');
     } finally {
       setSaving(false);
     }
@@ -179,10 +175,10 @@ export default function AdminProdutos() {
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Eliminar "${name}"? Esta ação não pode ser desfeita.`)) return;
     try {
-      await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+      await apiFetch(`/api/admin/products/${id}`, { method: 'DELETE' });
       fetchProducts();
     } catch (err) {
-      console.error(err);
+      alert(err instanceof ApiError ? err.message : 'Erro ao eliminar produto');
     }
   };
 
@@ -195,7 +191,7 @@ export default function AdminProdutos() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
-        <div className="loading" />
+        <Spinner size={36} className="text-[#4a1e5c]" />
       </div>
     );
   }
@@ -215,7 +211,7 @@ export default function AdminProdutos() {
         <aside className="w-56 bg-white border-r border-gray-200 min-h-[calc(100vh-60px)] p-4">
           <nav className="space-y-1">
             <Link href="/admin" className="flex items-center gap-3 px-4 py-3 text-[#6b6b6b] hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors">
-              <LayoutGrid className="w-4 h-4" />Dashboard
+              <LayoutGrid className="w-4 h-4" />Painel
             </Link>
             <Link href="/admin/produtos" className="flex items-center gap-3 px-4 py-3 bg-[#4a1e5c] text-white rounded-lg text-sm font-medium">
               <Package className="w-4 h-4" />Produtos
@@ -260,8 +256,19 @@ export default function AdminProdutos() {
           </form>
 
           {loading ? (
+            <div className="bg-white rounded-xl shadow-soft p-12 flex justify-center">
+              <Spinner size={32} className="text-[#4a1e5c]" />
+            </div>
+          ) : fetchError ? (
             <div className="bg-white rounded-xl shadow-soft p-12 text-center">
-              <div className="loading mx-auto" />
+              <AlertTriangle className="w-8 h-8 mx-auto mb-3 text-orange-400" />
+              <p className="text-sm text-[#6b6b6b] mb-4">Não foi possível carregar os produtos</p>
+              <button
+                onClick={fetchProducts}
+                className="flex items-center gap-2 btn-primary text-sm mx-auto"
+              >
+                <RefreshCw className="w-4 h-4" /> Tentar novamente
+              </button>
             </div>
           ) : products.length === 0 ? (
             <div className="bg-white rounded-xl shadow-soft p-12 text-center text-[#6b6b6b]">

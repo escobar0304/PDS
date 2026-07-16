@@ -33,7 +33,7 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError('Email ou password incorretos');
+        setError('Email ou palavra-passe incorretos');
       } else {
         router.push(callbackUrl);
         router.refresh();
@@ -153,7 +153,7 @@ export default function LoginPage() {
 
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                    Password
+                    Palavra-passe
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -185,7 +185,7 @@ export default function LoginPage() {
                     href="/auth/forgot-password"
                     className="text-[#4a1e5c] hover:underline"
                   >
-                    Esqueci a password
+                    Esqueci a palavra-passe
                   </Link>
                 </div>
 

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { User, Mail, Lock, UserPlus } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function RegisterPage() {
 
     // Validação
     if (formData.password !== formData.confirmPassword) {
-      setError('As passwords não coincidem');
+      setError('As palavras-passe não coincidem');
       setLoading(false);
       return;
     }
@@ -103,7 +104,7 @@ export default function RegisterPage() {
               <p className="text-[#6b6b6b] mb-6">
                 A redirecionar para a sua área pessoal...
               </p>
-              <div className="loading"></div>
+              <div className="flex justify-center"><Spinner size={28} className="text-green-600" /></div>
             </div>
           </div>
         </main>
@@ -224,7 +225,7 @@ export default function RegisterPage() {
 
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                    Password
+                    Palavra-passe
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -249,7 +250,7 @@ export default function RegisterPage() {
 
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#2c2c2c] mb-2">
-                    Confirmar Password
+                    Confirmar palavra-passe
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

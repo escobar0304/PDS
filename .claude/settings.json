@@ -20,7 +20,9 @@
       "Bash(curl -s \"http://localhost:3000/api/products?sort=price-asc\" -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -sv http://localhost:3000/api/categories)",
       "Bash(node -e \"require\\('dotenv'\\).config\\({path:'.env.local'}\\); console.log\\('URI starts:', process.env.MONGODB_URI?.substring\\(0,40\\)\\)\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(Test-Path \"c:\\\\Users\\\\escob\\\\Desktop\\\\repos\\\\petalasdesonho\\\\petalas-de-sonho\\\\src\\\\lib\\\\api.ts\")",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\escob\\.claude\\projects\\c--Users-escob-Desktop-repos-petalasdesonho-petalas-de-sonho\\memory"

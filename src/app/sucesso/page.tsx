@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, Suspense } from 'react';
+import Spinner from '@/components/ui/Spinner';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -147,7 +148,7 @@ export default function SucessoPage() {
       <>
         <Header />
         <main className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
-          <div className="loading" />
+          <Spinner size={36} className="text-[#4a1e5c]" />
         </main>
         <Footer />
       </>

@@ -13,7 +13,11 @@ import {
   ChevronRight,
   LayoutGrid,
   ListOrdered,
+  AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
+import Spinner from '@/components/ui/Spinner';
+import { apiFetch } from '@/lib/api';
 
 interface Stats {
   totalOrders: number;
@@ -42,31 +46,55 @@ const statusMap: Record<string, { label: string; color: string }> = {
   CANCELLED: { label: 'Cancelado', color: 'bg-red-100 text-red-800' },
 };
 
-export default function AdminDashboard() {
+export default function AdminPainel() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/auth/login');
     if (status === 'authenticated' && session.user.role !== 'ADMIN') router.push('/');
   }, [status, session, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
-      fetch('/api/admin/stats')
-        .then((r) => r.json())
-        .then(setStats)
-        .catch(console.error)
-        .finally(() => setLoading(false));
+  const loadStats = async () => {
+    setLoading(true);
+    setFetchError(false);
+    try {
+      const data = await apiFetch<Stats>('/api/admin/stats');
+      setStats(data);
+    } catch {
+      setFetchError(true);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role === 'ADMIN') loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, session]);
 
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
-        <div className="loading" />
+        <Spinner size={36} className="text-[#4a1e5c]" />
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center flex-col gap-4">
+        <AlertTriangle className="w-10 h-10 text-orange-500" />
+        <p className="text-[#6b6b6b]">Não foi possível carregar o painel</p>
+        <button
+          onClick={loadStats}
+          className="flex items-center gap-2 btn-primary text-sm"
+        >
+          <RefreshCw className="w-4 h-4" /> Tentar novamente
+        </button>
       </div>
     );
   }
@@ -141,7 +169,7 @@ export default function AdminDashboard() {
               className="flex items-center gap-3 px-4 py-3 bg-[#4a1e5c] text-white rounded-lg text-sm font-medium"
             >
               <LayoutGrid className="w-4 h-4" />
-              Dashboard
+              Painel
             </Link>
             <Link
               href="/admin/produtos"
@@ -162,7 +190,7 @@ export default function AdminDashboard() {
 
         {/* Main */}
         <main className="flex-1 p-6 md:p-8">
-          <h2 className="text-2xl font-serif text-[#4a1e5c] mb-8">Dashboard</h2>
+          <h2 className="text-2xl font-serif text-[#4a1e5c] mb-8">Painel</h2>
 
           {/* Stat Cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
