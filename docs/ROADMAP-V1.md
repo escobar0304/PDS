@@ -161,6 +161,11 @@ Tem de estar acessível de forma permanente e direta:
 **Preciso destes dados da tua parte.** É o único bloqueio de conteúdo desta fase.
 Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
 
+> **Confirmado em 22/09/2026: não é sociedade.** Sendo empresário em nome
+> individual, caem as duas últimas linhas da lista acima — não há conservatória,
+> número de matrícula nem capital social a indicar. Ficam por saber o nome, o
+> NIF, o domicílio e os contactos efetivos.
+
 ## F5. Livro de Reclamações e resolução de litígios
 
 **Base:** DL 156/2005, com as alterações do DL 74/2017, e Lei 144/2015, art. 18º.
