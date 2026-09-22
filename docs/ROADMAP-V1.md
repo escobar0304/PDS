@@ -207,6 +207,25 @@ Trabalho:
 
 ## F7. Cookies e armazenamento local
 
+> **Feita em 22/09/2026, e com uma conclusão diferente da planeada.** O detalhe
+> está em `docs/COOKIES.md`.
+>
+> Esta secção previa banner de consentimento e painel de preferências. Depois de
+> **medir** o que o site guarda de facto — dois cookies do NextAuth, ambos de
+> sessão e `httpOnly`, mais o carrinho em `localStorage` — verificou-se que está
+> tudo isento ao abrigo do art. 5.º, n.º 3 da Diretiva ePrivacy. **Não há nada
+> para consentir**, e um banner pediria autorização para o que não precisa dela,
+> o que as orientações da CNPD desaconselham.
+>
+> O único terceiro era o mapa da Google em `/sobre-nos`, que carregava sozinho.
+> Passou a carregamento por clique. Há uma página `/cookies` com o inventário
+> medido e testes que falham se aparecer um terceiro novo.
+>
+> O banner volta a ser a resposta certa no dia em que houver análise de tráfego,
+> publicidade ou *scripts* de pagamento fora do checkout. As regras para esse
+> dia ficam registadas abaixo.
+
+
 **Base:** Diretiva ePrivacy, Lei 41/2004 e as orientações da CNPD sobre cookies.
 
 Regras que a maioria dos banners falha:

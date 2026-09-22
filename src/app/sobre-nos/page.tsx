@@ -6,6 +6,11 @@ import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
 import ContactForm from '@/components/contactForm';
 import { Clock, Diamond, Envelope, Leaf, MagnifyingGlass, MapPin, Phone } from '@phosphor-icons/react';
+import MapaLocalizacao from '@/components/mapaLocalizacao';
+
+/** Incorporacao do mapa. So e pedida a Google depois de a pessoa carregar. */
+const MAPA_EMBED =
+  'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d48373.53503964024!2d-8.651142499999999!3d41.1579438!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd2465abc4e153c1%3A0xa648d95640b114bc!2sPorto!5e0!3m2!1spt-PT!2spt!4v1234567890123!5m2!1spt-PT!2spt';
 
 export default function SobreNos() {
   return (
@@ -177,19 +182,7 @@ export default function SobreNos() {
                   </div>
                 </div>
 
-                {/* Google Maps */}
-                <div className="relative h-64 md:h-80 rounded-lg overflow-hidden shadow-medium">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d48373.53503964024!2d-8.651142499999999!3d41.1579438!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd2465abc4e153c1%3A0xa648d95640b114bc!2sPorto!5e0!3m2!1spt-PT!2spt!4v1234567890123!5m2!1spt-PT!2spt"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Localização Pétalas de Sonho"
-                  ></iframe>
-                </div>
+                <MapaLocalizacao src={MAPA_EMBED} />
               </div>
             </div>
           </div>
