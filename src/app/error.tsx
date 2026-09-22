@@ -16,7 +16,7 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="container-custom flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
+    <main id="conteudo" className="container-custom flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
       <h1 className="mb-4 font-serif text-3xl text-ink md:text-4xl">
         Alguma coisa correu mal
       </h1>

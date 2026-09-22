@@ -111,12 +111,12 @@ export default function MapaLocalizacao({
         Ver o mapa
       </button>
 
-      <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-muted">
+      <label className="flex min-h-6 cursor-pointer items-center gap-2 py-1 text-xs text-ink-muted">
         <input
           type="checkbox"
           checked={lembrar}
           onChange={(e) => setLembrar(e.target.checked)}
-          className="h-3.5 w-3.5 cursor-pointer rounded-sm border-line text-rose-700 focus:ring-2 focus:ring-rose-600/40"
+          className="h-4 w-4 cursor-pointer rounded-sm border-line text-rose-700 focus:ring-2 focus:ring-rose-600/40"
         />
         Mostrar sempre, sem perguntar
       </label>

@@ -100,6 +100,20 @@ img {
   outline-color: var(--rose-300);
 }
 
+/* O botao secundario esta desenhado para fundo claro: o seu rose-700 da
+   2,01:1 sobre ameixa, muito abaixo dos 4,5:1 exigidos. Sobre ameixa passa a
+   rose-300, que da 9,99:1. A regra vive aqui, e nao em quem chama, para o
+   contraste nao depender de alguem se lembrar do fundo em que esta. */
+.on-plum .botao-secundario {
+  border-color: var(--rose-300);
+  color: var(--rose-300);
+}
+
+.on-plum .botao-secundario:hover:not(:disabled) {
+  background: var(--rose-300);
+  color: var(--plum);
+}
+
 /* ==========================================================================
    Layout
    ========================================================================== */
@@ -207,4 +221,29 @@ img {
     animation: none;
     opacity: 0.6;
   }
+}
+
+/* ==========================================================================
+   Saltar para o conteudo
+   ========================================================================== */
+
+/* Fora do ecra ate receber foco. Nao se usa `display: none` nem
+   `visibility: hidden` porque isso tira-a tambem da ordem de tabulacao, que e
+   exactamente para o que ela serve. */
+.saltar-conteudo {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  transform: translateY(-160%);
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  background: var(--rose-700);
+  color: var(--surface);
+  font-weight: 500;
+  transition: transform 150ms ease;
+}
+
+.saltar-conteudo:focus {
+  transform: translateY(0);
 }

@@ -102,17 +102,17 @@ export default function RegisterPage() {
         <>
           <p className="text-ink-muted">
             Já tem conta?{' '}
-            <Link href="/auth/login" className="font-medium text-rose-700 hover:underline">
+            <Link href="/auth/login" className="font-medium text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
               Entrar
             </Link>
           </p>
           <p className="mt-4 text-xs text-ink-muted">
             Ao criar uma conta, concorda com os nossos{' '}
-            <Link href="/termos" className="text-rose-700 hover:underline">
+            <Link href="/termos" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
               Termos e Condições
             </Link>{' '}
             e a{' '}
-            <Link href="/privacidade" className="text-rose-700 hover:underline">
+            <Link href="/privacidade" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
               Política de Privacidade
             </Link>
             .

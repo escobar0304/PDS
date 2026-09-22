@@ -31,6 +31,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.0",
@@ -38,6 +39,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.21",
+    "axe-core": "^4.13.0",
     "dotenv": "^17.2.3",
     "eslint": "^8",
     "eslint-config-next": "14.2.0",

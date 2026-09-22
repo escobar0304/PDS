@@ -63,7 +63,7 @@ function LoginContent() {
       rodape={
         <p className="text-ink-muted">
           Ainda não tem conta?{' '}
-          <Link href="/auth/register" className="font-medium text-rose-700 hover:underline">
+          <Link href="/auth/register" className="font-medium text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
             Criar conta
           </Link>
         </p>
@@ -104,7 +104,10 @@ function LoginContent() {
         />
 
         <div className="text-right text-sm">
-          <Link href="/auth/recuperar-password" className="text-rose-700 hover:underline">
+          <Link
+            href="/auth/recuperar-password"
+            className="inline-block py-1.5 text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+          >
             Esqueci a password
           </Link>
         </div>

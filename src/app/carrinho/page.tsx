@@ -15,7 +15,7 @@ export default function Carrinho() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-surface py-12">
+        <main id="conteudo" className="min-h-screen bg-surface py-12">
           <div className="container-custom">
             <div className="mx-auto max-w-2xl py-16 text-center">
               <ShoppingBag className="mx-auto mb-6 h-16 w-16 text-ink-muted/50" aria-hidden />
@@ -40,7 +40,7 @@ export default function Carrinho() {
     <>
       <Header />
       
-      <main className="min-h-screen bg-surface py-8 md:py-12">
+      <main id="conteudo" className="min-h-screen bg-surface py-8 md:py-12">
         <div className="container-custom">
           {/* Breadcrumb */}
           <Link

@@ -42,7 +42,7 @@ export default function Home() {
     <>
       <Header />
 
-      <main>
+      <main id="conteudo">
         {/* Hero */}
         <section className="on-plum relative min-h-[70svh] md:min-h-[100dvh]">
           <Image

@@ -37,7 +37,7 @@ export default function AreaPessoal() {
     return (
       <>
         <Header />
-        <main className="flex min-h-screen items-center justify-center bg-surface py-12">
+        <main id="conteudo" className="flex min-h-screen items-center justify-center bg-surface py-12">
           <Spinner label="A carregar a sua área pessoal" />
         </main>
         <Footer />
@@ -51,7 +51,7 @@ export default function AreaPessoal() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-surface py-8 md:py-12">
+      <main id="conteudo" className="min-h-screen bg-surface py-8 md:py-12">
         <Container>
           <h1 className="mb-8 font-serif text-3xl text-rose-700 md:text-4xl">Área pessoal</h1>
 

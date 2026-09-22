@@ -49,6 +49,7 @@ código.
 | `DADOS-PESSOAIS.md` | proteção de dados |
 | `SEGURANCA.md` | o que foi corrigido, e os testes que o mantêm corrigido |
 | `PERFORMANCE.md` | o que foi medido, e o que a medição desmentiu |
+| `ACESSIBILIDADE.md` | a auditoria, e porque o critério é 24×24 e não 44×44 |
 
 ## Regras do domínio
 
@@ -72,3 +73,9 @@ controlo novo não se escreve com classes soltas: ou já existe em
 
 Sem emoji na interface. Ícones são Phosphor, traço fino, definido uma vez no
 `IconContext`.
+
+**Acessibilidade é critério de aceitação, não fase.** `axe` sem violações WCAG
+2.1 AA, controlos com pelo menos 24×24 (2.5.8 da WCAG 2.2 — os 44×44 são AAA e
+não se aplicam a tudo), e ligações em texto corrido sublinhadas em repouso: só
+a cor não distingue. `e2e/acessibilidade.spec.ts` falha se alguma destas se
+perder.

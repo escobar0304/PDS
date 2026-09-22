@@ -22,7 +22,7 @@ export default function AuthShell({
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-surface py-12">
+      <main id="conteudo" className="min-h-screen bg-surface py-12">
         <Container>
           <div className="mx-auto max-w-md">
             <PageHeader title={title} lead={lead} className="mb-8" />
@@ -33,7 +33,10 @@ export default function AuthShell({
             </div>
 
             <p className="mt-6 text-center text-sm">
-              <Link href="/" className="text-ink-muted transition-smooth hover:text-rose-700">
+              <Link
+                href="/"
+                className="inline-block py-1.5 text-ink-muted transition-smooth hover:text-rose-700"
+              >
                 &larr; Voltar à loja
               </Link>
             </p>

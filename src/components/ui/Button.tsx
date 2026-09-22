@@ -13,7 +13,11 @@ const VARIANTES: Record<ButtonVariant, string> = {
     'border border-rose-700 bg-rose-700 text-surface hover:border-rose-600 hover:bg-rose-600 ' +
     'disabled:border-rose-700 disabled:bg-rose-700',
   secondary:
-    'border border-rose-700 bg-transparent text-rose-700 hover:bg-rose-100 disabled:bg-transparent',
+    // `botao-secundario` nao estiliza nada: e o gancho que permite a regra
+    // `.on-plum .botao-secundario` do globals.css corrigir o contraste em
+    // fundo escuro sem quem chama ter de saber em que fundo esta.
+    'botao-secundario border border-rose-700 bg-transparent text-rose-700 ' +
+    'hover:bg-rose-100 disabled:bg-transparent',
   ghost:
     'border border-transparent bg-transparent text-ink-muted hover:bg-surface-sunken hover:text-ink ' +
     'disabled:bg-transparent disabled:text-ink-muted',
