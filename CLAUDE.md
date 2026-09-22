@@ -47,6 +47,7 @@ código.
 | `COMPONENTES.md` | a biblioteca de UI |
 | `COOKIES.md` | o que o site guarda, medido |
 | `DADOS-PESSOAIS.md` | proteção de dados |
+| `SEGURANCA.md` | o que foi corrigido, e os testes que o mantêm corrigido |
 
 ## Regras do domínio
 

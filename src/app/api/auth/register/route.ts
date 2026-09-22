@@ -1,78 +1,66 @@
-// src/app/api/auth/register/route.ts
 import { NextResponse } from 'next/server';
 import { hash } from 'argon2';
 import connectDB from '@/lib/db';
 import { User } from '@/lib/models';
+import { consumir, identificar } from '@/lib/limites';
+import { esquemaRegisto, lerCorpo } from '@/lib/validacao';
+
+/**
+ * Criacao de conta.
+ *
+ * A versao anterior validava presenca (`if (!email)`) e formato do email por
+ * expressao regular. O formato salvava-a por acaso da injeccao NoSQL —
+ * `regex.test({})` compara contra "[object Object]" e falha — mas `name` e
+ * `password` nao tinham essa rede, e ninguem tinha escrito aquela linha a
+ * pensar nisso. Agora o esquema garante que cada campo e mesmo texto antes de
+ * chegar a uma consulta.
+ */
+
+const LIMITE_POR_IP = { max: 5, janelaMs: 60 * 60 * 1000 };
 
 export async function POST(request: Request) {
+  const corpo = await lerCorpo(request, esquemaRegisto);
+  if (!corpo.ok) {
+    return NextResponse.json({ error: corpo.erro }, { status: 400 });
+  }
+
+  const { name, email, password } = corpo.dados;
+
+  const limite = consumir(`registo:ip:${identificar(request)}`, LIMITE_POR_IP);
+  if (!limite.permitido) {
+    return NextResponse.json(
+      { error: 'Demasiadas tentativas. Tente mais tarde.' },
+      { status: 429, headers: { 'Retry-After': String(limite.segundosAteReiniciar) } },
+    );
+  }
+
   try {
-    const body = await request.json();
-    const { name, email, password } = body;
-
-    // Validação
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: 'Todos os campos são obrigatórios' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: 'Password deve ter no mínimo 6 caracteres' },
-        { status: 400 }
-      );
-    }
-
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Email inválido' },
-        { status: 400 }
-      );
-    }
-
     await connectDB();
 
-    // Verificar se user já existe
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'Este email já está registado' },
-        { status: 400 }
-      );
+    const existente = await User.findOne({ email });
+    if (existente) {
+      return NextResponse.json({ error: 'Este email já está registado' }, { status: 400 });
     }
 
-    // Hash da password com Argon2id
-    const hashedPassword = await hash(password, { type: 2 }); // 2 = argon2id
+    const passwordCifrada = await hash(password, { type: 2 }); // argon2id
 
-    // Criar user
     const user = await User.create({
       name,
-      email: email.toLowerCase(),
-      password: hashedPassword,
+      email,
+      password: passwordCifrada,
       role: 'USER',
       emailVerified: false,
     });
 
-    // Retornar user sem password
     return NextResponse.json(
       {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-        },
+        user: { id: user._id, name: user.name, email: user.email },
         message: 'Conta criada com sucesso!',
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error('Erro ao registar utilizador:', error);
-    return NextResponse.json(
-      { error: 'Erro ao criar conta' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Erro ao criar conta' }, { status: 500 });
   }
 }
