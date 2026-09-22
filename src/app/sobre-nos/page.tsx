@@ -60,6 +60,7 @@ export default function SobreNos() {
                     src="/images/nossa-historia.png"
                     alt="Nossa história"
                     fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
                     className="object-cover"
                   />
                 </div>

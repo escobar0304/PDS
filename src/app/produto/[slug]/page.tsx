@@ -203,6 +203,7 @@ export default function ProdutoPage() {
                   src={currentImage}
                   alt={product.name}
                   fill
+                  sizes="(min-width: 768px) 50vw, 100vw"
                   className="object-cover"
                   priority
                 />
@@ -251,6 +252,7 @@ export default function ProdutoPage() {
                         src={image}
                         alt={`${product.name} - ${index + 1}`}
                         fill
+                        sizes="96px"
                         className="object-cover"
                       />
                     </button>

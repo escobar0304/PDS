@@ -51,7 +51,6 @@ export default function Home() {
             fill
             className="object-cover"
             priority
-            quality={90}
             sizes="100vw"
           />
           {/* Escurecimento vertical: a base fica mais densa para o texto assentar */}

@@ -74,6 +74,7 @@ export default function Carrinho() {
                         src={item.image || '/images/placeholder.jpg'}
                         alt={item.name}
                         fill
+                        sizes="(min-width: 768px) 128px, 96px"
                         className="object-cover"
                       />
                     </Link>
