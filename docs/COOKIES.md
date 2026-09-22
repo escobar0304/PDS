@@ -57,27 +57,48 @@ que é relevante em vez de num aviso genérico à entrada.
 
 ## Como está feito
 
-Em dois níveis, porque servem pessoas diferentes.
+A escolha vive **no mapa**, e o painel em `/cookies` é o ponto permanente.
 
-**No mapa**, um aviso curto: "Onde estamos — mapa fornecido pela Google", com um
-botão. Quem está ali quer ver onde fica a loja, não ler sobre tratamento de
-dados. Carregar no botão mostra o mapa **só naquela visita**.
+**No mapa**, um aviso curto — "Onde estamos, mapa fornecido pela Google" — um
+botão *Ver o mapa*, e uma caixa *Mostrar sempre, sem perguntar*. Sem a caixa, o
+mapa aparece só naquela visita. Com ela, fica. Quando aparece por preferência
+guardada, a linha por baixo diz *Deixar de mostrar* e desliga-a num clique.
 
-**Em `/cookies`**, a explicação inteira — o que a Google passa a saber, e porquê
-— e um interruptor *Mostrar sempre o mapa*. Ligado, o mapa aparece logo, sem
-botão. A preferência fica em `localStorage`, na chave `pds.mapa`, e nunca chega
-ao servidor.
+**Em `/cookies`**, a explicação inteira e um interruptor com o mesmo efeito,
+ligado do rodapé em todas as páginas.
+
+### Porquê no mapa e não num aviso à entrada
+
+Duas razões, e a primeira é legal.
+
+**O consentimento tem de ser informado**, e só é informado quando a pessoa sabe
+do que se trata. Junto ao mapa está a olhar para o sítio do mapa. Num aviso à
+entrada do site estaria a decidir sobre uma página que ainda não viu e que
+talvez nunca veja — Sobre Nós é página secundária.
+
+**Retirar tem de ser tão fácil como dar.** Dar é uma caixa junto ao botão;
+retirar é um clique na linha por baixo do mapa, no mesmo sítio. Se o controlo
+vivesse só em `/cookies`, dar custava um clique e retirar custava três — e
+`/cookies` é uma página onde praticamente ninguém entra. **Isto foi uma
+correção do dono do negócio**, que notou que o painel de definições é um sítio
+estranho para o controlo. Tinha razão quanto ao problema; a solução não foi o
+banner que propôs, mas trazer o controlo para onde a decisão faz sentido.
+
+### E porque continua a não haver banner
 
 A primeira versão desta fase punha a explicação toda no lugar do mapa, a falar
 de endereços IP. Era linguagem de auditoria num sítio onde alguém só quer ver
-onde fica a loja. **Isto veio de uma correção do dono do negócio**, e está
-melhor: o aviso é proporcional ao momento, e a explicação está onde quem a
-procura a vai procurar.
+onde fica a loja, e foi corrigida. Mas o passo seguinte — um aviso de cookies à
+entrada — foi discutido e recusado, por quatro razões:
 
-Guardar a escolha é consentimento, e consentimento exige poder retirá-lo tão
-facilmente como se deu. Aqui é o **mesmo interruptor**, no mesmo sítio, com o
-mesmo peso visual — que é onde a maioria dos painéis falha, ao esconder o
-"rejeitar" num canto. Começa desligado e nada está pré-selecionado.
+1. **Pedia uma decisão sem contexto**, sobre um mapa que a pessoa ainda não viu
+2. **Criava a obrigação que serve para cumprir.** Hoje nada no site exige
+   consentimento; um aviso à entrada afirma a todos os visitantes que exige, o
+   que é falso e treina as pessoas a despachar a caixa sem ler
+3. **A proporção é má:** dispara em todas as visitas para controlar um recurso
+   que uma minoria alcança
+4. **É o elemento que assinala "site feito por modelo".** A auditoria inicial
+   deste projeto existiu precisamente para tirar esses elementos
 
 ## A rede
 
@@ -85,8 +106,9 @@ mesmo peso visual — que é onde a maioria dos painéis falha, ao esconder o
 
 - qualquer página pública contactar um domínio externo sem interação
 - o mapa carregar sozinho
-- carregar em *Ver o mapa* passar a valer para além daquela visita
-- o interruptor aparecer ligado num browser limpo
+- carregar em *Ver o mapa* sem marcar a caixa passar a valer além daquela visita
+- deixar de haver forma de retirar a escolha no próprio mapa
+- a caixa ou o interruptor aparecerem ligados num browser limpo
 - a preferência passar a ser um cookie, ou seja, a viajar para o servidor
 - aparecer um cookie ou uma chave de `localStorage` que `/cookies` não declare
 
@@ -96,12 +118,18 @@ chegar a produção.
 
 ## Quando é que isto muda
 
-Se for acrescentada análise de tráfego, publicidade, remarketing, chat de apoio
-de terceiro, vídeos incorporados, ou o processador de pagamentos a carregar
-*scripts* em páginas onde ainda não há intenção de pagar — aí é preciso
-consentimento a sério, e o banner passa a ser a resposta certa. Nessa altura
-valem as regras que a maioria falha: "rejeitar tudo" com o mesmo destaque que
-"aceitar tudo", nada pré-selecionado, e retirar tão fácil como dar.
+Está planeado na **F7b** do roteiro. O resumo: vender não obriga a banner, e
+aceitar pagamentos também não, desde que o `stripe.js` seja carregado por rota
+e nunca no `layout` raiz — carregado em todas as páginas, os cookies de fraude
+que ele põe deixam de ser isentos.
+
+O que obriga mesmo é análise de tráfego, publicidade, testes A/B, chat de apoio
+de terceiro e vídeos incorporados. Nada disso é consequência de ter loja: é
+escolha do negócio.
+
+`src/lib/preferencias.ts` já é um registo de preferências por finalidade, não
+código específico do mapa. Acrescentar finalidades é estendê-lo, não
+recomeçar.
 
 ## O que isto não é
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Alert, Button, Input, Select, Textarea } from '@/components/ui';
 
 const ASSUNTOS = [
@@ -119,6 +120,24 @@ export default function ContactForm() {
       <Button type="submit" fullWidth loading={loading}>
         {loading ? 'A enviar…' : 'Enviar mensagem'}
       </Button>
+
+      {/*
+        Aviso, nao caixa de consentimento.
+
+        O fundamento para tratar estes dados e responder a quem nos escreve —
+        diligencias a pedido do proprio, nao consentimento. Por uma caixa a
+        pedir autorizacao criava-se um fundamento falso, e depois quem a
+        retirasse teria de fazer desaparecer uma mensagem que so existe para
+        lhe podermos responder. O que a lei pede aqui e informacao (art. 13 do
+        RGPD), e e isso que esta linha da.
+      */}
+      <p className="text-xs text-ink-muted">
+        Usamos o que escrever aqui para lhe responder, e mais nada. Veja a{' '}
+        <Link href="/privacidade" className="text-rose-700 hover:underline">
+          política de privacidade
+        </Link>
+        .
+      </p>
     </form>
   );
 }

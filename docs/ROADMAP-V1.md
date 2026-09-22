@@ -184,6 +184,24 @@ Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
 
 ## F6. Proteção de dados
 
+> **Parcialmente feita em 22/09/2026.** O detalhe está em `docs/DADOS-PESSOAIS.md`.
+>
+> Feito: `src/lib/empresa.ts` como fonte única da identificação (com os campos
+> por preencher a `null`, nunca a fingir), a página `/privacidade` derivada do
+> código, o aviso no formulário de contacto, e a indexação a exigir que a
+> identificação esteja completa e não só que a variável de ambiente esteja
+> ligada.
+>
+> **Correção ao que estava planeado:** esta secção previa consentimento
+> explícito no formulário de contacto. O fundamento ali não é consentimento —
+> é responder a quem escreve. Uma caixa a pedir autorização criaria um
+> fundamento falso. O que a lei pede é informação, e é isso que está.
+>
+> Por fazer: os direitos operacionais na área pessoal (exportar e apagar), o
+> registo de atividades de tratamento do art. 30.º, e os dados do prestador,
+> que continuam do lado do negócio.
+
+
 **Base:** RGPD (Regulamento (UE) 2016/679) e Lei 58/2019.
 
 O site já trata dados pessoais hoje, em dois sítios, sem qualquer aviso:
@@ -230,8 +248,9 @@ Trabalho:
 > novo ou se algo passar a estar ligado por omissão.
 >
 > O banner volta a ser a resposta certa no dia em que houver análise de tráfego,
-> publicidade ou *scripts* de pagamento fora do checkout. As regras para esse
-> dia ficam registadas abaixo.
+> publicidade ou *scripts* de pagamento fora do checkout. Esse dia está
+> planeado na **F7b**, mais abaixo: o que obriga, o que não obriga, a armadilha
+> do `stripe.js`, e porque é que a arquitetura já está preparada.
 
 
 **Base:** Diretiva ePrivacy, Lei 41/2004 e as orientações da CNPD sobre cookies.
@@ -382,6 +401,82 @@ O que fica nesta fase, porque depende do logótipo (F1) e da copy (F9):
 - JSON-LD: `Organization`, `LocalBusiness`, `BreadcrumbList` e, mais tarde, `Product`
 - Canónicos e `lang` correto
 - Revisão dos títulos e descrições de todas as páginas
+
+---
+
+## F7b. Consentimento, quando a loja o obrigar
+
+**Não é agora, e não é a loja em si que o obriga.** Fica registado aqui para
+não ser decidido à pressa no dia em que fizer falta.
+
+### O que não obriga
+
+Vender não obriga. Aceitar pagamentos não obriga, desde que se respeite a regra
+abaixo. Guardar o carrinho, manter a sessão, lembrar a morada de envio — tudo
+isso é necessário ao serviço que a pessoa pediu, e continua isento.
+
+### A armadilha do Stripe
+
+O `stripe.js` coloca cookies de deteção de fraude (`__stripe_mid`,
+`__stripe_sid`) **no instante em que carrega**, antes de qualquer interação. A
+documentação da Stripe recomenda carregá-lo em **todas as páginas**, porque dá
+mais sinal ao motor de fraude.
+
+**Não fazer isso.** Carregado só onde há pagamento a decorrer, é defensável
+como necessário a um serviço que a pessoa pediu. Carregado na página inicial,
+não é — e passa a exigir consentimento em todo o sítio, por uma otimização de
+fraude que ninguém pediu.
+
+Regra: `stripe.js` entra por rota, nunca no `layout` raiz. Há um teste em
+`e2e/privacidade.spec.ts` que falha se uma página pública contactar um
+terceiro; esse teste protege isto sem ser preciso lembrar.
+
+O mesmo raciocínio vale para o checkout alojado da Stripe: o redirecionamento
+acontece depois de a pessoa escolher pagar, e os cookies são do domínio da
+Stripe, sob a política dela.
+
+### O que obriga mesmo
+
+| | porquê |
+|---|---|
+| Análise de tráfego | saber o que vende é interesse do negócio, não necessidade de quem visita |
+| Píxeis de remarketing (Meta, Google Ads) | publicidade, nunca isento |
+| Testes A/B | segmenta a pessoa sem ela pedir |
+| Chat de apoio de terceiro | carrega e identifica antes de a conversa existir |
+| Vídeos incorporados | mesmo problema do mapa, resolvido da mesma maneira |
+
+Nada disto é inevitável. É tudo escolha do negócio, e vale a pena decidir
+sabendo o que cada uma custa em cumprimento.
+
+### Quando for preciso, o que tem de ter
+
+As regras que a maioria dos banners falha, e que já estão discutidas em
+`docs/COOKIES.md`:
+
+- Consentimento **antes** de colocar o cookie, não em paralelo
+- **"Rejeitar tudo" com o mesmo destaque visual que "aceitar tudo".** Um botão
+  cinzento pequeno ao lado de um colorido grande não cumpre
+- Granular por finalidade, nada pré-selecionado
+- Retirar tão fácil como dar: ligação permanente no rodapé
+- Sem muro de cookies — recusar não pode bloquear o acesso
+
+### A arquitetura já está lá
+
+`src/lib/preferencias.ts` não é código específico do mapa: é um registo de
+preferências por finalidade, com evento para os componentes reagirem. O mapa é
+a primeira finalidade. Acrescentar "análise de tráfego" ou "publicidade" é
+estender esse módulo e o painel em `/cookies`, não recomeçar.
+
+O que muda no dia em que houver uma finalidade não isenta é **onde se pergunta**:
+o controlo junto ao recurso deixa de chegar, porque um *script* de análise não
+tem um lugar visível na página onde a pessoa o encontre. Aí sim, o aviso à
+entrada passa a ser a resposta certa — pela razão certa, e não por reflexo.
+
+### Prioridade
+
+Depois da v1.0.0, e **antes** de qualquer integração de medição ou publicidade.
+Não é trabalho que se faça a seguir ao facto: o consentimento tem de existir
+antes do primeiro cookie, não depois do primeiro relatório.
 
 ---
 

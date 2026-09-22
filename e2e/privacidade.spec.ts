@@ -51,39 +51,56 @@ test('o mapa só contacta a Google depois de a pessoa pedir', async ({ page, con
   await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
 });
 
-test('ver o mapa uma vez não o liga para sempre', async ({ page }) => {
+test('a escolha de mostrar sempre dá-se e retira-se no próprio mapa', async ({ page }) => {
   await page.goto('/sobre-nos');
+
+  // Dar: a caixa fica junto ao botao, onde a pessoa ja esta a olhar para o
+  // sitio do mapa. Um aviso a entrada do site pedia a mesma decisao sobre uma
+  // pagina que ainda nao tinha visto.
+  await page.getByLabel('Mostrar sempre, sem perguntar').check();
   await page.getByRole('button', { name: 'Ver o mapa' }).click();
   await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
 
-  // Sem passar pelo interruptor, a escolha vale so para esta visita.
+  await page.reload();
+  await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toHaveCount(0);
+
+  // Retirar tem de ser tao facil como dar: um clique, no mesmo sitio.
+  await page.getByRole('button', { name: 'Deixar de mostrar' }).click();
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
+
   await page.reload();
   await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
 });
 
-test('o interruptor liga e desliga o mapa, e o estado persiste', async ({ page }) => {
+test('ver o mapa sem marcar a caixa não o liga para sempre', async ({ page }) => {
+  await page.goto('/sobre-nos');
+  await page.getByRole('button', { name: 'Ver o mapa' }).click();
+  await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
+});
+
+test('o interruptor em /cookies continua a ser o ponto permanente', async ({ page }) => {
+  await page.goto('/sobre-nos');
+  await page.getByLabel('Mostrar sempre, sem perguntar').check();
+  await page.getByRole('button', { name: 'Ver o mapa' }).click();
+
   await page.goto('/cookies');
-
   const interruptor = page.getByRole('switch', { name: 'Mostrar sempre o mapa' });
-  await expect(interruptor).toHaveAttribute('aria-checked', 'false');
-
-  await interruptor.click();
   await expect(interruptor).toHaveAttribute('aria-checked', 'true');
 
-  await page.goto('/sobre-nos');
-  await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toHaveCount(0);
-
-  // Retirar tem de ser tao facil como dar: e o mesmo controlo.
-  await page.goto('/cookies');
-  await page.getByRole('switch', { name: 'Mostrar sempre o mapa' }).click();
+  await interruptor.click();
 
   await page.goto('/sobre-nos');
   await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
-  await expect(page.locator('iframe[title*="Localização"]')).toHaveCount(0);
 });
 
-test('o interruptor começa desligado num browser limpo', async ({ page, context }) => {
+test('nada está pré-selecionado num browser limpo', async ({ page, context }) => {
+  await page.goto('/sobre-nos');
+  await expect(page.getByLabel('Mostrar sempre, sem perguntar')).not.toBeChecked();
+
   await page.goto('/cookies');
   await expect(page.getByRole('switch', { name: 'Mostrar sempre o mapa' })).toHaveAttribute(
     'aria-checked',
@@ -127,4 +144,51 @@ test('a página de cookies está ligada a partir do rodapé', async ({ page }) =
 
   await expect(page).toHaveURL(/\/cookies$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Cookies');
+});
+
+test('a política de privacidade está ligada do rodapé e identifica a autoridade', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Política de Privacidade' }).click();
+
+  await expect(page).toHaveURL(/\/privacidade$/);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('privacidade');
+
+  // O direito de reclamacao junto da autoridade de controlo e obrigatorio
+  // (art. 13.o, n.o 2, al. d) do RGPD) e e o que mais falta nos modelos.
+  await expect(page.getByRole('link', { name: /Comissão Nacional de Proteção de Dados/ })).toHaveAttribute(
+    'href',
+    'https://www.cnpd.pt',
+  );
+});
+
+test('a política avisa quando ainda não está completa', async ({ page }) => {
+  await page.goto('/privacidade');
+
+  const aviso = page.getByRole('main').getByRole('alert');
+  const identificacaoPorPreencher = await page.getByText('por preencher').count();
+
+  if (identificacaoPorPreencher > 0) {
+    await expect(aviso.first()).toContainText('não está completa');
+  } else {
+    await expect(aviso).toHaveCount(0);
+  }
+});
+
+test('o formulário de contacto diz para que servem os dados', async ({ page }) => {
+  await page.goto('/sobre-nos');
+
+  const form = page.locator('form').filter({ has: page.getByLabel('Mensagem *') });
+  await expect(form.getByRole('link', { name: 'política de privacidade' })).toBeVisible();
+
+  // Aviso, nao caixa de consentimento: o fundamento nao e consentimento.
+  await expect(form.locator('input[type=checkbox]')).toHaveCount(0);
+});
+
+test('sem dados do prestador, o site continua bloqueado aos motores de busca', async ({ request }) => {
+  const res = await request.get('/robots.txt');
+  const corpo = await res.text();
+
+  // A variavel de ambiente sozinha nao chega: `robots.ts` exige tambem que a
+  // identificacao obrigatoria esteja preenchida.
+  expect(corpo).toContain('Disallow: /');
 });
