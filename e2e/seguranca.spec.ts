@@ -121,3 +121,107 @@ test.describe('cabeçalhos', () => {
     expect(res.headers()['x-powered-by']).toBeUndefined();
   });
 });
+
+test.describe('recuperação de palavra-passe', () => {
+  test('a resposta não revela se a conta existe', async ({ request }) => {
+    const pedir = (email: string) =>
+      request.post('/api/auth/recuperar-password', {
+        data: { email },
+        failOnStatusCode: false,
+      });
+
+    const inexistente = await pedir(`nao-existe-${Date.now()}@exemplo.pt`);
+    const corpo = await inexistente.json();
+
+    expect(inexistente.status()).toBe(200);
+    // Nem a mensagem nem o estado podem distinguir os dois casos.
+    expect(JSON.stringify(corpo)).not.toMatch(/não encontrad|inexistente|não existe/i);
+    expect(corpo.message).toContain('Se existir uma conta');
+  });
+
+  test('um token inventado não é aceite nem explicado', async ({ request }) => {
+    const res = await request.post('/api/auth/nova-password', {
+      data: { token: 'a'.repeat(43), password: 'umapasswordnova' },
+      failOnStatusCode: false,
+    });
+
+    // Esta suite corre de propósito sem base de dados, por isso aqui vem 500
+    // em vez de 400. O que interessa não é o código: é que a resposta não
+    // distinga "não existe" de "expirou" — isso dizia a quem sonda que
+    // acertou num token que já existiu.
+    expect(res.ok()).toBe(false);
+    const corpo = await res.json();
+    expect(JSON.stringify(corpo)).not.toMatch(/expirou|não existe|inexistente|utilizador/i);
+  });
+
+  test('a rota recusa palavras-passe curtas antes de tocar na base de dados', async ({
+    request,
+  }) => {
+    const res = await request.post('/api/auth/nova-password', {
+      data: { token: 'a'.repeat(43), password: 'curta' },
+      failOnStatusCode: false,
+    });
+
+    expect(res.status()).toBe(400);
+    expect((await res.json()).error).toBe('Dados inválidos.');
+  });
+
+  test('a verificação de email não aceita GET', async ({ request }) => {
+    // Pre-carregadores de ligações e antivírus de correio abrem os URL das
+    // mensagens. Com GET, gastavam o token antes de a pessoa lhe tocar.
+    const res = await request.get('/api/auth/verificar?token=' + 'a'.repeat(43), {
+      failOnStatusCode: false,
+    });
+
+    expect([404, 405]).toContain(res.status());
+  });
+});
+
+test.describe('páginas de recuperação', () => {
+  test('o link "esqueci a password" deixou de dar 404', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.getByRole('link', { name: 'Esqueci a password' }).click();
+
+    await expect(page).toHaveURL(/\/auth\/recuperar-password$/);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Recuperar');
+  });
+
+  test('pedir a reposição mostra sempre a mesma mensagem', async ({ page }) => {
+    await page.goto('/auth/recuperar-password');
+    await page.getByLabel('Email').fill(`qualquer-${Date.now()}@exemplo.pt`);
+    await page.getByRole('button', { name: 'Enviar instruções' }).click();
+
+    await expect(page.getByRole('main').getByRole('status')).toContainText(
+      'Se existir uma conta',
+    );
+  });
+
+  test('a página de nova palavra-passe sem token explica-se', async ({ page }) => {
+    await page.goto('/auth/nova-password');
+
+    await expect(page.getByRole('main').getByRole('alert')).toContainText('ligação');
+    await expect(page.getByRole('link', { name: 'Pedir uma ligação nova' })).toBeVisible();
+  });
+});
+
+/**
+ * Os testes que esgotam limites ficam no fim, de proposito.
+ *
+ * O limitador e por IP e vive na memoria do servidor: e partilhado por toda a
+ * execucao da suite. Um teste que gasta a quota bloqueia todos os que venham
+ * a seguir e usem a mesma rota — foi assim que o teste da pagina de
+ * recuperacao passou sozinho e falhou em conjunto.
+ */
+test.describe('limites que esgotam a quota', () => {
+  test('o pedido é travado antes de poder servir para enumerar', async ({ request }) => {
+    const estados: number[] = [];
+    for (let i = 0; i < 8; i += 1) {
+      const r = await request.post('/api/auth/recuperar-password', {
+        data: { email: `sonda-${i}-${Date.now()}@exemplo.pt` },
+        failOnStatusCode: false,
+      });
+      estados.push(r.status());
+    }
+    expect(estados).toContain(429);
+  });
+});

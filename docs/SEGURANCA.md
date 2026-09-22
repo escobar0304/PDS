@@ -119,12 +119,79 @@ passa para Redis sem a interface mudar.
 diretamente. Trava abuso casual e automatizado, não um atacante decidido — para
 esse, o limite tem de estar na borda.
 
+## F11.3 — verificação de email e recuperação de password
+
+Feita a 22/09/2026, no mesmo dia.
+
+### O que não existia
+
+`emailVerified: false` estava no modelo desde o início e **nada o punha a
+`true`**. Qualquer pessoa se registava com o email de outra. Hoje uma conta não
+dá acesso a nada, mas dará quando houver encomendas associadas.
+
+`/auth/recuperar-password` dava 404. Quem perdesse a palavra-passe ficava
+trancado para sempre.
+
+### O desenho dos tokens
+
+Três decisões, e a primeira é a que importa.
+
+**O que vai no email não é o que fica guardado.** Gera-se um token aleatório de
+32 bytes, envia-se esse, e na base de dados guarda-se apenas o resumo SHA-256.
+Quem leia a base de dados fica com resumos, que não servem para nada. Guardar o
+token em claro transformava uma leitura da base de dados numa tomada de todas as
+contas.
+
+**Prazos diferentes por finalidade.** Verificar o email a expirar é uma
+inconveniência; repor a palavra-passe a ser intercetado é uma tomada de conta.
+Daí 24 horas contra 1 hora.
+
+**Uso único por eliminação, não por marca.** O token é apagado ao ser usado. O
+que não existe não pode ser reutilizado por um caminho que se esqueceu de ler a
+marca.
+
+Há ainda um índice de expiração no Mongo que limpa os vencidos, mas o prazo é
+verificado também em código: esse índice corre periodicamente e pode deixar um
+token expirado vivo durante minutos.
+
+### Enumeração, outra vez — e agora pelo tempo
+
+O pedido de reposição responde sempre o mesmo, exista a conta ou não. Isso é o
+óbvio. O que se falha com frequência é o segundo canal:
+
+**Se só se enviasse email quando a conta existe, esse caminho demorava
+visivelmente mais** — e o tempo dizia o que a mensagem se recusava a dizer. O
+envio não é esperado: a resposta sai imediatamente nos dois casos e o email
+segue em segundo plano.
+
+Até o erro responde igual. Uma falha da base de dados é registada e devolve a
+mesma mensagem.
+
+### A verificação não aceita GET
+
+Pré-carregadores de ligações e antivírus de correio abrem os URL das mensagens.
+Com `GET`, gastavam o token antes de a pessoa lhe tocar — e ela recebia
+"ligação inválida" sem nunca a ter aberto. A página faz `POST` a partir de
+JavaScript.
+
+### Uma armadilha nos próprios testes
+
+O teste da página de recuperação passava sozinho e falhava em conjunto. **O
+limitador é por IP e vive na memória do servidor**: é partilhado por toda a
+execução da suite, e um teste que esgota a quota bloqueia os seguintes que usem
+a mesma rota.
+
+Os testes que esgotam limites ficam agora no fim do ficheiro, com a razão
+escrita. É o tipo de coisa que volta se não ficar registada.
+
 ## Por fazer
 
-- **F11.3:** verificação de email (as contas nascem `emailVerified: false` e
-  nunca são verificadas), recuperação de password (`/auth/recuperar-password`
-  dá 404)
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
   em `localStorage`; a regra está no `CLAUDE.md`
 - **Rotas de administração** que virão da `redesign-geral` — passam todas por
   `exigirAdmin()`
+- **Invalidar sessões ao repor a palavra-passe.** Com sessões em JWT não há
+  sessão do lado do servidor para apagar: quem já tivesse entrado continua
+  entrado até o token expirar. Resolver isto exige guardar um marcador de
+  invalidação por utilizador e verificá-lo em cada pedido. Fica registado como
+  dívida conhecida, não como esquecimento
