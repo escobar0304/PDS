@@ -5,7 +5,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Check, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 
 export default function Carrinho() {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -14,14 +14,14 @@ export default function Carrinho() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-[#faf8f5] py-12">
+        <main className="min-h-screen bg-surface py-12">
           <div className="container-custom">
             <div className="max-w-2xl mx-auto text-center py-16">
-              <ShoppingBag className="w-24 h-24 mx-auto text-gray-300 mb-6" />
-              <h1 className="text-3xl md:text-4xl font-serif text-[#4a1e5c] mb-4">
+              <ShoppingBag className="w-24 h-24 mx-auto text-rose-200 mb-6" />
+              <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-4">
                 Carrinho Vazio
               </h1>
-              <p className="text-lg text-[#6b6b6b] mb-8">
+              <p className="text-lg text-ink-muted mb-8">
                 Ainda não adicionou nenhum produto ao carrinho
               </p>
               <Link href="/loja" className="btn-primary inline-block">
@@ -39,19 +39,19 @@ export default function Carrinho() {
     <>
       <Header />
       
-      <main className="min-h-screen bg-[#faf8f5] py-8 md:py-12">
+      <main className="min-h-screen bg-surface py-8 md:py-12">
         <div className="container-custom">
           {/* Breadcrumb */}
           <Link
             href="/loja"
-            className="inline-flex items-center gap-2 text-sm text-[#6b6b6b] hover:text-[#4a1e5c] transition-smooth mb-6"
+            className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-rose-700 transition-smooth mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
             Continuar a Comprar
           </Link>
 
           {/* Título */}
-          <h1 className="text-3xl md:text-4xl font-serif text-[#4a1e5c] mb-8">
+          <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-8">
             Carrinho de Compras
           </h1>
 
@@ -61,7 +61,7 @@ export default function Carrinho() {
               {items.map((item) => (
                 <div
                   key={item._id}
-                  className="bg-white p-4 md:p-6 rounded-lg shadow-soft"
+                  className="bg-surface-raised p-4 md:p-6 rounded-lg shadow-soft"
                 >
                   <div className="flex gap-4">
                     {/* Imagem */}
@@ -73,7 +73,7 @@ export default function Carrinho() {
                         src={item.image || '/images/placeholder.jpg'}
                         alt={item.name}
                         fill
-                        className="object-cover hover:scale-110 transition-transform duration-300"
+                        className="object-cover"
                       />
                     </Link>
 
@@ -82,29 +82,29 @@ export default function Carrinho() {
                       <div className="flex justify-between gap-4 mb-2">
                         <Link
                           href={`/produto/${item.slug}`}
-                          className="text-lg font-medium text-[#2c2c2c] hover:text-[#4a1e5c] transition-smooth line-clamp-2"
+                          className="text-lg font-medium text-ink hover:text-rose-700 transition-smooth line-clamp-2"
                         >
                           {item.name}
                         </Link>
                         <button
                           onClick={() => removeItem(item._id)}
-                          className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-smooth flex-shrink-0"
+                          className="p-2 hover:bg-danger-100 text-danger-700 rounded-lg transition-smooth flex-shrink-0"
                           aria-label="Remover item"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
 
-                      <p className="text-xl font-bold text-[#4a1e5c] mb-4">
+                      <p className="tabular mb-4 text-xl font-semibold text-rose-700">
                         {item.price.toFixed(2)}€
                       </p>
 
                       {/* Controles de Quantidade */}
                       <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
+                        <div className="flex items-center gap-2 border border-line rounded-lg">
                           <button
                             onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                            className="p-2 hover:bg-gray-100 transition-smooth"
+                            className="p-2 hover:bg-surface-sunken transition-smooth"
                             aria-label="Diminuir quantidade"
                           >
                             <Minus className="w-5 h-5" />
@@ -115,7 +115,7 @@ export default function Carrinho() {
                           <button
                             onClick={() => updateQuantity(item._id, item.quantity + 1)}
                             disabled={item.quantity >= item.stock}
-                            className="p-2 hover:bg-gray-100 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 hover:bg-surface-sunken transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Aumentar quantidade"
                           >
                             <Plus className="w-5 h-5" />
@@ -123,15 +123,15 @@ export default function Carrinho() {
                         </div>
 
                         {item.stock <= 5 && (
-                          <p className="text-sm text-orange-600">
+                          <p className="text-sm text-danger-700">
                             Apenas {item.stock} em stock
                           </p>
                         )}
                       </div>
 
                       {/* Subtotal por item */}
-                      <p className="text-sm text-[#6b6b6b] mt-3">
-                        Subtotal: <span className="font-semibold text-[#2c2c2c]">{(item.price * item.quantity).toFixed(2)}€</span>
+                      <p className="text-sm text-ink-muted mt-3">
+                        Subtotal: <span className="font-semibold text-ink">{(item.price * item.quantity).toFixed(2)}€</span>
                       </p>
                     </div>
                   </div>
@@ -141,7 +141,7 @@ export default function Carrinho() {
               {/* Botão Limpar Carrinho */}
               <button
                 onClick={clearCart}
-                className="text-sm text-red-600 hover:text-red-700 font-medium transition-smooth"
+                className="text-sm text-danger-700 hover:text-danger-700 font-medium transition-smooth"
               >
                 Limpar Carrinho
               </button>
@@ -149,25 +149,25 @@ export default function Carrinho() {
 
             {/* Resumo */}
             <div className="lg:col-span-1">
-              <div className="bg-white p-6 rounded-lg shadow-soft sticky top-24">
-                <h2 className="text-2xl font-serif text-[#4a1e5c] mb-6">
+              <div className="bg-surface-raised p-6 rounded-lg shadow-soft sticky top-24">
+                <h2 className="text-2xl font-serif text-rose-700 mb-6">
                   Resumo do Pedido
                 </h2>
 
                 <div className="space-y-3 mb-6 pb-6 border-b">
                   <div className="flex justify-between text-base">
-                    <span className="text-[#6b6b6b]">Subtotal</span>
-                    <span className="font-medium text-[#2c2c2c]">{total.toFixed(2)}€</span>
+                    <span className="text-ink-muted">Subtotal</span>
+                    <span className="font-medium text-ink">{total.toFixed(2)}€</span>
                   </div>
                   <div className="flex justify-between text-base">
-                    <span className="text-[#6b6b6b]">Envio</span>
-                    <span className="text-sm text-[#6b6b6b]">Calculado no checkout</span>
+                    <span className="text-ink-muted">Envio</span>
+                    <span className="text-sm text-ink-muted">Calculado no checkout</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-lg font-semibold text-[#2c2c2c]">Total</span>
-                  <span className="text-3xl font-bold text-[#4a1e5c]">{total.toFixed(2)}€</span>
+                  <span className="text-lg font-semibold text-ink">Total</span>
+                  <span className="tabular text-3xl font-semibold text-rose-700">{total.toFixed(2)}€</span>
                 </div>
 
                 <Link
@@ -186,16 +186,16 @@ export default function Carrinho() {
 
                 {/* Informações extras */}
                 <div className="mt-6 pt-6 border-t space-y-3">
-                  <div className="flex items-start gap-2 text-sm text-[#6b6b6b]">
-                    <span>✓</span>
+                  <div className="flex items-start gap-2 text-sm text-ink-muted">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
                     <span>Pagamento seguro</span>
                   </div>
-                  <div className="flex items-start gap-2 text-sm text-[#6b6b6b]">
-                    <span>✓</span>
+                  <div className="flex items-start gap-2 text-sm text-ink-muted">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
                     <span>Envio em 2-3 dias úteis</span>
                   </div>
-                  <div className="flex items-start gap-2 text-sm text-[#6b6b6b]">
-                    <span>✓</span>
+                  <div className="flex items-start gap-2 text-sm text-ink-muted">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
                     <span>14 dias para devolução</span>
                   </div>
                 </div>

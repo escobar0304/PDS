@@ -1,52 +1,74 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 
+// O texto e o mesmo de antes. A revisao das afirmacoes comerciais e a F9 do
+// roteiro e precisa de decisoes de negocio, nao de design.
+const PILARES = [
+  {
+    titulo: 'Expertise',
+    imagem: '/images/expertise.png',
+    alt: 'Pedras preciosas a serem avaliadas',
+    texto:
+      'A nossa equipa de gemologistas certificados garante a precisão das avaliações.',
+    detalhe:
+      'Cada avaliação é cuidadosamente realizada para garantir a qualidade e autenticidade das pedras.',
+  },
+  {
+    titulo: 'Personalização',
+    imagem: '/images/personalizacao.png',
+    alt: 'Pedras dispostas para escolha personalizada',
+    texto: 'Avaliações personalizadas',
+    detalhe:
+      'Avaliações feitas à medida para garantir que encontra a pedra perfeita para a sua jornada espiritual.',
+  },
+  {
+    titulo: 'Confiança',
+    imagem: '/images/confianca.png',
+    alt: 'Pedra em bruto sobre uma superfície de madeira',
+    texto:
+      'Com transparência e profissionalismo, garantimos a integridade de cada avaliação realizada.',
+    detalhe:
+      'Sinta-se seguro ao adquirir pedras preciosas autênticas e de qualidade na nossa loja.',
+  },
+];
+
 export default function Home() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
-
   return (
     <>
       <Header />
 
       <main>
-        {/* Hero Section */}
-        <section className="relative h-[70vh] sm:h-[80vh] md:h-screen">
-          <div className="relative w-full h-full">
-            {/* Background Image */}
-            <Image
-              src="/images/hero-bg.png"
-              alt="Pedra roxa"
-              fill
-              className="object-cover"
-              priority
-              quality={90}
-            />
-            
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-black/30 z-10"></div>
-            
-            {/* Hero Content */}
-            <div className="absolute inset-0 flex items-center justify-center text-center px-4 z-20">
-              <div className={`max-w-4xl transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif text-white mb-6 leading-tight">
-                  Explore os Nossos <span className="text-purple-300">Produtos</span>
+        {/* Hero */}
+        <section className="on-plum relative min-h-[70svh] md:min-h-[100dvh]">
+          <Image
+            src="/images/hero-bg.png"
+            alt="Pedra em bruto iluminada de lado"
+            fill
+            className="object-cover"
+            priority
+            quality={90}
+            sizes="100vw"
+          />
+          {/* Escurecimento vertical: a base fica mais densa para o texto assentar */}
+          <div
+            className="absolute inset-0 bg-gradient-to-b from-plum/25 via-plum/40 to-plum/75"
+            aria-hidden
+          />
+
+          <div className="relative flex min-h-[70svh] items-end md:min-h-[100dvh]">
+            <div className="container-custom pb-16 md:pb-24">
+              <div className="fade-in max-w-2xl">
+                <h1 className="mb-5 font-serif text-4xl leading-[1.05] tracking-display text-surface sm:text-5xl md:text-6xl">
+                  Explore os Nossos Produtos
                 </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 font-light max-w-2xl mx-auto">
+                <p className="mb-8 max-w-xl text-lg leading-relaxed text-rose-100 md:text-xl">
                   Descubra pedras preciosas e cristais para a sua jornada espiritual
                 </p>
-                <Link
-                  href="/loja"
-                  className="inline-block border-2 border-white/80 text-white px-10 py-3 rounded-lg text-lg font-medium transition-all duration-300 hover:bg-white hover:text-[#000414] hover:border-white hover:shadow-lg hover:shadow-purple-500/30"
-                >
+                <Link href="/loja" className="btn-primary">
                   Descobrir Mais
                 </Link>
               </div>
@@ -54,146 +76,87 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Avaliação Especializada Section */}
-        <section className="py-16 md:py-20 lg:py-24 px-4 bg-[#000414]">
-          <div className="max-w-7xl mx-auto">
-            {/* Section Header */}
-            <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif text-white mb-4">
-                Avaliação <span className="text-purple-300">Especializada</span>
+        {/* Avaliação Especializada */}
+        <section className="py-20 md:py-28">
+          <div className="container-custom">
+            <div className="mb-14 max-w-2xl">
+              <h2 className="mb-4 font-serif text-3xl leading-tight tracking-display text-ink sm:text-4xl md:text-5xl">
+                Avaliação Especializada
               </h2>
-              <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+              <p className="text-lg leading-relaxed text-ink-muted">
                 Conheça a qualidade e energia de cada pedra
               </p>
             </div>
 
-            {/* Content Grid */}
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-              <div className="order-2 md:order-1">
-                <div className="relative h-80 md:h-96 rounded-xl overflow-hidden shadow-2xl shadow-purple-900/20">
-                  <Image
-                    src="/images/expertise.png"
-                    alt="Pedras preciosas - Expertise"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+            <div className="mb-20 grid items-center gap-10 md:grid-cols-2 md:gap-14">
+              <div className="overflow-hidden rounded-lg">
+                <Image
+                  src="/images/pedras-especiais.png"
+                  alt="Conjunto de pedras preciosas"
+                  width={960}
+                  height={720}
+                  className="h-72 w-full object-cover md:h-96"
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                />
               </div>
-              <div className="order-1 md:order-2 space-y-5">
-                <p className="text-lg md:text-xl text-gray-200 leading-relaxed">
-                  Os nossos especialistas em gemologia oferecem avaliações detalhadas para garantir a autenticidade e qualidade de cada pedra preciosa.
+              <div className="space-y-5">
+                <p className="text-lg leading-relaxed text-ink">
+                  Os nossos especialistas em gemologia oferecem avaliações detalhadas
+                  para garantir a autenticidade e qualidade de cada pedra preciosa.
                 </p>
-                <p className="text-lg md:text-xl text-gray-300 leading-relaxed">
-                  Combinando conhecimento técnico e sensibilidade espiritual, avaliamos cada peça para que possa fazer uma escolha consciente e energética.
+                <p className="leading-relaxed text-ink-muted">
+                  Combinando conhecimento técnico e sensibilidade espiritual, avaliamos
+                  cada peça para que possa fazer uma escolha consciente e energética.
                 </p>
               </div>
             </div>
 
-            {/* Features Grid */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-20">
-              {/* Expertise */}
-              <div className="text-center group">
-                <div className="mb-6">
-                  <div className="relative h-64 rounded-xl overflow-hidden shadow-xl shadow-purple-900/20 transition-transform duration-500 group-hover:scale-105">
+            <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+              {PILARES.map((pilar) => (
+                <article key={pilar.titulo}>
+                  <div className="mb-5 overflow-hidden rounded-lg">
                     <Image
-                      src="/images/expertise.png"
-                      alt="Expertise"
-                      fill
-                      className="object-cover"
+                      src={pilar.imagem}
+                      alt={pilar.alt}
+                      width={640}
+                      height={480}
+                      className="h-60 w-full object-cover"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                     />
                   </div>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-serif text-white mb-4 group-hover:text-purple-300 transition-colors duration-300">
-                  Expertise
-                </h3>
-                <p className="text-base md:text-lg text-gray-200 leading-relaxed mb-3">
-                  A nossa equipa de gemologistas certificados garante a precisão das avaliações.
-                </p>
-                <p className="text-sm md:text-base text-gray-400 leading-relaxed">
-                  Cada avaliação é cuidadosamente realizada para garantir a qualidade e autenticidade das pedras.
-                </p>
-              </div>
-
-              {/* Personalização */}
-              <div className="text-center group">
-                <div className="mb-6">
-                  <div className="relative h-64 rounded-xl overflow-hidden shadow-xl shadow-purple-900/20 transition-transform duration-500 group-hover:scale-105">
-                    <Image
-                      src="/images/personalizacao.png"
-                      alt="Personalização"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-serif text-white mb-4 group-hover:text-purple-300 transition-colors duration-300">
-                  Personalização
-                </h3>
-                <p className="text-base md:text-lg text-gray-200 leading-relaxed mb-3">
-                  Avaliações personalizadas
-                </p>
-                <p className="text-sm md:text-base text-gray-400 leading-relaxed">
-                  Avaliações feitas à medida para garantir que encontra a pedra perfeita para a sua jornada espiritual.
-                </p>
-              </div>
-
-              {/* Confiança */}
-              <div className="text-center group sm:col-span-2 lg:col-span-1">
-                <div className="mb-6">
-                  <div className="relative h-64 rounded-xl overflow-hidden shadow-xl shadow-purple-900/20 mx-auto max-w-md lg:max-w-none transition-transform duration-500 group-hover:scale-105">
-                    <Image
-                      src="/images/confianca.png"
-                      alt="Confiança"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-                <h3 className="text-2xl md:text-3xl font-serif text-white mb-4 group-hover:text-purple-300 transition-colors duration-300">
-                  Confiança
-                </h3>
-                <p className="text-base md:text-lg text-gray-200 leading-relaxed mb-3">
-                  Com transparência e profissionalismo, garantimos a integridade de cada avaliação realizada.
-                </p>
-                <p className="text-sm md:text-base text-gray-400 leading-relaxed">
-                  Sinta-se seguro ao adquirir pedras preciosas autênticas e de qualidade na nossa loja.
-                </p>
-              </div>
+                  <h3 className="mb-3 font-serif text-2xl text-ink">{pilar.titulo}</h3>
+                  <p className="mb-2 leading-relaxed text-ink">{pilar.texto}</p>
+                  <p className="text-sm leading-relaxed text-ink-muted">{pilar.detalhe}</p>
+                </article>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-20 md:py-24 bg-gradient-to-br from-[#000414] via-[#3a1650] to-[#1a0b2e] relative overflow-hidden">
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 via-transparent to-purple-900/10" />
-          
-          <div className="max-w-4xl mx-auto text-center px-4 relative z-10">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-serif text-white mb-6">
-              Pronto para Descobrir a Sua <span className="text-purple-300">Pedra Especial</span>?
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Explore a nossa coleção completa e encontre o cristal perfeito para sua jornada.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                href="/loja"
-                className="w-full sm:w-auto bg-white text-[#000414] px-10 py-4 rounded-full text-lg font-semibold hover:bg-purple-50 transition-all duration-300 hover:scale-105 hover:shadow-xl shadow-white/20"
-              >
-                Ver Loja
-              </Link>
-              <Link
-                href="/catalogo"
-                className="w-full sm:w-auto border-2 border-white/80 text-white px-10 py-4 rounded-full text-lg font-semibold hover:bg-white hover:text-[#000414] hover:border-white transition-all duration-300 hover:scale-105"
-              >
-                Catálogo
-              </Link>
+        {/* Faixa de marca */}
+        <section className="on-plum bg-plum py-20 md:py-24">
+          <div className="container-custom">
+            <div className="max-w-2xl">
+              <h2 className="mb-5 font-serif text-3xl leading-tight tracking-display text-surface sm:text-4xl md:text-5xl">
+                Pronto para Descobrir a Sua Pedra Especial?
+              </h2>
+              <p className="mb-9 text-lg leading-relaxed text-rose-200">
+                Explore a nossa coleção completa e encontre o cristal perfeito para sua
+                jornada.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link href="/loja" className="btn-primary">
+                  Ver Loja
+                </Link>
+                <Link href="/catalogo" className="btn-secondary">
+                  Catálogo
+                </Link>
+              </div>
             </div>
           </div>
         </section>
       </main>
 
-      
       <Footer />
     </>
   );
