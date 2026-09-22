@@ -5,6 +5,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
 import ContactForm from '@/components/contactForm';
+import { Clock, Gem, Leaf, Mail, MapPin, Phone, Search } from 'lucide-react';
 
 export default function SobreNos() {
   return (
@@ -23,14 +24,14 @@ export default function SobreNos() {
         />
 
         {/* Nossa História */}
-        <section className="py-12 md:py-16 lg:py-20 bg-white">
+        <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
           <div className="container-custom">
             <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
               <div className="order-2 md:order-1">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#4a1e5c] mb-4 md:mb-6">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-4 md:mb-6">
                   Nossa História
                 </h2>
-                <div className="space-y-4 text-base md:text-lg text-[#2c2c2c] leading-relaxed">
+                <div className="space-y-4 text-base md:text-lg text-ink leading-relaxed">
                   <p>
                     Pétalas de Sonho nasceu da paixão por pedras preciosas e cristais, 
                     combinada com um profundo respeito pela espiritualidade e energia 
@@ -63,55 +64,49 @@ export default function SobreNos() {
         </section>
 
         {/* Nossos Valores */}
-        <section className="py-12 md:py-16 lg:py-20 bg-[#faf8f5]">
+        <section className="py-12 md:py-16 lg:py-20 bg-surface">
           <div className="container-custom">
             <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#4a1e5c] mb-3 md:mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3 md:mb-4">
                 Nossos Valores
               </h2>
-              <p className="text-base sm:text-lg md:text-xl text-[#6b6b6b] max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-ink-muted max-w-3xl mx-auto">
                 Princípios que guiam o nosso trabalho diário
               </p>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {/* Autenticidade */}
-              <div className="bg-white p-6 md:p-8 rounded-lg shadow-soft text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[#4a1e5c] bg-opacity-10 rounded-full flex items-center justify-center">
-                  <span className="text-3xl">✨</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-serif text-[#4a1e5c] mb-3">
+              <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
+                <Gem className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
+                <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
                   Autenticidade
                 </h3>
-                <p className="text-sm md:text-base text-[#6b6b6b] leading-relaxed">
+                <p className="text-sm md:text-base text-ink-muted leading-relaxed">
                   Todas as nossas pedras são autênticas e certificadas, 
                   garantindo qualidade e procedência.
                 </p>
               </div>
 
               {/* Transparência */}
-              <div className="bg-white p-6 md:p-8 rounded-lg shadow-soft text-center">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[#4a1e5c] bg-opacity-10 rounded-full flex items-center justify-center">
-                  <span className="text-3xl">🔍</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-serif text-[#4a1e5c] mb-3">
+              <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
+                <Search className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
+                <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
                   Transparência
                 </h3>
-                <p className="text-sm md:text-base text-[#6b6b6b] leading-relaxed">
+                <p className="text-sm md:text-base text-ink-muted leading-relaxed">
                   Informação clara sobre cada produto, suas propriedades 
                   e origem, sem mistérios.
                 </p>
               </div>
 
               {/* Sustentabilidade */}
-              <div className="bg-white p-6 md:p-8 rounded-lg shadow-soft text-center sm:col-span-2 lg:col-span-1">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[#4a1e5c] bg-opacity-10 rounded-full flex items-center justify-center">
-                  <span className="text-3xl">🌱</span>
-                </div>
-                <h3 className="text-xl md:text-2xl font-serif text-[#4a1e5c] mb-3">
+              <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center sm:col-span-2 lg:col-span-1">
+                <Leaf className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
+                <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
                   Sustentabilidade
                 </h3>
-                <p className="text-sm md:text-base text-[#6b6b6b] leading-relaxed">
+                <p className="text-sm md:text-base text-ink-muted leading-relaxed">
                   Comprometidos com práticas éticas e sustentáveis 
                   na extração e comercialização.
                 </p>
@@ -121,13 +116,13 @@ export default function SobreNos() {
         </section>
 
         {/* Contacto Section */}
-        <section className="py-12 md:py-16 lg:py-20 bg-white">
+        <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
           <div className="container-custom">
             <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#4a1e5c] mb-3 md:mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3 md:mb-4">
                 Entre em Contacto
               </h2>
-              <p className="text-base sm:text-lg md:text-xl text-[#6b6b6b] max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg md:text-xl text-ink-muted max-w-3xl mx-auto">
                 Estamos aqui para ajudar na sua jornada espiritual
               </p>
             </div>
@@ -141,42 +136,42 @@ export default function SobreNos() {
               {/* Informações e Mapa */}
               <div className="space-y-6">
                 {/* Informações */}
-                <div className="bg-[#faf8f5] p-6 md:p-8 rounded-lg">
-                  <h3 className="text-xl md:text-2xl font-serif text-[#4a1e5c] mb-6">
+                <div className="bg-surface p-6 md:p-8 rounded-lg">
+                  <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-6">
                     Informações
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <span className="text-[#4a1e5c] mt-1">📍</span>
+                      <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
-                        <p className="font-medium text-[#2c2c2c]">Morada</p>
-                        <p className="text-sm text-[#6b6b6b]">Porto, Portugal</p>
+                        <p className="font-medium text-ink">Morada</p>
+                        <p className="text-sm text-ink-muted">Porto, Portugal</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#4a1e5c] mt-1">📧</span>
+                      <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
-                        <p className="font-medium text-[#2c2c2c]">Email</p>
-                        <a href="mailto:info@petalasdesonho.pt" className="text-sm text-[#6b6b6b] hover:text-[#4a1e5c] transition-smooth">
+                        <p className="font-medium text-ink">Email</p>
+                        <a href="mailto:info@petalasdesonho.pt" className="text-sm text-ink-muted hover:text-rose-700 transition-smooth">
                           info@petalasdesonho.pt
                         </a>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#4a1e5c] mt-1">📞</span>
+                      <Phone className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
-                        <p className="font-medium text-[#2c2c2c]">Telefone</p>
-                        <a href="tel:+351000000000" className="text-sm text-[#6b6b6b] hover:text-[#4a1e5c] transition-smooth">
+                        <p className="font-medium text-ink">Telefone</p>
+                        <a href="tel:+351000000000" className="text-sm text-ink-muted hover:text-rose-700 transition-smooth">
                           +351 xxx xxx xxx
                         </a>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <span className="text-[#4a1e5c] mt-1">🕐</span>
+                      <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
-                        <p className="font-medium text-[#2c2c2c]">Horário</p>
-                        <p className="text-sm text-[#6b6b6b]">Seg-Sex: 10h - 19h</p>
-                        <p className="text-sm text-[#6b6b6b]">Sáb: 10h - 14h</p>
+                        <p className="font-medium text-ink">Horário</p>
+                        <p className="text-sm text-ink-muted">Seg-Sex: 10h - 19h</p>
+                        <p className="text-sm text-ink-muted">Sáb: 10h - 14h</p>
                       </div>
                     </div>
                   </div>

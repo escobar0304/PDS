@@ -57,12 +57,12 @@ export default function Hero({
       {/* Content */}
       <div className="relative h-full flex items-center justify-center text-center px-4">
         <div className="max-w-4xl fade-in">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-serif text-white mb-4 md:mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-serif text-surface mb-4 md:mb-6 leading-tight">
             {title}
           </h1>
           
           {subtitle && (
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white mb-6 md:mb-8 font-light max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-surface mb-6 md:mb-8 font-light max-w-2xl mx-auto">
               {subtitle}
             </p>
           )}

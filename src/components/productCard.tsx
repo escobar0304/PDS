@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingCart } from 'lucide-react';
+import { Check, ShoppingCart } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 
 interface Product {
@@ -49,24 +49,24 @@ export default function ProductCard({ product }: ProductCardProps) {
     : 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=600&h=600&fit=crop';
 
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300 group">
-      <Link href={`/produto/${product.slug}`}>
-        <div className="relative h-64 overflow-hidden bg-gray-100">
+    <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition-smooth hover:border-rose-300">
+      <Link href={`/produto/${product.slug}`} className="block shrink-0">
+        <div className="relative h-64 overflow-hidden bg-surface-sunken">
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
             onError={() => setImageError(true)}
           />
           {product.featured && (
-            <div className="absolute top-3 left-3 bg-[#d4af37] text-white text-xs font-semibold px-3 py-1 rounded-full">
+            <div className="absolute left-3 top-3 rounded-sm bg-rose-200 px-2.5 py-1 text-xs font-medium text-rose-900">
               Destaque
             </div>
           )}
           {product.stock === 0 && (
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-              <span className="bg-white text-[#2c2c2c] px-4 py-2 rounded-full font-semibold">
+            <div className="absolute inset-0 flex items-center justify-center bg-plum/60">
+              <span className="rounded-sm bg-surface px-3 py-1.5 text-sm font-medium text-ink">
                 Esgotado
               </span>
             </div>
@@ -74,47 +74,47 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <Link href={`/produto/${product.slug}`}>
-          <h3 className="text-lg font-serif text-[#4a1e5c] mb-2 line-clamp-2 group-hover:text-[#6b2d7f] transition-colors min-h-[3.5rem]">
+          <h3 className="mb-2 line-clamp-2 font-serif text-lg leading-snug text-ink transition-smooth group-hover:text-rose-700">
             {product.name}
           </h3>
         </Link>
 
         {product.description && (
-          <p className="text-sm text-[#6b6b6b] mb-3 line-clamp-2">
+          <p className="mb-3 line-clamp-2 text-sm text-ink-muted">
             {product.description}
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-4">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
           <div>
-            <span className="text-2xl font-bold text-[#4a1e5c]">
+            <span className="tabular text-2xl font-semibold text-rose-700">
               {product.price.toFixed(2)}€
             </span>
-            {product.stock > 0 && product.stock <= 5 && (
-              <p className="text-xs text-orange-600 mt-1">
-                Apenas {product.stock} em stock
-              </p>
-            )}
+            <p className="mt-1 min-h-[1rem] text-xs text-danger-700">
+              {product.stock > 0 && product.stock <= 5
+                ? `Apenas ${product.stock} em stock`
+                : ''}
+            </p>
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={product.stock === 0 || isAdding}
-            className={`p-3 rounded-full transition-all duration-300 ${
+            className={`rounded p-3 transition-smooth ${
               product.stock === 0
-                ? 'bg-gray-300 cursor-not-allowed'
+                ? 'cursor-not-allowed bg-line text-ink-muted'
                 : isAdding
-                ? 'bg-green-500 text-white'
-                : 'bg-[#4a1e5c] hover:bg-[#6b2d7f] text-white hover:scale-110'
+                ? 'bg-sage-600 text-surface'
+                : 'bg-rose-700 text-surface hover:bg-rose-600'
             }`}
             aria-label="Adicionar ao carrinho"
           >
             {isAdding ? (
-              <span className="text-xl">✓</span>
+              <Check className="h-5 w-5" aria-hidden />
             ) : (
-              <ShoppingCart className="w-5 h-5" />
+              <ShoppingCart className="h-5 w-5" aria-hidden />
             )}
           </button>
         </div>

@@ -17,7 +17,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-[#000414] text-white">
+    <footer className="on-plum bg-plum text-surface">
       <div className="container-custom py-8 md:py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -33,14 +33,14 @@ export default function Footer() {
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-400 leading-relaxed">
+            <p className="text-sm text-rose-200 leading-relaxed">
               A sua jornada espiritual começa aqui. Descubra pedras preciosas e cristais autênticos.
             </p>
           </div>
 
           {/* Legal Links */}
           <div>
-            <h3 className="text-base md:text-lg font-semibold mb-4 text-[#d4af37]">
+            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
               Informações Legais
             </h3>
             <ul className="space-y-2">
@@ -50,7 +50,7 @@ export default function Footer() {
                     href={link.href}
                     target={link.href.startsWith('http') ? '_blank' : undefined}
                     rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="text-sm text-gray-400 hover:text-white transition-smooth block"
+                    className="text-sm text-rose-200 hover:text-surface transition-smooth block"
                   >
                     {link.label}
                   </Link>
@@ -61,28 +61,28 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-base md:text-lg font-semibold mb-4 text-[#d4af37]">
+            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
               Contacto
             </h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-gray-400">
+              <li className="flex items-start gap-2 text-sm text-rose-200">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <span>Porto, Portugal</span>
               </li>
-              <li className="flex items-start gap-2 text-sm text-gray-400">
+              <li className="flex items-start gap-2 text-sm text-rose-200">
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <a
                   href="tel:+351000000000"
-                  className="hover:text-white transition-smooth"
+                  className="hover:text-surface transition-smooth"
                 >
                   +351 xxx xxx xxx
                 </a>
               </li>
-              <li className="flex items-start gap-2 text-sm text-gray-400">
+              <li className="flex items-start gap-2 text-sm text-rose-200">
                 <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <a
                   href="mailto:info@petalasdesonho.pt"
-                  className="hover:text-white transition-smooth break-all"
+                  className="hover:text-surface transition-smooth break-all"
                 >
                   info@petalasdesonho.pt
                 </a>
@@ -92,7 +92,7 @@ export default function Footer() {
 
           {/* Social Media */}
           <div>
-            <h3 className="text-base md:text-lg font-semibold mb-4 text-[#d4af37]">
+            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
               Siga-nos
             </h3>
             <div className="flex gap-4">
@@ -100,7 +100,7 @@ export default function Footer() {
                 href="https://www.instagram.com/petalasdesonho/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-smooth"
+                className="text-rose-200 hover:text-surface transition-smooth"
                 aria-label="Instagram"
               >
                 <Instagram className="w-6 h-6" />
@@ -109,7 +109,7 @@ export default function Footer() {
                 href="https://www.facebook.com/PetalasDeSonho"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-smooth"
+                className="text-rose-200 hover:text-surface transition-smooth"
                 aria-label="Facebook"
               >
                 <Facebook className="w-6 h-6" />
@@ -119,9 +119,9 @@ export default function Footer() {
         </div>
 
         {/* Bottom Footer */}
-        <div className="pt-6 border-t border-gray-700">
+        <div className="border-t border-line-plum pt-6">
           <div className="flex justify-center items-center">
-            <p className="text-xs md:text-sm text-gray-400 text-center">
+            <p className="text-xs md:text-sm text-rose-200 text-center">
               © {currentYear} Pétalas de Sonho. Todos os direitos reservados.
             </p>
           </div>

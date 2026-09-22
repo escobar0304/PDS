@@ -18,7 +18,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-[#000414] shadow-sm sticky top-0 z-50">
+    <header className="on-plum sticky top-0 z-50 border-b border-line-plum bg-plum">
       <div className="container-custom px-2 md:px-6">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo maior e menos margem lateral */}
@@ -40,7 +40,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-white text-lg font-medium transition-smooth hover:text-[#4a1e5c]"
+                className="text-surface text-lg font-medium transition-smooth hover:text-rose-300"
               >
                 {link.label}
               </Link>
@@ -51,7 +51,7 @@ export default function Header() {
           <div className="flex items-center gap-4 pr-1 md:pr-2">
             <Link
               href="/area-pessoal"
-              className="p-2 text-white hover:text-[#4a1e5c] transition-smooth"
+              className="p-2 text-surface hover:text-rose-300 transition-smooth"
               aria-label="Área Pessoal"
             >
               <User className="w-6 h-6 md:w-7 md:h-7" />
@@ -59,12 +59,12 @@ export default function Header() {
             
             <Link
               href="/carrinho"
-              className="p-2 text-white hover:text-[#4a1e5c] transition-smooth relative"
+              className="p-2 text-surface hover:text-rose-300 transition-smooth relative"
               aria-label="Carrinho de Compras"
             >
               <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
               {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-[#4a1e5c] text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="tabular absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-700 text-xs font-semibold text-surface">
                   {itemCount}
                 </span>
               )}
@@ -72,7 +72,7 @@ export default function Header() {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-white hover:text-[#4a1e5c] transition-smooth"
+              className="md:hidden p-2 text-surface hover:text-rose-300 transition-smooth"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu"
               aria-expanded={mobileMenuOpen}
@@ -88,13 +88,13 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-gray-100 fade-in">
+          <nav className="fade-in border-t border-line-plum py-4 md:hidden">
             <div className="flex flex-col gap-1 justify-center items-center text-center">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="w-full max-w-xs text-base font-medium py-3 px-2 rounded-lg transition-smooth hover:text-[#4a1e5c] text-white"
+                  className="w-full max-w-xs rounded px-2 py-3 text-base font-medium text-surface transition-smooth hover:text-rose-300"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <span className="block">{link.label}</span>

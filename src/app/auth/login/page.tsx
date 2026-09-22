@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 
 function LoginContent() {
   const router = useRouter();
@@ -66,27 +66,24 @@ function LoginContent() {
     <>
       <Header />
       
-      <main className="min-h-screen bg-[#faf8f5] py-12">
+      <main className="min-h-screen bg-surface py-12">
         <div className="container-custom">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
-              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-r from-[#4a1e5c] to-[#6b2d7f] rounded-full flex items-center justify-center">
-                <LogIn className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="text-3xl md:text-4xl font-serif text-[#4a1e5c] mb-2">
+              <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-2">
                 Bem-vindo de volta
               </h1>
-              <p className="text-[#6b6b6b]">
+              <p className="text-ink-muted">
                 Entre na sua conta para continuar
               </p>
             </div>
 
-            <div className="bg-white rounded-lg shadow-soft p-6 md:p-8">
+            <div className="bg-surface-raised rounded-lg shadow-soft p-6 md:p-8">
               {/* Google Sign In */}
               <button
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-gray-300 rounded-lg hover:border-[#4a1e5c] hover:bg-gray-50 transition-smooth disabled:opacity-50 mb-6"
+                className="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-line rounded-lg hover:border-rose-700 hover:bg-surface-sunken transition-smooth disabled:opacity-50 mb-6"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -106,17 +103,17 @@ function LoginContent() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span className="font-medium text-[#2c2c2c]">
+                <span className="font-medium text-ink">
                   Continuar com Google
                 </span>
               </button>
 
               <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
+                  <div className="w-full border-t border-line"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-[#6b6b6b]">
+                  <span className="px-4 bg-surface-raised text-ink-muted">
                     Ou com email
                   </span>
                 </div>
@@ -125,18 +122,18 @@ function LoginContent() {
               {/* Email/Password Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-800">{error}</p>
+                  <div className="p-4 bg-danger-100 border border-danger-700/25 rounded-lg">
+                    <p className="text-sm text-danger-700">{error}</p>
                   </div>
                 )}
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-ink mb-2">
                     Email
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-5 w-5 text-rose-200" />
                     </div>
                     <input
                       type="email"
@@ -145,19 +142,19 @@ function LoginContent() {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
                       placeholder="seu@email.com"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                  <label htmlFor="password" className="block text-sm font-medium text-ink mb-2">
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-rose-200" />
                     </div>
                     <input
                       type="password"
@@ -167,7 +164,7 @@ function LoginContent() {
                       onChange={handleChange}
                       required
                       minLength={6}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
                       placeholder="••••••••"
                     />
                   </div>
@@ -177,13 +174,13 @@ function LoginContent() {
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 text-[#4a1e5c] border-gray-300 rounded focus:ring-[#4a1e5c]"
+                      className="w-4 h-4 text-rose-700 border-line rounded focus:ring-rose-700"
                     />
-                    <span className="ml-2 text-[#6b6b6b]">Lembrar-me</span>
+                    <span className="ml-2 text-ink-muted">Lembrar-me</span>
                   </label>
                   <Link
                     href="/auth/forgot-password"
-                    className="text-[#4a1e5c] hover:underline"
+                    className="text-rose-700 hover:underline"
                   >
                     Esqueci a password
                   </Link>
@@ -199,11 +196,11 @@ function LoginContent() {
               </form>
 
               <div className="mt-6 text-center">
-                <p className="text-sm text-[#6b6b6b]">
+                <p className="text-sm text-ink-muted">
                   Ainda não tem conta?{' '}
                   <Link
                     href="/auth/register"
-                    className="text-[#4a1e5c] font-medium hover:underline"
+                    className="text-rose-700 font-medium hover:underline"
                   >
                     Criar conta
                   </Link>
@@ -211,8 +208,8 @@ function LoginContent() {
               </div>
             </div>
 
-            <div className="mt-6 text-center text-sm text-[#6b6b6b]">
-              <Link href="/" className="hover:text-[#4a1e5c] transition-smooth">
+            <div className="mt-6 text-center text-sm text-ink-muted">
+              <Link href="/" className="hover:text-rose-700 transition-smooth">
                 ← Voltar à Loja
               </Link>
             </div>
@@ -234,7 +231,7 @@ export default function LoginPage() {
       fallback={
         <>
           <Header />
-          <main className="min-h-screen bg-[#faf8f5] py-12">
+          <main className="min-h-screen bg-surface py-12">
             <div className="container-custom">
               <div className="max-w-md mx-auto">
                 <div className="loading" />

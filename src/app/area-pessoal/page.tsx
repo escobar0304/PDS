@@ -70,7 +70,7 @@ export default function AreaPessoal() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-[#faf8f5] py-12 flex items-center justify-center">
+        <main className="min-h-screen bg-surface py-12 flex items-center justify-center">
           <div className="loading"></div>
         </main>
         <Footer />
@@ -82,35 +82,37 @@ export default function AreaPessoal() {
     return null;
   }
 
+  // Tres tons em vez de seis pares de cor: neutro para o que esta a decorrer,
+  // salvia para o que terminou bem, vermelho para o que foi cancelado.
   const statusMap: Record<string, { label: string; color: string }> = {
-    PENDING: { label: 'Pendente', color: 'bg-yellow-100 text-yellow-800' },
-    PROCESSING: { label: 'A Processar', color: 'bg-blue-100 text-blue-800' },
-    SHIPPED: { label: 'Enviado', color: 'bg-purple-100 text-purple-800' },
-    READY_PICKUP: { label: 'Pronto', color: 'bg-green-100 text-green-800' },
-    COMPLETED: { label: 'Concluído', color: 'bg-green-100 text-green-800' },
-    CANCELLED: { label: 'Cancelado', color: 'bg-red-100 text-red-800' },
+    PENDING: { label: 'Pendente', color: 'bg-surface-sunken text-ink-muted' },
+    PROCESSING: { label: 'A Processar', color: 'bg-surface-sunken text-ink-muted' },
+    SHIPPED: { label: 'Enviado', color: 'bg-rose-100 text-rose-900' },
+    READY_PICKUP: { label: 'Pronto', color: 'bg-sage-100 text-sage-600' },
+    COMPLETED: { label: 'Concluído', color: 'bg-sage-100 text-sage-600' },
+    CANCELLED: { label: 'Cancelado', color: 'bg-danger-100 text-danger-700' },
   };
 
   return (
     <>
       <Header />
       
-      <main className="min-h-screen bg-[#faf8f5] py-8 md:py-12">
+      <main className="min-h-screen bg-surface py-8 md:py-12">
         <div className="container-custom">
-          <h1 className="text-3xl md:text-4xl font-serif text-[#4a1e5c] mb-8">
+          <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-8">
             Área Pessoal
           </h1>
 
           <div className="grid lg:grid-cols-4 gap-6 md:gap-8">
             {/* Sidebar */}
             <aside className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-soft p-4 space-y-2">
+              <div className="bg-surface-raised rounded-lg shadow-soft p-4 space-y-2">
                 <button
                   onClick={() => setActiveTab('perfil')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-smooth ${
                     activeTab === 'perfil'
-                      ? 'bg-[#4a1e5c] text-white'
-                      : 'text-[#6b6b6b] hover:bg-gray-100'
+                      ? 'bg-rose-700 text-surface'
+                      : 'text-ink-muted hover:bg-surface-sunken'
                   }`}
                 >
                   <User className="w-5 h-5" />
@@ -121,8 +123,8 @@ export default function AreaPessoal() {
                   onClick={() => setActiveTab('encomendas')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-smooth ${
                     activeTab === 'encomendas'
-                      ? 'bg-[#4a1e5c] text-white'
-                      : 'text-[#6b6b6b] hover:bg-gray-100'
+                      ? 'bg-rose-700 text-surface'
+                      : 'text-ink-muted hover:bg-surface-sunken'
                   }`}
                 >
                   <Package className="w-5 h-5" />
@@ -133,8 +135,8 @@ export default function AreaPessoal() {
                   onClick={() => setActiveTab('favoritos')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-smooth ${
                     activeTab === 'favoritos'
-                      ? 'bg-[#4a1e5c] text-white'
-                      : 'text-[#6b6b6b] hover:bg-gray-100'
+                      ? 'bg-rose-700 text-surface'
+                      : 'text-ink-muted hover:bg-surface-sunken'
                   }`}
                 >
                   <Heart className="w-5 h-5" />
@@ -143,7 +145,7 @@ export default function AreaPessoal() {
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-smooth"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-danger-700 hover:bg-danger-100 transition-smooth"
                 >
                   <LogOut className="w-5 h-5" />
                   <span className="font-medium">Sair</span>
@@ -155,93 +157,93 @@ export default function AreaPessoal() {
             <div className="lg:col-span-3">
               {/* Tab: Perfil */}
               {activeTab === 'perfil' && (
-                <div className="bg-white rounded-lg shadow-soft p-6 md:p-8">
+                <div className="bg-surface-raised rounded-lg shadow-soft p-6 md:p-8">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-serif text-[#4a1e5c]">
+                    <h2 className="text-2xl font-serif text-rose-700">
                       Informações Pessoais
                     </h2>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-smooth">
-                      <Settings className="w-5 h-5 text-[#6b6b6b]" />
+                    <button className="p-2 hover:bg-surface-sunken rounded-lg transition-smooth">
+                      <Settings className="w-5 h-5 text-ink-muted" />
                     </button>
                   </div>
 
                   <div className="space-y-6">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           Nome Completo
                         </label>
                         <input
                           type="text"
                           defaultValue="Cliente Teste"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           Email
                         </label>
                         <input
                           type="email"
                           defaultValue="cliente@teste.com"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                         />
                       </div>
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           Telefone
                         </label>
                         <input
                           type="tel"
                           placeholder="+351 xxx xxx xxx"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           Código Postal
                         </label>
                         <input
                           type="text"
                           placeholder="4000-000"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                      <label className="block text-sm font-medium text-ink mb-2">
                         Morada
                       </label>
                       <input
                         type="text"
                         placeholder="Rua, número, andar"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                        className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                       />
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           Cidade
                         </label>
                         <input
                           type="text"
                           placeholder="Porto"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-[#2c2c2c] mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           País
                         </label>
                         <input
                           type="text"
                           defaultValue="Portugal"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c]"
+                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
                         />
                       </div>
                     </div>
@@ -256,14 +258,14 @@ export default function AreaPessoal() {
               {/* Tab: Encomendas */}
               {activeTab === 'encomendas' && (
                 <div className="space-y-4">
-                  <h2 className="text-2xl font-serif text-[#4a1e5c] mb-6">
+                  <h2 className="text-2xl font-serif text-rose-700 mb-6">
                     Histórico de Encomendas
                   </h2>
 
                   {orders.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow-soft p-12 text-center">
-                      <Package className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                      <p className="text-lg text-[#6b6b6b]">
+                    <div className="bg-surface-raised rounded-lg shadow-soft p-12 text-center">
+                      <Package className="w-16 h-16 mx-auto text-rose-200 mb-4" />
+                      <p className="text-lg text-ink-muted">
                         Ainda não fez nenhuma encomenda
                       </p>
                       <Link href="/loja" className="btn-primary inline-block mt-6">
@@ -272,17 +274,17 @@ export default function AreaPessoal() {
                     </div>
                   ) : (
                     orders.map((order) => (
-                      <div key={order._id} className="bg-white rounded-lg shadow-soft p-6">
+                      <div key={order._id} className="bg-surface-raised rounded-lg shadow-soft p-6">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 pb-4 border-b">
                           <div>
-                            <p className="text-sm text-[#6b6b6b]">
+                            <p className="text-sm text-ink-muted">
                               Encomenda #{order._id}
                             </p>
-                            <p className="text-sm text-[#6b6b6b]">
+                            <p className="text-sm text-ink-muted">
                               {new Date(order.createdAt).toLocaleDateString('pt-PT')}
                             </p>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusMap[order.status]?.color || 'bg-gray-100'}`}>
+                          <span className={`rounded-sm px-2.5 py-1 text-sm font-medium ${statusMap[order.status]?.color || 'bg-surface-sunken'}`}>
                             {statusMap[order.status]?.label || order.status}
                           </span>
                         </div>
@@ -290,10 +292,10 @@ export default function AreaPessoal() {
                         <div className="space-y-2 mb-4">
                           {order.items.map((item, index) => (
                             <div key={index} className="flex justify-between text-sm">
-                              <span className="text-[#2c2c2c]">
+                              <span className="text-ink">
                                 {item.quantity}x {item.name}
                               </span>
-                              <span className="font-medium text-[#4a1e5c]">
+                              <span className="font-medium text-rose-700">
                                 {(item.price * item.quantity).toFixed(2)}€
                               </span>
                             </div>
@@ -301,10 +303,10 @@ export default function AreaPessoal() {
                         </div>
 
                         <div className="flex justify-between items-center pt-4 border-t">
-                          <span className="text-lg font-semibold text-[#2c2c2c]">
+                          <span className="text-lg font-semibold text-ink">
                             Total
                           </span>
-                          <span className="text-2xl font-bold text-[#4a1e5c]">
+                          <span className="text-2xl font-bold text-rose-700">
                             {order.total.toFixed(2)}€
                           </span>
                         </div>
@@ -320,12 +322,12 @@ export default function AreaPessoal() {
 
               {/* Tab: Favoritos */}
               {activeTab === 'favoritos' && (
-                <div className="bg-white rounded-lg shadow-soft p-12 text-center">
-                  <Heart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                  <h2 className="text-2xl font-serif text-[#4a1e5c] mb-2">
+                <div className="bg-surface-raised rounded-lg shadow-soft p-12 text-center">
+                  <Heart className="w-16 h-16 mx-auto text-rose-200 mb-4" />
+                  <h2 className="text-2xl font-serif text-rose-700 mb-2">
                     Lista de Favoritos
                   </h2>
-                  <p className="text-lg text-[#6b6b6b] mb-6">
+                  <p className="text-lg text-ink-muted mb-6">
                     Ainda não adicionou produtos aos favoritos
                   </p>
                   <Link href="/loja" className="btn-primary inline-block">

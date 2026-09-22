@@ -8,7 +8,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
-import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingCart, Heart, Share2, Truck, RotateCcw, Shield } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Dot, Heart, Minus, Plus, RotateCcw, Share2, Shield, ShoppingCart, Sparkle, Truck } from 'lucide-react';
 
 interface Product {
   _id: string;
@@ -121,16 +121,16 @@ export default function ProdutoPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-[#faf8f5] py-12">
+        <main className="min-h-screen bg-surface py-12">
           <div className="container-custom">
             <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-48 mb-8"></div>
+              <div className="h-8 bg-surface-sunken rounded w-48 mb-8"></div>
               <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-gray-200 h-96 rounded-lg"></div>
+                <div className="bg-surface-sunken h-96 rounded-lg"></div>
                 <div className="space-y-4">
-                  <div className="h-8 bg-gray-200 rounded"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-16 bg-gray-200 rounded"></div>
+                  <div className="h-8 bg-surface-sunken rounded"></div>
+                  <div className="h-4 bg-surface-sunken rounded w-3/4"></div>
+                  <div className="h-16 bg-surface-sunken rounded"></div>
                 </div>
               </div>
             </div>
@@ -145,9 +145,9 @@ export default function ProdutoPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-[#faf8f5] py-12">
+        <main className="min-h-screen bg-surface py-12">
           <div className="container-custom text-center">
-            <h1 className="text-3xl font-serif text-[#4a1e5c] mb-4">
+            <h1 className="text-3xl font-serif text-rose-700 mb-4">
               Produto não encontrado
             </h1>
             <Link href="/loja" className="btn-primary inline-block">
@@ -166,15 +166,15 @@ export default function ProdutoPage() {
     <>
       <Header />
       
-      <main className="min-h-screen bg-[#faf8f5] py-8 md:py-12">
+      <main className="min-h-screen bg-surface py-8 md:py-12">
         <div className="container-custom">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-[#6b6b6b] mb-8">
-            <Link href="/" className="hover:text-[#4a1e5c] transition-smooth">
+          <nav className="flex items-center gap-2 text-sm text-ink-muted mb-8">
+            <Link href="/" className="hover:text-rose-700 transition-smooth">
               Início
             </Link>
             <span>/</span>
-            <Link href="/loja" className="hover:text-[#4a1e5c] transition-smooth">
+            <Link href="/loja" className="hover:text-rose-700 transition-smooth">
               Loja
             </Link>
             <span>/</span>
@@ -182,14 +182,14 @@ export default function ProdutoPage() {
               <>
                 <Link 
                   href={`/loja?categoria=${product.categoryId.slug}`}
-                  className="hover:text-[#4a1e5c] transition-smooth"
+                  className="hover:text-rose-700 transition-smooth"
                 >
                   {product.categoryId.name}
                 </Link>
                 <span>/</span>
               </>
             )}
-            <span className="text-[#2c2c2c]">{product.name}</span>
+            <span className="text-ink">{product.name}</span>
           </nav>
 
           {/* Produto */}
@@ -197,7 +197,7 @@ export default function ProdutoPage() {
             {/* Galeria de Imagens */}
             <div className="space-y-4">
               {/* Imagem Principal */}
-              <div className="relative bg-white rounded-lg overflow-hidden shadow-soft aspect-square">
+              <div className="relative bg-surface-raised rounded-lg overflow-hidden shadow-soft aspect-square">
                 <Image
                   src={currentImage}
                   alt={product.name}
@@ -207,7 +207,7 @@ export default function ProdutoPage() {
                 />
                 
                 {product.featured && (
-                  <div className="absolute top-4 left-4 bg-[#d4af37] text-white px-4 py-2 rounded-full text-sm font-semibold">
+                  <div className="absolute left-4 top-4 rounded-sm bg-rose-200 px-3 py-1.5 text-sm font-medium text-rose-900">
                     Destaque
                   </div>
                 )}
@@ -217,14 +217,14 @@ export default function ProdutoPage() {
                   <>
                     <button
                       onClick={prevImage}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-soft transition-smooth"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-2 text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Imagem anterior"
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
                     <button
                       onClick={nextImage}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-soft transition-smooth"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-2 text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Próxima imagem"
                     >
                       <ChevronRight className="w-6 h-6" />
@@ -242,8 +242,8 @@ export default function ProdutoPage() {
                       onClick={() => setCurrentImageIndex(index)}
                       className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-smooth ${
                         currentImageIndex === index
-                          ? 'border-[#4a1e5c]'
-                          : 'border-transparent hover:border-gray-300'
+                          ? 'border-rose-700'
+                          : 'border-transparent hover:border-line'
                       }`}
                     >
                       <Image
@@ -260,59 +260,59 @@ export default function ProdutoPage() {
 
             {/* Informações do Produto */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-serif text-[#4a1e5c] mb-4">
+              <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-4">
                 {product.name}
               </h1>
 
               {product.categoryId && (
                 <Link
                   href={`/loja?categoria=${product.categoryId.slug}`}
-                  className="inline-block text-sm text-[#6b6b6b] hover:text-[#4a1e5c] transition-smooth mb-4"
+                  className="inline-block text-sm text-ink-muted hover:text-rose-700 transition-smooth mb-4"
                 >
                   {product.categoryId.name}
                 </Link>
               )}
 
               <div className="flex items-baseline gap-4 mb-6">
-                <span className="text-4xl font-bold text-[#4a1e5c]">
+                <span className="tabular text-4xl font-semibold text-rose-700">
                   {product.price.toFixed(2)}€
                 </span>
                 {product.stock > 0 ? (
-                  <span className="text-sm text-green-600 font-medium">
+                  <span className="text-sm font-medium text-sage-600">
                     Em Stock
                   </span>
                 ) : (
-                  <span className="text-sm text-red-600 font-medium">
+                  <span className="text-sm font-medium text-danger-700">
                     Esgotado
                   </span>
                 )}
               </div>
 
               {product.description && (
-                <p className="text-base text-[#2c2c2c] leading-relaxed mb-6">
+                <p className="text-base text-ink leading-relaxed mb-6">
                   {product.description}
                 </p>
               )}
 
               {/* Propriedades Especiais */}
               {product.properties && (
-                <div className="bg-[#f5f1e8] p-4 rounded-lg mb-6 space-y-2">
+                <div className="bg-surface-sunken p-4 rounded-lg mb-6 space-y-2">
                   {product.properties.chakra && (
                     <div className="flex items-start gap-2">
-                      <span className="text-[#4a1e5c] font-medium">Chakra:</span>
-                      <span className="text-[#2c2c2c]">{product.properties.chakra}</span>
+                      <span className="text-rose-700 font-medium">Chakra:</span>
+                      <span className="text-ink">{product.properties.chakra}</span>
                     </div>
                   )}
                   {product.properties.elemento && (
                     <div className="flex items-start gap-2">
-                      <span className="text-[#4a1e5c] font-medium">Elemento:</span>
-                      <span className="text-[#2c2c2c]">{product.properties.elemento}</span>
+                      <span className="text-rose-700 font-medium">Elemento:</span>
+                      <span className="text-ink">{product.properties.elemento}</span>
                     </div>
                   )}
                   {product.properties.signo && (
                     <div className="flex items-start gap-2">
-                      <span className="text-[#4a1e5c] font-medium">Signo:</span>
-                      <span className="text-[#2c2c2c]">{product.properties.signo}</span>
+                      <span className="text-rose-700 font-medium">Signo:</span>
+                      <span className="text-ink">{product.properties.signo}</span>
                     </div>
                   )}
                 </div>
@@ -321,11 +321,11 @@ export default function ProdutoPage() {
               {/* Quantidade e Add to Cart */}
               <div className="space-y-4 mb-6">
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-[#2c2c2c]">Quantidade:</span>
-                  <div className="flex items-center gap-2 border-2 border-gray-300 rounded-lg">
+                  <span className="text-sm font-medium text-ink">Quantidade:</span>
+                  <div className="flex items-center gap-2 border-2 border-line rounded-lg">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="p-3 hover:bg-gray-100 transition-smooth"
+                      className="p-3 hover:bg-surface-sunken transition-smooth"
                       aria-label="Diminuir quantidade"
                     >
                       <Minus className="w-5 h-5" />
@@ -336,7 +336,7 @@ export default function ProdutoPage() {
                     <button
                       onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                       disabled={quantity >= product.stock}
-                      className="p-3 hover:bg-gray-100 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-3 hover:bg-surface-sunken transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Aumentar quantidade"
                     >
                       <Plus className="w-5 h-5" />
@@ -352,8 +352,8 @@ export default function ProdutoPage() {
                   >
                     {isAdding ? (
                       <>
-                        <span>✓</span>
-                        <span>Adicionado!</span>
+                        <Check className="h-5 w-5" aria-hidden />
+                        <span>Adicionado</span>
                       </>
                     ) : (
                       <>
@@ -365,10 +365,10 @@ export default function ProdutoPage() {
 
                   <button
                     onClick={() => setIsFavorite(!isFavorite)}
-                    className={`p-4 rounded-full border-2 transition-smooth ${
+                    className={`rounded border p-4 transition-smooth ${
                       isFavorite
-                        ? 'bg-red-50 border-red-500 text-red-500'
-                        : 'border-gray-300 text-gray-600 hover:border-[#4a1e5c] hover:text-[#4a1e5c]'
+                        ? 'border-rose-700 bg-rose-100 text-rose-700'
+                        : 'border-line text-ink-muted hover:border-rose-700 hover:text-rose-700'
                     }`}
                     aria-label="Adicionar aos favoritos"
                   >
@@ -376,7 +376,7 @@ export default function ProdutoPage() {
                   </button>
 
                   <button
-                    className="p-4 rounded-full border-2 border-gray-300 text-gray-600 hover:border-[#4a1e5c] hover:text-[#4a1e5c] transition-smooth"
+                    className="rounded border border-line p-4 text-ink-muted transition-smooth hover:border-rose-700 hover:text-rose-700"
                     aria-label="Partilhar"
                   >
                     <Share2 className="w-5 h-5" />
@@ -387,24 +387,24 @@ export default function ProdutoPage() {
               {/* Informações Adicionais */}
               <div className="border-t pt-6 space-y-3">
                 <div className="flex items-start gap-3">
-                  <Truck className="w-5 h-5 text-[#4a1e5c] flex-shrink-0 mt-0.5" />
+                  <Truck className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-[#2c2c2c]">Envio Rápido</p>
-                    <p className="text-sm text-[#6b6b6b]">Entrega em 2-3 dias úteis</p>
+                    <p className="font-medium text-ink">Envio Rápido</p>
+                    <p className="text-sm text-ink-muted">Entrega em 2-3 dias úteis</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <RotateCcw className="w-5 h-5 text-[#4a1e5c] flex-shrink-0 mt-0.5" />
+                  <RotateCcw className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-[#2c2c2c]">Devoluções</p>
-                    <p className="text-sm text-[#6b6b6b]">14 dias para devolução</p>
+                    <p className="font-medium text-ink">Devoluções</p>
+                    <p className="text-sm text-ink-muted">14 dias para devolução</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-[#4a1e5c] flex-shrink-0 mt-0.5" />
+                  <Shield className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-medium text-[#2c2c2c]">Garantia de Autenticidade</p>
-                    <p className="text-sm text-[#6b6b6b]">Certificado de autenticidade incluído</p>
+                    <p className="font-medium text-ink">Garantia de Autenticidade</p>
+                    <p className="text-sm text-ink-muted">Certificado de autenticidade incluído</p>
                   </div>
                 </div>
               </div>
@@ -415,15 +415,15 @@ export default function ProdutoPage() {
           {product.properties && (product.properties.beneficios || product.properties.cuidados) && (
             <div className="grid md:grid-cols-2 gap-8 mb-16">
               {product.properties.beneficios && product.properties.beneficios.length > 0 && (
-                <div className="bg-white p-6 md:p-8 rounded-lg shadow-soft">
-                  <h3 className="text-2xl font-serif text-[#4a1e5c] mb-4">
+                <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft">
+                  <h3 className="text-2xl font-serif text-rose-700 mb-4">
                     Benefícios Energéticos
                   </h3>
                   <ul className="space-y-2">
                     {product.properties.beneficios.map((beneficio, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <span className="text-[#4a1e5c] mt-1">✦</span>
-                        <span className="text-[#2c2c2c]">{beneficio}</span>
+                        <Sparkle className="mt-1 h-3.5 w-3.5 flex-shrink-0 text-rose-700" aria-hidden />
+                        <span className="text-ink">{beneficio}</span>
                       </li>
                     ))}
                   </ul>
@@ -431,15 +431,15 @@ export default function ProdutoPage() {
               )}
 
               {product.properties.cuidados && product.properties.cuidados.length > 0 && (
-                <div className="bg-white p-6 md:p-8 rounded-lg shadow-soft">
-                  <h3 className="text-2xl font-serif text-[#4a1e5c] mb-4">
+                <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft">
+                  <h3 className="text-2xl font-serif text-rose-700 mb-4">
                     Cuidados
                   </h3>
                   <ul className="space-y-2">
                     {product.properties.cuidados.map((cuidado, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <span className="text-[#4a1e5c] mt-1">•</span>
-                        <span className="text-[#2c2c2c]">{cuidado}</span>
+                        <Dot className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                        <span className="text-ink">{cuidado}</span>
                       </li>
                     ))}
                   </ul>
@@ -451,10 +451,10 @@ export default function ProdutoPage() {
           {/* Produtos Relacionados */}
           {relatedProducts.length > 0 && (
             <div>
-              <h2 className="text-3xl font-serif text-[#4a1e5c] mb-8">
+              <h2 className="text-3xl font-serif text-rose-700 mb-8">
                 Produtos Relacionados
               </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {relatedProducts.slice(0, 4).map((relatedProduct) => (
                   <ProductCard key={relatedProduct._id} product={relatedProduct} />
                 ))}

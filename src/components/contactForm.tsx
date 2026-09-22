@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AlertCircle, Check } from 'lucide-react';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -59,7 +60,7 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
       {/* Nome */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="name" className="block text-sm font-medium text-ink mb-2">
           Nome *
         </label>
         <input
@@ -69,14 +70,14 @@ export default function ContactForm() {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
           placeholder="O seu nome"
         />
       </div>
 
       {/* Email */}
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-ink mb-2">
           Email *
         </label>
         <input
@@ -86,14 +87,14 @@ export default function ContactForm() {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
           placeholder="seuemail@exemplo.com"
         />
       </div>
 
       {/* Telefone */}
       <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="phone" className="block text-sm font-medium text-ink mb-2">
           Telefone
         </label>
         <input
@@ -102,14 +103,14 @@ export default function ContactForm() {
           name="phone"
           value={formData.phone}
           onChange={handleChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
           placeholder="+351 xxx xxx xxx"
         />
       </div>
 
       {/* Assunto */}
       <div>
-        <label htmlFor="subject" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="subject" className="block text-sm font-medium text-ink mb-2">
           Assunto *
         </label>
         <select
@@ -118,7 +119,7 @@ export default function ContactForm() {
           value={formData.subject}
           onChange={handleChange}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth"
+          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
         >
           <option value="">Selecione um assunto</option>
           <option value="informacao">Informação sobre produtos</option>
@@ -130,7 +131,7 @@ export default function ContactForm() {
 
       {/* Mensagem */}
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-[#2c2c2c] mb-2">
+        <label htmlFor="message" className="block text-sm font-medium text-ink mb-2">
           Mensagem *
         </label>
         <textarea
@@ -140,24 +141,26 @@ export default function ContactForm() {
           onChange={handleChange}
           required
           rows={5}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a1e5c] focus:border-transparent transition-smooth resize-none"
+          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth resize-none"
           placeholder="Escreva a sua mensagem aqui..."
         />
       </div>
 
       {/* Mensagens de sucesso/erro */}
       {success && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800">
-            ✅ Mensagem enviada com sucesso! Entraremos em contacto em breve.
+        <div className="p-4 bg-sage-100 border border-sage-600/25 rounded-lg">
+          <p className="flex items-start gap-2 text-sm text-sage-600">
+            <Check className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden />
+            Mensagem enviada com sucesso. Entraremos em contacto em breve.
           </p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">
-            ❌ {error}
+        <div className="p-4 bg-danger-100 border border-danger-700/25 rounded-lg">
+          <p className="flex items-start gap-2 text-sm text-danger-700">
+            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden />
+            {error}
           </p>
         </div>
       )}
