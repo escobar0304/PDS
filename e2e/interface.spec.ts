@@ -114,3 +114,35 @@ test('todos os campos de formulário têm etiqueta associada', async ({ page }) 
     expect(semEtiqueta, `campos sem etiqueta em ${rota}`).toEqual([]);
   }
 });
+
+test('a marca é servida como vetor, não como imagem pesada', async ({ page, request }) => {
+  const pesados: string[] = [];
+  page.on('response', (res) => {
+    const url = res.url();
+    if (/\/(marca|images)\//.test(url) && /logo/.test(url)) pesados.push(url);
+  });
+
+  await page.goto('/');
+
+  // O logotipo antigo eram tres PNG em base64 dentro de um SVG de 636 kB,
+  // carregado no cabecalho de todas as paginas.
+  expect(pesados, 'nenhuma pagina deve voltar a pedir o logotipo antigo').toEqual([]);
+
+  for (const ficheiro of ['/marca/simbolo.svg', '/marca/wordmark.svg']) {
+    const res = await request.get(ficheiro);
+    expect(res.ok(), `${ficheiro} deve existir`).toBeTruthy();
+    const corpo = await res.text();
+    expect(corpo, `${ficheiro} nao pode ter rasters embutidos`).not.toContain('base64');
+  }
+});
+
+test('o cabeçalho e o rodapé mostram a marca uma vez cada', async ({ page }) => {
+  await page.goto('/');
+
+  await expect(
+    page.getByRole('banner').getByRole('img', { name: 'Pétalas de Sonho' }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole('contentinfo').getByRole('img', { name: 'Pétalas de Sonho' }),
+  ).toHaveCount(1);
+});

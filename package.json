@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "check:env": "tsx scripts/check-env.ts",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "marca:og": "node scripts/gerar-og.mjs",
+    "marca:simbolo": "python3 scripts/gerar-simbolo.py"
   },
   "dependencies": {
     "@next-auth/mongodb-adapter": "^1.1.3",

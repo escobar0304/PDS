@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 176" role="img" aria-label="Pétalas de Sonho">
+  <path d="M30 72.2L49.8 62L49.8 150L30 150Z" fill="#f0909f"/>
+  <path d="M49.8 62L70.2 62L70.2 150L49.8 150Z" fill="#ffb4c0"/>
+  <path d="M70.2 62L90 72.2L90 150L70.2 150Z" fill="#ffc9d2"/>
+  <path d="M30 72.2L49.8 62L60.0 12Z" fill="#f0909f"/>
+  <path d="M49.8 62L70.2 62L60.0 12Z" fill="#ffc9d2"/>
+  <path d="M70.2 62L90 72.2L60.0 12Z" fill="#ffe1e6"/>
+  <path d="M64 120C40 122 10 138 12 164C24 178 58 150 64 120Z" fill="#e5697f"/>
+  <path d="M56 120C82 118 112 132 108 158C98 176 62 148 56 120Z" fill="#f7889b"/>
+</svg>

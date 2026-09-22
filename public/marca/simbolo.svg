@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 176" role="img" aria-label="Pétalas de Sonho">
+  <g transform="rotate(-15 41 154)">
+    <path d="M24 83.78L35.22 78L35.22 154L24 154Z" fill="#f0909f"/>
+    <path d="M35.22 78L46.78 78L46.78 154L35.22 154Z" fill="#ffb4c0"/>
+    <path d="M46.78 78L58 83.78L58 154L46.78 154Z" fill="#ffc9d2"/>
+    <path d="M24 83.78L35.22 78L41.0 34Z" fill="#f0909f"/>
+    <path d="M35.22 78L46.78 78L41.0 34Z" fill="#ffc9d2"/>
+    <path d="M46.78 78L58 83.78L41.0 34Z" fill="#ffe1e6"/>
+  </g>
+  <g transform="rotate(13 81 154)">
+    <path d="M67 100.76L76.24 96L76.24 154L67 154Z" fill="#f0909f"/>
+    <path d="M76.24 96L85.76 96L85.76 154L76.24 154Z" fill="#ffb4c0"/>
+    <path d="M85.76 96L95 100.76L95 154L85.76 154Z" fill="#ffc9d2"/>
+    <path d="M67 100.76L76.24 96L81.0 62Z" fill="#f0909f"/>
+    <path d="M76.24 96L85.76 96L81.0 62Z" fill="#ffc9d2"/>
+    <path d="M85.76 96L95 100.76L81.0 62Z" fill="#ffe1e6"/>
+  </g>
+  <g>
+    <path d="M41 62.46L53.54 56L53.54 154L41 154Z" fill="#f0909f"/>
+    <path d="M53.54 56L66.46000000000001 56L66.46000000000001 154L53.54 154Z" fill="#ffb4c0"/>
+    <path d="M66.46000000000001 56L79 62.46L79 154L66.46000000000001 154Z" fill="#ffc9d2"/>
+    <path d="M41 62.46L53.54 56L60.0 10Z" fill="#f0909f"/>
+    <path d="M53.54 56L66.46000000000001 56L60.0 10Z" fill="#ffc9d2"/>
+    <path d="M66.46000000000001 56L79 62.46L60.0 10Z" fill="#ffe1e6"/>
+  </g>
+  <path d="M62 116C42 116 12 138 14 168C22 178 58 152 62 116Z" fill="#e5697f"/>
+  <path d="M58 116C80 112 108 130 104 160C96 174 62 150 58 116Z" fill="#f7889b"/>
+</svg>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import Logotipo from '@/components/marca';
 import { List, ShoppingCart, User, X } from '@phosphor-icons/react';
 import { useCart } from '@/contexts/CartContext';
 
@@ -22,16 +22,11 @@ export default function Header() {
       <div className="container-custom px-2 md:px-6">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo maior e menos margem lateral */}
-          <Link href="/" className="flex items-center transition-smooth hover:opacity-80 pl-1 md:pl-2">
-            <div className="relative w-32 h-32 md:w-36 md:h-36">
-              <Image
-                src="/images/logo-icon.svg"
-                alt="Pétalas de Sonho"
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
+          <Link
+            href="/"
+            className="flex items-center pl-1 text-[19px] text-rose-200 transition-smooth hover:text-rose-100 sm:text-[24px] md:pl-2 md:text-[32px]"
+          >
+            <Logotipo />
           </Link>
 
           {/* Desktop Navigation */}
