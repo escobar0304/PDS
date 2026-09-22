@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import Logotipo from '@/components/marca';
 import { Envelope, FacebookLogo, InstagramLogo, MapPin, Phone } from '@phosphor-icons/react';
 
 export default function Footer() {
@@ -23,16 +23,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Brand Section */}
           <div>
-            <div className="flex items-center gap-0 mb-0">
-              <div className="relative w-36 h-36 md:w-40 md:h-40">
-                <Image
-                  src="/images/logo-icon.svg"
-                  alt="Pétalas de Sonho"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
+            <Logotipo className="mb-5 text-[26px] text-rose-200" />
             <p className="text-sm text-rose-200 leading-relaxed">
               A sua jornada espiritual começa aqui. Descubra pedras preciosas e cristais autênticos.
             </p>

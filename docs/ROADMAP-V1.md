@@ -79,7 +79,14 @@ volta a acontecer.
 
 ## F1. Marca
 
-**Bloqueia F2 e tudo o que vem depois.**
+> **Feita em 22/09/2026.** O detalhe está em `docs/MARCA.md`. Fica uma decisão
+> por tomar, e é do negócio, não de engenharia: **as letras do lettering**. Não
+> existe original vetorial e a única fonte é um raster onde o lettering tem
+> 831×118 px, por isso o que está no repositório é um traçado — fiel, mas com os
+> contornos ondulados em usos grandes. Ou se aceita isso, ou se redesenham as
+> letras e a marca muda. A tipografia do site (ainda Playfair + Inter) só se
+> fecha depois disso.
+
 
 O ficheiro que existe, `logo-icon.svg`, tem 622 KB e é um par de imagens raster
 em base64 embrulhadas em `<svg>`. Não é vetor, não escala, não muda de cor, não
