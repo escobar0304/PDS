@@ -1,13 +1,9 @@
 // src/lib/db.ts
+//
+// Ligacao Mongoose partilhada. A validacao da configuracao acontece no momento
+// da ligacao, nao no import, para nao rebentar o build.
 import mongoose from 'mongoose';
-
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    '❌ Por favor define a variável MONGODB_URI no arquivo .env.local'
-  );
-}
+import { requireEnv } from './env';
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -15,39 +11,26 @@ interface MongooseCache {
 }
 
 declare global {
+  // eslint-disable-next-line no-var
   var mongooseCache: MongooseCache | undefined;
 }
 
-const cached: MongooseCache = global.mongooseCache || { conn: null, promise: null };
-
-if (!global.mongooseCache) {
-  global.mongooseCache = cached;
-}
+const cached: MongooseCache = global.mongooseCache ?? { conn: null, promise: null };
+global.mongooseCache = cached;
 
 async function connectDB(): Promise<typeof mongoose> {
-  if (cached.conn) {
-    console.log('✅ Usando conexão MongoDB existente');
-    return cached.conn;
-  }
+  if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    console.log('🔄 Conectando ao MongoDB...');
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      console.log('✅ MongoDB conectado com sucesso!');
-      return mongoose;
-    });
+    const uri = requireEnv('MONGODB_URI');
+    cached.promise = mongoose.connect(uri, { bufferCommands: false });
   }
 
   try {
     cached.conn = await cached.promise;
-  } catch (e) {
+  } catch (error) {
     cached.promise = null;
-    console.error('❌ Erro ao conectar ao MongoDB:', e);
-    throw e;
+    throw error;
   }
 
   return cached.conn;

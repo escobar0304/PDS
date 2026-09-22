@@ -1,22 +1,26 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  addItem as addItemTo,
+  cartTotal,
+  countItems,
+  parseStoredCart,
+  removeItem as removeItemFrom,
+  setQuantity,
+  type CartItem,
+  type CartProduct,
+} from '@/lib/cart';
 
-export interface CartItem {
-  _id: string;
-  name: string;
-  slug: string;
-  price: number;
-  image: string;
-  quantity: number;
-  stock: number;
-}
+export type { CartItem } from '@/lib/cart';
+
+const STORAGE_KEY = 'cart';
 
 interface CartContextType {
   items: CartItem[];
   itemCount: number;
   total: number;
-  addItem: (product: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+  addItem: (product: CartProduct, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -29,80 +33,51 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Carregar carrinho do localStorage
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Erro ao carregar carrinho:', error);
-      }
+    try {
+      setItems(parseStoredCart(localStorage.getItem(STORAGE_KEY)));
+    } catch {
+      // localStorage pode estar indisponivel (modo privado, cookies bloqueados)
     }
+    setHydrated(true);
   }, []);
 
-  // Guardar carrinho no localStorage
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(items));
-  }, [items]);
+    // Nao escrever antes de ler, senao o primeiro render apaga o carrinho guardado
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // sem persistencia disponivel, o carrinho vive so nesta sessao
+    }
+  }, [items, hydrated]);
 
-  const addItem = (product: Omit<CartItem, 'quantity'>, quantity: number = 1) => {
-    setItems(prevItems => {
-      const existingItem = prevItems.find(item => item._id === product._id);
-      
-      if (existingItem) {
-        // Atualizar quantidade se já existe
-        return prevItems.map(item =>
-          item._id === product._id
-            ? { ...item, quantity: Math.min(item.quantity + quantity, item.stock) }
-            : item
-        );
-      } else {
-        // Adicionar novo item
-        return [...prevItems, { ...product, quantity }];
-      }
-    });
-    
-    setIsOpen(true); // Abrir preview do carrinho
+  const addItem = (product: CartProduct, quantity = 1) => {
+    setItems((prev) => addItemTo(prev, product, quantity));
+    setIsOpen(true);
   };
 
   const removeItem = (productId: string) => {
-    setItems(prevItems => prevItems.filter(item => item._id !== productId));
+    setItems((prev) => removeItemFrom(prev, productId));
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(productId);
-      return;
-    }
-    
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item._id === productId
-          ? { ...item, quantity: Math.min(quantity, item.stock) }
-          : item
-      )
-    );
+    setItems((prev) => setQuantity(prev, productId, quantity));
   };
 
-  const clearCart = () => {
-    setItems([]);
-  };
-
+  const clearCart = () => setItems([]);
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
-
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
         items,
-        itemCount,
-        total,
+        itemCount: countItems(items),
+        total: cartTotal(items),
         addItem,
         removeItem,
         updateQuantity,
