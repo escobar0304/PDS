@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Mail, Lock, LogIn } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/area-pessoal';
@@ -222,5 +222,30 @@ export default function LoginPage() {
 
       <Footer />
     </>
+  );
+}
+
+/**
+ * useSearchParams() (callbackUrl) obriga a um limite de Suspense no App Router.
+ */
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Header />
+          <main className="min-h-screen bg-[#faf8f5] py-12">
+            <div className="container-custom">
+              <div className="max-w-md mx-auto">
+                <div className="loading" />
+              </div>
+            </div>
+          </main>
+          <Footer />
+        </>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -25,7 +25,7 @@ interface Category {
   slug: string;
 }
 
-export default function Loja() {
+function LojaContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -280,5 +280,53 @@ export default function Loja() {
 
       <Footer />
     </>
+  );
+}
+
+/**
+ * useSearchParams() obriga a um limite de Suspense no App Router. Sem ele o
+ * `next build` falha a pre-renderizar esta pagina.
+ */
+function LojaFallback() {
+  return (
+    <>
+      <Header />
+      <main className="min-h-screen bg-[#faf8f5]">
+        <section className="bg-white py-8 md:py-12 border-b">
+          <div className="container-custom">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-[#4a1e5c] mb-3">
+              Loja
+            </h1>
+            <p className="text-base md:text-lg text-[#6b6b6b]">
+              Descubra nossa coleção completa de cristais e pedras preciosas
+            </p>
+          </div>
+        </section>
+        <section className="py-8 md:py-12">
+          <div className="container-custom">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-lg overflow-hidden shadow-soft">
+                  <div className="bg-gray-200 h-64 animate-pulse"></div>
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+}
+
+export default function Loja() {
+  return (
+    <Suspense fallback={<LojaFallback />}>
+      <LojaContent />
+    </Suspense>
   );
 }
