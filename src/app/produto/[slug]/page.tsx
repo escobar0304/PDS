@@ -122,7 +122,7 @@ export default function ProdutoPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-surface py-12">
+        <main id="conteudo" className="min-h-screen bg-surface py-12">
           <div className="container-custom">
             <div className="animate-pulse">
               <div className="h-8 bg-surface-sunken rounded w-48 mb-8"></div>
@@ -146,7 +146,7 @@ export default function ProdutoPage() {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-surface py-12">
+        <main id="conteudo" className="min-h-screen bg-surface py-12">
           <div className="container-custom text-center">
             <h1 className="text-3xl font-serif text-rose-700 mb-4">
               Produto não encontrado
@@ -167,7 +167,7 @@ export default function ProdutoPage() {
     <>
       <Header />
       
-      <main className="min-h-screen bg-surface py-8 md:py-12">
+      <main id="conteudo" className="min-h-screen bg-surface py-8 md:py-12">
         <div className="container-custom">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-ink-muted mb-8">

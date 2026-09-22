@@ -58,7 +58,7 @@ export default function PrivacidadePage() {
     <>
       <Header />
 
-      <main className="min-h-screen bg-surface py-12">
+      <main id="conteudo" className="min-h-screen bg-surface py-12">
         <Container>
           <div className="mx-auto max-w-3xl">
             <PageHeader
@@ -153,14 +153,14 @@ export default function PrivacidadePage() {
                 <p className="mt-3 leading-relaxed text-ink-muted">
                   Escreva-nos{' '}
                   {EMPRESA.email ? (
-                    <a href={`mailto:${EMPRESA.email}`} className="text-rose-700 hover:underline">
+                    <a href={`mailto:${EMPRESA.email}`} className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
                       para {EMPRESA.email}
                     </a>
                   ) : (
                     <span className="text-danger-700">(endereço por preencher)</span>
                   )}{' '}
                   ou pelo{' '}
-                  <Link href="/sobre-nos" className="text-rose-700 hover:underline">
+                  <Link href="/sobre-nos" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
                     formulário de contacto
                   </Link>
                   . Respondemos no prazo de um mês.
@@ -172,7 +172,7 @@ export default function PrivacidadePage() {
                     href="https://www.cnpd.pt"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-rose-700 hover:underline"
+                    className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
                   >
                     Comissão Nacional de Proteção de Dados
                   </a>
@@ -186,7 +186,7 @@ export default function PrivacidadePage() {
                 </h2>
                 <p className="leading-relaxed text-ink-muted">
                   Está tratado à parte, com o inventário completo, na página de{' '}
-                  <Link href="/cookies" className="text-rose-700 hover:underline">
+                  <Link href="/cookies" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
                     cookies e armazenamento local
                   </Link>
                   .

@@ -9,7 +9,7 @@ export default function FalhaPage() {
   return (
     <>
       <Header />
-      <main className="container-custom py-20 text-center md:py-28">
+      <main id="conteudo" className="container-custom py-20 text-center md:py-28">
         <h1 className="mb-4 font-serif text-3xl text-ink md:text-4xl">
           Pagamento falhou ou foi cancelado
         </h1>

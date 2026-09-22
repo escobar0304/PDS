@@ -359,6 +359,22 @@ Encontrado durante a análise:
 
 ## F13. Acessibilidade
 
+> **Feita em 22/09/2026.** O detalhe está em `docs/ACESSIBILIDADE.md`.
+>
+> **A obrigação legal provavelmente não se aplica** — microempresa de serviços
+> está isenta, e o negócio é empresário em nome individual. Fica dito porque
+> dizer o contrário seria fabricar uma obrigação para justificar trabalho.
+>
+> A auditoria com `axe` em dez páginas e dois tamanhos deu **três regras
+> violadas**: o botão secundário a 2,01:1 sobre ameixa, doze ligações que só se
+> distinguiam pela cor, e uma tabela com deslocamento sem acesso por teclado.
+>
+> O que o `axe` não apanha era onde faltava trabalho: **não havia ligação para
+> saltar a navegação** (quatro tabulações até ao conteúdo em todas as páginas)
+> e vários controlos abaixo de 24×24. O critério aplicado é o 2.5.8 da WCAG 2.2
+> (24×24, com isenção para ligações em frases), não os 44×44 que são AAA.
+
+
 **Base:** Diretiva (UE) 2019/882, transposta pelo DL 82/2022, aplicável ao comércio
 eletrónico desde 28 de junho de 2025. **As microempresas de serviços estão isentas**,
 com menos de 10 trabalhadores e menos de 2 milhões de euros de volume de negócios.
@@ -523,7 +539,7 @@ F9  Afirmações comerciais        precisa de decisões tuas sobre o negócio
 F10 Páginas institucionais       depende de F3
 F11 Segurança                    independente, pode correr em paralelo
 F12 Área pessoal                 depende de F3 e F6
-F13 Acessibilidade               depois de F10
+F13 Acessibilidade               feita
 F14 Performance                  feita
 F15 SEO                          robots.ts feito na F3; o resto por último
 ```

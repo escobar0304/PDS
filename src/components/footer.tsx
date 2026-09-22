@@ -42,7 +42,7 @@ export default function Footer() {
                     href={link.href}
                     target={link.href.startsWith('http') ? '_blank' : undefined}
                     rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="text-sm text-rose-200 hover:text-surface transition-smooth block"
+                    className="block py-1 text-sm text-rose-200 transition-smooth hover:text-surface"
                   >
                     {link.label}
                   </Link>
@@ -65,7 +65,7 @@ export default function Footer() {
                 <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <a
                   href="tel:+351000000000"
-                  className="hover:text-surface transition-smooth"
+                  className="inline-block py-1 transition-smooth hover:text-surface"
                 >
                   +351 xxx xxx xxx
                 </a>
@@ -74,7 +74,7 @@ export default function Footer() {
                 <Envelope className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <a
                   href="mailto:info@petalasdesonho.pt"
-                  className="hover:text-surface transition-smooth break-all"
+                  className="inline-block break-all py-1 transition-smooth hover:text-surface"
                 >
                   info@petalasdesonho.pt
                 </a>

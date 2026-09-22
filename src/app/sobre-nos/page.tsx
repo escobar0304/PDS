@@ -17,7 +17,7 @@ export default function SobreNos() {
     <>
       <Header />
       
-      <main>
+      <main id="conteudo">
         {/* Hero Section */}
         <Hero
           title="Sobre Nós"
@@ -158,7 +158,7 @@ export default function SobreNos() {
                       <Envelope className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Email</p>
-                        <a href="mailto:info@petalasdesonho.pt" className="text-sm text-ink-muted hover:text-rose-700 transition-smooth">
+                        <a href="mailto:info@petalasdesonho.pt" className="inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700">
                           info@petalasdesonho.pt
                         </a>
                       </div>
@@ -167,7 +167,7 @@ export default function SobreNos() {
                       <Phone className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Telefone</p>
-                        <a href="tel:+351000000000" className="text-sm text-ink-muted hover:text-rose-700 transition-smooth">
+                        <a href="tel:+351000000000" className="inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700">
                           +351 xxx xxx xxx
                         </a>
                       </div>

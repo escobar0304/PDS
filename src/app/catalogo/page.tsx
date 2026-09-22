@@ -52,7 +52,7 @@ export default function Catalogo() {
     <>
       <Header />
       
-      <main>
+      <main id="conteudo">
         {/* Hero Section */}
         <Hero
           title="Catálogo"

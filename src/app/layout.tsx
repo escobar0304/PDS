@@ -39,6 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
       <body>
+        <a href="#conteudo" className="saltar-conteudo">
+          Saltar para o conteúdo
+        </a>
         <ClientProviders>
           {children}
         </ClientProviders>

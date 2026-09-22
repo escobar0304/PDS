@@ -46,7 +46,7 @@ export default function Header() {
           <div className="flex items-center gap-4 pr-1 md:pr-2">
             <Link
               href="/area-pessoal"
-              className="p-2 text-surface hover:text-rose-300 transition-smooth"
+              className="flex h-11 w-11 items-center justify-center text-surface transition-smooth hover:text-rose-300"
               aria-label="Área Pessoal"
             >
               <User className="w-6 h-6 md:w-7 md:h-7" />
@@ -61,7 +61,7 @@ export default function Header() {
                 e.preventDefault();
                 openCart();
               }}
-              className="relative p-2 text-surface transition-smooth hover:text-rose-300"
+              className="relative flex h-11 w-11 items-center justify-center text-surface transition-smooth hover:text-rose-300"
               aria-label="Carrinho de Compras"
             >
               <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
@@ -74,7 +74,7 @@ export default function Header() {
 
             {/* Botao do menu em telemovel */}
             <button
-              className="md:hidden p-2 text-surface hover:text-rose-300 transition-smooth"
+              className="flex h-11 w-11 items-center justify-center text-surface transition-smooth hover:text-rose-300 md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Menu"
               aria-expanded={mobileMenuOpen}
