@@ -8,6 +8,10 @@
 > **Correção (2026-09-22):** as contagens de uso de classe na secção 3.1 foram
 > revistas. A primeira medição contava também nomes de variáveis com o mesmo texto
 > (`loading`, por exemplo). Os números abaixo são contagens de `className` reais.
+>
+> **Correção (2026-09-22):** a secção 5.2 dizia que o drawer do carrinho nunca abre.
+> Estava errado: abre ao adicionar um produto. O que não funciona é o ícone do
+> header. Texto corrigido.
 
 ---
 
@@ -220,9 +224,13 @@ Rotas referenciadas no JSX que **não existem** em `src/app/`:
 ### 5.2 Interface construída mas inalcançável
 
 `CartPreview` (drawer lateral de carrinho, 189 linhas, com animação de entrada) está
-montado em `ClientProviders.tsx` e funciona. Mas **`openCart` nunca é chamado**:
-`header.tsx:11` importa-o do contexto e o ícone do carrinho é um `<Link href="/carrinho">`.
-Resultado: existem duas experiências de carrinho e a melhor delas nunca abre.
+montado em `ClientProviders.tsx` e funciona. **Abre quando se adiciona um produto**,
+porque `addItem` no contexto faz `setIsOpen(true)`.
+
+O que não funciona é o ícone do carrinho no header: é um `<Link href="/carrinho">`
+que navega em vez de abrir o drawer, e `header.tsx:11` importa `openCart` do contexto
+sem nunca o chamar. Ficam duas experiências de carrinho, e a escolha entre elas
+depende de como lá se chega, não de uma decisão de desenho.
 
 ### 5.3 Páginas vazias ou sem marca
 

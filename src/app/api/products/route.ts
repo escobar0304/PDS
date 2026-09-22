@@ -3,23 +3,7 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import { Category, Product } from '@/lib/models';
-
-type SortKey =
-  | 'featured'
-  | 'price-asc'
-  | 'price-desc'
-  | 'name-asc'
-  | 'name-desc'
-  | 'newest';
-
-const SORTS: Record<SortKey, Record<string, 1 | -1>> = {
-  featured: { featured: -1, createdAt: -1 },
-  'price-asc': { price: 1 },
-  'price-desc': { price: -1 },
-  'name-asc': { name: 1 },
-  'name-desc': { name: -1 },
-  newest: { createdAt: -1 },
-};
+import { resolveLimit, resolveSort } from '@/lib/products';
 
 export async function GET(request: Request) {
   try {
@@ -27,7 +11,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
-    const sort = (searchParams.get('sort') || 'featured') as SortKey;
+    const sort = searchParams.get('sort');
     const limitParam = searchParams.get('limit');
 
     const query: Record<string, unknown> = { active: true };
@@ -48,11 +32,11 @@ export async function GET(request: Request) {
 
     let cursor = Product.find(query)
       .populate('categoryId', 'name slug')
-      .sort(SORTS[sort] ?? SORTS.featured);
+      .sort(resolveSort(sort));
 
-    const limit = Number(limitParam);
-    if (Number.isInteger(limit) && limit > 0) {
-      cursor = cursor.limit(Math.min(limit, 100));
+    const limit = resolveLimit(limitParam);
+    if (limit !== null) {
+      cursor = cursor.limit(limit);
     }
 
     const products = await cursor;

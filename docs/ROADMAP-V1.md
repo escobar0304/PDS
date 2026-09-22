@@ -112,7 +112,9 @@ copiados e colados em cinco ficheiros.
 - Substituir os emoji por ícones de uma família única
 - `AuthShell` partilhado: `login` e `register` são 80% o mesmo ficheiro
 - Apagar os componentes órfãos: `categoryCard`, `cartItem`, `orderSummary`
-- Ligar o drawer do carrinho ao ícone do header. Está construído e nunca abre
+- Decidir o comportamento do ícone do carrinho no header: hoje navega para
+  `/carrinho` e o drawer só abre ao adicionar um produto. `openCart` está
+  importado no header sem nunca ser chamado
 
 **Critério de pronto:** nenhuma cor literal e nenhum `<button>` solto em páginas.
 
