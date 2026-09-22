@@ -48,6 +48,7 @@ código.
 | `COOKIES.md` | o que o site guarda, medido |
 | `DADOS-PESSOAIS.md` | proteção de dados |
 | `SEGURANCA.md` | o que foi corrigido, e os testes que o mantêm corrigido |
+| `PERFORMANCE.md` | o que foi medido, e o que a medição desmentiu |
 
 ## Regras do domínio
 

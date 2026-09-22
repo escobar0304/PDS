@@ -373,6 +373,18 @@ Confirma se é o caso. Mesmo estando isento, o alvo deve ser WCAG 2.1 AA.
 
 ## F14. Performance
 
+> **Feita em 22/09/2026.** O detalhe está em `docs/PERFORMANCE.md`.
+>
+> **A fase desmentiu o que estava escrito aqui.** Esta secção dizia que as
+> imagens pesavam ~450 kB cada na entrega. Medido: o otimizador do Next já
+> estava a funcionar e o browser recebia 15–26 kB nos cartões. Os 3,7 MB são
+> tamanho de repositório, não de entrega.
+>
+> O que valeu: qualidade de 90 para 82 (medido, 42,4 dB de PSNR, indistinguível
+> a 100%) e `sizes` em oito imagens que o não tinham — sem ele, a miniatura de
+> 80 px do carrinho pedia a imagem a 1920 px. **582 kB passam a 287 kB.**
+
+
 - As oito imagens de conteúdo são JPEG com extensão `.png`, a 2048 por 1152 e cerca
   de 450 KB cada. Os dois ficheiros de logótipo pesam 2.1 MB cada
 - Converter para WebP ou AVIF, redimensionar, corrigir extensões
@@ -512,7 +524,7 @@ F10 Páginas institucionais       depende de F3
 F11 Segurança                    independente, pode correr em paralelo
 F12 Área pessoal                 depende de F3 e F6
 F13 Acessibilidade               depois de F10
-F14 Performance                  depois de F1
+F14 Performance                  feita
 F15 SEO                          robots.ts feito na F3; o resto por último
 ```
 

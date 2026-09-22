@@ -149,3 +149,47 @@ test('o cabeçalho e o rodapé mostram a marca uma vez cada', async ({ page }) =
     page.getByRole('contentinfo').getByRole('img', { name: 'Pétalas de Sonho' }),
   ).toHaveCount(1);
 });
+
+test('as páginas cabem no orçamento de imagens', async ({ page }) => {
+  // Medido em 22/09/2026, com a cache desligada: a home custava 582 kB de
+  // imagens e passou a 287 kB. O limite e generoso de propósito — serve para
+  // apanhar uma regressao grande, como perder o `sizes` ou voltar a q=90,
+  // e nao para discutir kilobytes.
+  const LIMITE_KB = 420;
+
+  let bytes = 0;
+  page.on('response', async (res) => {
+    if (!(res.headers()['content-type'] ?? '').startsWith('image/')) return;
+    try {
+      bytes += (await res.body()).length;
+    } catch {
+      // Resposta sem corpo acessivel: nao conta.
+    }
+  });
+
+  await page.goto('/');
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(2000);
+
+  expect(Math.round(bytes / 1024), 'orçamento de imagens da página inicial').toBeLessThan(
+    LIMITE_KB,
+  );
+});
+
+test('nenhuma imagem fica por carregar', async ({ page }) => {
+  for (const rota of ['/', '/sobre-nos']) {
+    await page.goto(rota);
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(2000);
+
+    const partidas = await page
+      .locator('img')
+      .evaluateAll((imgs) =>
+        imgs
+          .filter((i) => !(i as HTMLImageElement).naturalWidth)
+          .map((i) => (i as HTMLImageElement).currentSrc || i.getAttribute('src') || '?'),
+      );
+
+    expect(partidas, `imagens partidas em ${rota}`).toEqual([]);
+  }
+});

@@ -61,9 +61,9 @@ export default function Hero({
           src={imageSrc}
           alt={imageAlt}
           fill
+          sizes="100vw"
           className="object-cover"
           priority
-          quality={90}
         />
         <div aria-hidden className={`absolute inset-0 ${veuBase[overlay]}`} />
         <div aria-hidden className={`absolute inset-0 ${vinheta}`} />

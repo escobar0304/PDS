@@ -57,7 +57,15 @@ const cabecalhos = [
 /** @type {import('next').NextConfig} */
 module.exports = {
   images: {
-    qualities: [90],
+    /**
+     * 82 e nao 90.
+     *
+     * Medido no hero: q=90 da 124 kB, q=82 da 74 kB, e a 100% numa face de
+     * cristal nao se distinguem — PSNR de 42,4 dB contra q=95, acima do
+     * limiar de impercetibilidade. Abaixo disto ja se perde textura mineral,
+     * e numa loja de pedras a textura e o produto.
+     */
+    qualities: [82],
   },
   poweredByHeader: false,
   async headers() {
