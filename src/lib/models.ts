@@ -376,3 +376,47 @@ export const User: Model<IUser> =
 
 export const Order: Model<IOrder> =
   mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+
+// ============================================
+// TOKENS DE USO UNICO
+// ============================================
+
+/**
+ * Verificacao de email e reposicao de password.
+ *
+ * Guarda-se o resumo do token, nunca o token. Ver `src/lib/tokens.ts` para o
+ * raciocinio.
+ *
+ * Coleccao propria e nao campos no utilizador: permite mais do que um token
+ * em voo, permite indice de expiracao automatica, e nao suja o documento
+ * principal com estado temporario.
+ */
+export interface IToken extends Document {
+  resumo: string;
+  userId: mongoose.Types.ObjectId;
+  finalidade: 'verificar-email' | 'repor-password';
+  expiraEm: Date;
+  createdAt: Date;
+}
+
+const tokenSchema = new Schema<IToken>(
+  {
+    resumo: { type: String, required: true, unique: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    finalidade: {
+      type: String,
+      enum: ['verificar-email', 'repor-password'],
+      required: true,
+    },
+    expiraEm: { type: Date, required: true },
+  },
+  { timestamps: true }
+);
+
+// O Mongo apaga sozinho os expirados. Sem isto a coleccao so cresce, e cada
+// token que fica e um que ainda pode ser usado se a verificacao de prazo
+// falhar em algum caminho.
+tokenSchema.index({ expiraEm: 1 }, { expireAfterSeconds: 0 });
+
+export const Token: Model<IToken> =
+  mongoose.models.Token || mongoose.model<IToken>('Token', tokenSchema);

@@ -87,3 +87,16 @@ export const esquemaCategoria = z.object({
   image: z.string().trim().max(500).optional().or(z.literal('')),
   order: z.number().int().min(0).max(9999).optional(),
 });
+
+export const esquemaPedidoReposicao = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+});
+
+export const esquemaNovaPassword = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: z.string().min(8).max(200),
+});
+
+export const esquemaVerificacao = z.object({
+  token: z.string().trim().min(20).max(200),
+});

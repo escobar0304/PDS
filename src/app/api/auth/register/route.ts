@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { hash } from 'argon2';
 import connectDB from '@/lib/db';
-import { User } from '@/lib/models';
 import { consumir, identificar } from '@/lib/limites';
 import { esquemaRegisto, lerCorpo } from '@/lib/validacao';
+import { Token, User } from '@/lib/models';
+import { expiraEm, gerarToken, ligacaoToken, resumir } from '@/lib/tokens';
+import { enviarVerificacao } from '@/services/mailer';
 
 /**
  * Criacao de conta.
@@ -52,10 +54,27 @@ export async function POST(request: Request) {
       emailVerified: false,
     });
 
+    // O endereco fica por confirmar ate alguem abrir a ligacao que so chega a
+    // caixa de correio dele. Sem isto, qualquer pessoa se regista com o email
+    // de outra — que hoje nao da acesso a nada, mas dara quando houver
+    // encomendas associadas a conta.
+    const token = gerarToken();
+    await Token.create({
+      resumo: resumir(token),
+      userId: user._id,
+      finalidade: 'verificar-email',
+      expiraEm: expiraEm('verificar-email'),
+    });
+
+    // Sem `await`: o registo nao fica refem do SMTP. Se o envio falhar, a
+    // conta existe na mesma e o email pode ser pedido outra vez.
+    void enviarVerificacao(user.email, user.name, ligacaoToken('verificar-email', token))
+      .catch((erro) => console.error('Falha ao enviar verificação:', erro));
+
     return NextResponse.json(
       {
         user: { id: user._id, name: user.name, email: user.email },
-        message: 'Conta criada com sucesso!',
+        message: 'Conta criada. Enviámos uma mensagem para confirmar o seu email.',
       },
       { status: 201 },
     );
