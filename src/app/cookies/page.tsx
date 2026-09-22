@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import InterruptorMapa from '@/components/interruptorMapa';
 import { Alert, Card, Container, PageHeader } from '@/components/ui';
 
 export const metadata: Metadata = {
@@ -45,6 +46,12 @@ const ITENS = [
     duracao: 'Até esvaziar o carrinho ou limpar os dados do navegador',
   },
   {
+    nome: 'pds.mapa',
+    tipo: 'Armazenamento local',
+    fim: 'Guarda se escolheu mostrar sempre o mapa da loja. Só existe se ligar essa opção.',
+    duracao: 'Até desligar a opção ou limpar os dados do navegador',
+  },
+  {
     nome: 'nextauth.message',
     tipo: 'Armazenamento local',
     fim: 'Sincroniza o estado da sessão entre separadores abertos do mesmo site.',
@@ -69,16 +76,20 @@ export default function CookiesPage() {
             <div className="mt-10 space-y-8 text-ink">
               <section>
                 <h2 className="mb-3 font-serif text-2xl text-rose-700">
-                  Não lhe pedimos consentimento. Aqui está porquê.
+                  Porque é que não há aqui uma barra de cookies
                 </h2>
                 <p className="leading-relaxed text-ink-muted">
                   A lei exige consentimento para guardar informação no seu equipamento,
                   com uma exceção: o que é estritamente necessário para lhe prestar o
                   serviço que pediu. Este sítio não tem publicidade, não tem análise de
-                  tráfego e não partilha nada com terceiros para fins de marketing.
-                  Tudo o que guardamos cai na exceção — por isso não há nada para
-                  aceitar nem para recusar, e uma barra a pedir-lhe autorização seria
-                  a fingir uma escolha que não existe.
+                  tráfego e não partilha nada com terceiros para fins de marketing —
+                  tudo o que guardamos cai na exceção.
+                </p>
+                <p className="mt-3 leading-relaxed text-ink-muted">
+                  Há uma única coisa que vem de fora, o mapa da loja, e essa não carrega
+                  sem que a peça. Fica em baixo, com o interruptor para a ligar ou
+                  desligar quando quiser. Por isso não encontra aqui uma barra a pedir-lhe
+                  autorização: seria a fingir uma escolha que, tirando o mapa, não existe.
                 </p>
                 <p className="mt-3 leading-relaxed text-ink-muted">
                   Se isso mudar, esta página muda primeiro.
@@ -113,19 +124,27 @@ export default function CookiesPage() {
               </section>
 
               <section>
-                <h2 className="mb-3 font-serif text-2xl text-rose-700">O mapa em Sobre Nós</h2>
+                <h2 className="mb-3 font-serif text-2xl text-rose-700">O mapa da loja</h2>
                 <p className="leading-relaxed text-ink-muted">
                   A página <Link href="/sobre-nos" className="text-rose-700 hover:underline">Sobre Nós</Link>{' '}
-                  pode mostrar um mapa fornecido pela Google. Esse mapa{' '}
+                  mostra onde fica a loja num mapa da Google. Esse mapa é a única coisa neste
+                  sítio que vem de fora, e por isso{' '}
                   <strong className="font-medium text-ink">não carrega sozinho</strong>: fica
-                  um aviso no lugar dele e só é pedido à Google se carregar no botão. Até lá,
-                  o seu browser não contacta a Google nem lhe envia o seu endereço IP.
+                  um botão no lugar dele.
                 </p>
                 <p className="mt-3 leading-relaxed text-ink-muted">
-                  A escolha não fica guardada. Se voltar à página, o mapa está outra vez em
-                  espera. É de propósito: guardá-la obrigaria a pedir-lhe consentimento e a
-                  dar-lhe onde o retirar — exatamente o que esta solução evita.
+                  Carregar num mapa da Google faz o seu navegador contactar a Google, que
+                  fica a saber o seu endereço de internet e a página onde está, e pode
+                  guardar informação no seu equipamento. Nada disso acontece enquanto não
+                  pedir o mapa.
                 </p>
+                <p className="mt-3 leading-relaxed text-ink-muted">
+                  Se preferir não repetir a escolha em cada visita, pode deixá-lo ligado:
+                </p>
+
+                <div className="mt-5">
+                  <InterruptorMapa />
+                </div>
               </section>
 
               <section>

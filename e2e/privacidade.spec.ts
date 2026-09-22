@@ -34,7 +34,7 @@ test('nenhuma página contacta terceiros sem a pessoa pedir', async ({ page, con
   ).toEqual([]);
 });
 
-test('o mapa só contacta a Google depois de carregar no botão', async ({ page, context }) => {
+test('o mapa só contacta a Google depois de a pessoa pedir', async ({ page, context }) => {
   const pedidosGoogle: string[] = [];
   context.on('request', (req) => {
     if (new URL(req.url()).hostname.endsWith('google.com')) pedidosGoogle.push(req.url());
@@ -44,26 +44,65 @@ test('o mapa só contacta a Google depois de carregar no botão', async ({ page,
   await page.waitForTimeout(800);
 
   expect(pedidosGoogle, 'o mapa não pode carregar sozinho').toEqual([]);
-  await expect(page.getByRole('button', { name: 'Carregar o mapa' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Carregar o mapa' }).click();
+  await page.getByRole('button', { name: 'Ver o mapa' }).click();
 
   await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
 });
 
-test('a escolha do mapa não é guardada entre visitas', async ({ page }) => {
+test('ver o mapa uma vez não o liga para sempre', async ({ page }) => {
   await page.goto('/sobre-nos');
-  await page.getByRole('button', { name: 'Carregar o mapa' }).click();
+  await page.getByRole('button', { name: 'Ver o mapa' }).click();
   await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
 
-  // Guardar a escolha exigiria consentimento informado e forma de o retirar.
+  // Sem passar pelo interruptor, a escolha vale so para esta visita.
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Carregar o mapa' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
+});
+
+test('o interruptor liga e desliga o mapa, e o estado persiste', async ({ page }) => {
+  await page.goto('/cookies');
+
+  const interruptor = page.getByRole('switch', { name: 'Mostrar sempre o mapa' });
+  await expect(interruptor).toHaveAttribute('aria-checked', 'false');
+
+  await interruptor.click();
+  await expect(interruptor).toHaveAttribute('aria-checked', 'true');
+
+  await page.goto('/sobre-nos');
+  await expect(page.locator('iframe[title*="Localização"]')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toHaveCount(0);
+
+  // Retirar tem de ser tao facil como dar: e o mesmo controlo.
+  await page.goto('/cookies');
+  await page.getByRole('switch', { name: 'Mostrar sempre o mapa' }).click();
+
+  await page.goto('/sobre-nos');
+  await expect(page.getByRole('button', { name: 'Ver o mapa' })).toBeVisible();
+  await expect(page.locator('iframe[title*="Localização"]')).toHaveCount(0);
+});
+
+test('o interruptor começa desligado num browser limpo', async ({ page, context }) => {
+  await page.goto('/cookies');
+  await expect(page.getByRole('switch', { name: 'Mostrar sempre o mapa' })).toHaveAttribute(
+    'aria-checked',
+    'false',
+  );
+
+  const guardado = await page.evaluate(() => localStorage.getItem('pds.mapa'));
+  expect(guardado, 'nada pré-selecionado').toBeNull();
+
+  const cookies = await context.cookies();
+  expect(
+    cookies.map((c) => c.name).filter((n) => n.includes('mapa')),
+    'a preferência não é um cookie, não vai para o servidor',
+  ).toEqual([]);
 });
 
 test('o site só guarda o que a página /cookies declara', async ({ page, context }) => {
   const declarados = ['next-auth.csrf-token', 'next-auth.callback-url', 'next-auth.session-token'];
-  const declaradosLocal = ['cart', 'nextauth.message'];
+  const declaradosLocal = ['cart', 'nextauth.message', 'pds.mapa'];
 
   await mockApi(page);
   for (const rota of ROTAS_PUBLICAS) {

@@ -22,7 +22,7 @@ Resultado:
 | | encontrado |
 |---|---|
 | Cookies | 2 (`next-auth.csrf-token`, `next-auth.callback-url`) — ambos `httpOnly`, ambos de sessão |
-| `localStorage` | `cart`, `nextauth.message` |
+| `localStorage` | `cart`, `nextauth.message` (e `pds.mapa`, se ligar o mapa) |
 | `sessionStorage` | nenhum |
 | Domínios externos | **`www.google.com`** |
 
@@ -42,26 +42,42 @@ Passa despercebido a auditorias que só olham para `document.cookie`, porque o
 cookie não é do site. Mas a Diretiva ePrivacy não distingue pela origem: o que
 conta é o acesso ao equipamento.
 
-## Porquê carregamento por clique e não um banner
+## Porquê isto e não um banner
 
 O banner é a resposta automática, e aqui seria a errada.
 
-**Um banner pediria consentimento para coisas que não precisam dele.** As
-orientações da CNPD são claras em que não se pede autorização para o que está
-isento; fazê-lo treina as pessoas a carregar em "aceitar" sem ler, e finge uma
-escolha que não existe.
+**Pediria consentimento para coisas que não precisam dele.** As orientações da
+CNPD são claras em que não se pede autorização para o que está isento; fazê-lo
+treina as pessoas a carregar em "aceitar" sem ler, e finge uma escolha que, para
+tudo menos o mapa, não existe.
 
-**Havia um terceiro, num sítio só.** Pedir uma vez, onde está, custa menos a
-quem visita do que uma barra em todas as páginas. E a informação chega no
-momento em que é relevante, em vez de num aviso genérico à entrada.
+**Havia um terceiro, num sítio só.** Pedir onde ele está custa menos a quem
+visita do que uma barra em todas as páginas, e a informação chega no momento em
+que é relevante em vez de num aviso genérico à entrada.
 
-**Um banner traz consigo obrigações que a solução simples não tem:** guardar o
-consentimento, dar onde o retirar com a mesma facilidade, registar quando foi
-dado. Tudo isso existe para resolver um problema que o site deixa de ter.
+## Como está feito
 
-A escolha de carregar o mapa **não é guardada de propósito**. Guardá-la seria
-consentimento, e consentimento exige forma de o retirar — ou seja, exigia o
-banner que esta decisão evita.
+Em dois níveis, porque servem pessoas diferentes.
+
+**No mapa**, um aviso curto: "Onde estamos — mapa fornecido pela Google", com um
+botão. Quem está ali quer ver onde fica a loja, não ler sobre tratamento de
+dados. Carregar no botão mostra o mapa **só naquela visita**.
+
+**Em `/cookies`**, a explicação inteira — o que a Google passa a saber, e porquê
+— e um interruptor *Mostrar sempre o mapa*. Ligado, o mapa aparece logo, sem
+botão. A preferência fica em `localStorage`, na chave `pds.mapa`, e nunca chega
+ao servidor.
+
+A primeira versão desta fase punha a explicação toda no lugar do mapa, a falar
+de endereços IP. Era linguagem de auditoria num sítio onde alguém só quer ver
+onde fica a loja. **Isto veio de uma correção do dono do negócio**, e está
+melhor: o aviso é proporcional ao momento, e a explicação está onde quem a
+procura a vai procurar.
+
+Guardar a escolha é consentimento, e consentimento exige poder retirá-lo tão
+facilmente como se deu. Aqui é o **mesmo interruptor**, no mesmo sítio, com o
+mesmo peso visual — que é onde a maioria dos painéis falha, ao esconder o
+"rejeitar" num canto. Começa desligado e nada está pré-selecionado.
 
 ## A rede
 
@@ -69,7 +85,9 @@ banner que esta decisão evita.
 
 - qualquer página pública contactar um domínio externo sem interação
 - o mapa carregar sozinho
-- a escolha do mapa passar a ser guardada
+- carregar em *Ver o mapa* passar a valer para além daquela visita
+- o interruptor aparecer ligado num browser limpo
+- a preferência passar a ser um cookie, ou seja, a viajar para o servidor
 - aparecer um cookie ou uma chave de `localStorage` que `/cookies` não declare
 
 O valor está em falhar no dia em que alguém acrescentar um script de análise ou

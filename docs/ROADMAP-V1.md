@@ -218,8 +218,11 @@ Trabalho:
 > o que as orientações da CNPD desaconselham.
 >
 > O único terceiro era o mapa da Google em `/sobre-nos`, que carregava sozinho.
-> Passou a carregamento por clique. Há uma página `/cookies` com o inventário
-> medido e testes que falham se aparecer um terceiro novo.
+> Passou a carregar só a pedido: um botão no lugar do mapa para aquela visita, e
+> um interruptor em `/cookies` para quem o quiser sempre. O mesmo interruptor dá
+> e retira, começa desligado, e a preferência fica no browser. Há uma página
+> `/cookies` com o inventário medido e testes que falham se aparecer um terceiro
+> novo ou se algo passar a estar ligado por omissão.
 >
 > O banner volta a ser a resposta certa no dia em que houver análise de tráfego,
 > publicidade ou *scripts* de pagamento fora do checkout. As regras para esse
