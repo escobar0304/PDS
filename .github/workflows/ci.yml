@@ -40,3 +40,34 @@ jobs:
       # depender de uma base de dados viva, falha aqui e nao em producao.
       - name: Build
         run: npm run build
+
+  e2e:
+    name: Testes de ponta a ponta
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar o Chromium
+        run: npx playwright install --with-deps chromium
+
+      # O servidor de testes arranca sem MONGODB_URI de proposito: a suite
+      # verifica que o site aguenta a base de dados em baixo.
+      - name: Playwright
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

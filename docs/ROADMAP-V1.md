@@ -55,9 +55,21 @@ volta a acontecer.
 - **`.env.example`** com todas as chaves necessárias, sem valores
 - **`error.tsx`, `not-found.tsx` e `loading.tsx`** na raiz do App Router. Hoje um erro
   de runtime mostra o ecrã por omissão do Next
-- **Testes.** Vitest para a lógica pura (carrinho, ordenação, filtros, handlers de API)
-  e Playwright para quatro percursos: abrir a home, filtrar a loja, abrir um produto,
-  submeter o formulário de contacto
+- **Testes.** Vitest para a lógica pura e Playwright para os percursos, divididos
+  por domínio em vez de um ficheiro único:
+
+  | Ficheiro | Cobre |
+  |---|---|
+  | `e2e/resiliencia.spec.ts` | todas as rotas renderizam com a base de dados em baixo; erro da API distinguido de catálogo vazio |
+  | `e2e/navegacao.spec.ts` | links do cabeçalho e do rodapé, logótipo, migalhas, loja até ao produto |
+  | `e2e/loja.spec.ts` | grelha, pesquisa, filtro por categoria, ordenação, esgotados |
+  | `e2e/carrinho.spec.ts` | adicionar, limite de stock, persistência, totais, remover |
+  | `e2e/autenticacao.spec.ts` | formulários, validação, erros do servidor, rota protegida |
+  | `e2e/interface.spec.ts` | menu de telemóvel, foco de teclado, texto alternativo, marcas estruturais, sem scroll horizontal |
+
+  A API é interceptada com fixtures, por isso a suite é determinística e não
+  precisa de base de dados. O servidor de testes arranca **sem** `MONGODB_URI`
+  de propósito: é assim que se verifica que o site aguenta a base de dados em baixo.
 
 **Critério de pronto:** um PR que parta o build não consegue ser fundido.
 

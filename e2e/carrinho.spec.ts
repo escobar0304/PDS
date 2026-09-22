@@ -1,0 +1,88 @@
+import { expect, test } from '@playwright/test';
+import { mockApi } from './fixtures/api';
+
+test.beforeEach(async ({ page }) => {
+  await mockApi(page);
+});
+
+const contador = (page: import('@playwright/test').Page) =>
+  page.getByRole('banner').locator('a[aria-label="Carrinho de Compras"] span');
+
+test('adicionar da loja abre o painel e conta a unidade', async ({ page }) => {
+  await page.goto('/loja');
+
+  await page
+    .locator('div')
+    .filter({ has: page.getByRole('heading', { name: 'Quartzo Rosa Bruto' }) })
+    .last()
+    .getByRole('button', { name: 'Adicionar ao carrinho' })
+    .click();
+
+  await expect(page.getByRole('heading', { name: /Carrinho \(1\)/ })).toBeVisible();
+  await expect(contador(page)).toHaveText('1');
+});
+
+test('a quantidade nunca passa o stock disponível', async ({ page }) => {
+  await page.goto('/produto/quartzo-rosa-bruto');
+
+  // stock = 3, portanto o botao de aumentar tem de parar aos 3
+  for (let i = 0; i < 6; i++) {
+    const mais = page.getByRole('button', { name: 'Aumentar quantidade' });
+    if (await mais.isDisabled()) break;
+    await mais.click();
+  }
+
+  await expect(page.getByRole('button', { name: 'Aumentar quantidade' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
+  await expect(contador(page)).toHaveText('3');
+});
+
+test('o carrinho sobrevive a recarregar a página', async ({ page }) => {
+  await page.goto('/produto/ametista-polida');
+  await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
+  await expect(contador(page)).toHaveText('1');
+
+  await page.reload();
+
+  await expect(contador(page)).toHaveText('1');
+});
+
+test('dados corrompidos no armazenamento não rebentam o site', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.setItem('cart', '{isto não é json'));
+  await page.reload();
+
+  await expect(page.getByText('Alguma coisa correu mal')).toHaveCount(0);
+  await expect(page.locator('h1').first()).toBeVisible();
+});
+
+test('a página do carrinho soma, altera quantidades e remove', async ({ page }) => {
+  await page.goto('/produto/ametista-polida');
+  await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
+  await page.goto('/carrinho');
+
+  await expect(page.getByText('42.50€').first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Aumentar quantidade' }).click();
+  await expect(page.getByText('85.00€').first()).toBeVisible();
+
+  await page.getByRole('button', { name: 'Remover item' }).click();
+  await expect(page.getByRole('heading', { name: 'Carrinho Vazio' })).toBeVisible();
+});
+
+test('o carrinho vazio convida a ir à loja', async ({ page }) => {
+  await page.goto('/carrinho');
+
+  await expect(page.getByRole('heading', { name: 'Carrinho Vazio' })).toBeVisible();
+  await page.getByRole('link', { name: 'Ir às Compras' }).click();
+  await expect(page).toHaveURL(/\/loja$/);
+});
+
+// O checkout ainda nao existe. Fica registado para nao passar despercebido.
+test.fixme('finalizar compra leva a um checkout que funciona', async ({ page }) => {
+  await page.goto('/produto/ametista-polida');
+  await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
+  await page.goto('/carrinho');
+  await page.getByRole('link', { name: 'Finalizar Compra' }).click();
+  await expect(page).toHaveURL(/\/checkout/);
+});

@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
+import { fetchList } from '@/lib/api';
 
 interface Product {
   _id: string;
@@ -33,6 +34,7 @@ function LojaContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('featured');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories();
@@ -48,26 +50,28 @@ function LojaContent() {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/categories');
-      const data = await response.json();
-      setCategories(data);
+      setCategories(await fetchList<Category>('/api/categories'));
     } catch (error) {
+      // Sem categorias a loja continua utilizavel, so perde os filtros.
       console.error('Erro ao carregar categorias:', error);
+      setCategories([]);
     }
   };
 
   const fetchProducts = async () => {
     setLoading(true);
+    setErro(null);
     try {
-      let url = '/api/products?';
-      if (selectedCategory) url += `category=${selectedCategory}&`;
-      if (sortBy) url += `sort=${sortBy}`;
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      setProducts(data);
+      const params = new URLSearchParams();
+      if (selectedCategory) params.set('category', selectedCategory);
+      if (sortBy) params.set('sort', sortBy);
+
+      setProducts(await fetchList<Product>(`/api/products?${params}`));
     } catch (error) {
       console.error('Erro ao carregar produtos:', error);
+      // Um erro de servidor nao pode ser mostrado como catalogo vazio.
+      setErro('Não foi possível carregar os produtos.');
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -176,11 +180,26 @@ function LojaContent() {
                   <p className="text-sm text-[#6b6b6b]">
                     {loading ? (
                       'A carregar...'
+                    ) : erro ? (
+                      ''
                     ) : (
                       `${filteredProducts.length} produto${filteredProducts.length !== 1 ? 's' : ''} encontrado${filteredProducts.length !== 1 ? 's' : ''}`
                     )}
                   </p>
                 </div>
+
+                {/* Erro de carregamento */}
+                {!loading && erro && (
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-red-200 bg-red-50 p-6 text-center"
+                  >
+                    <p className="mb-4 text-base text-red-800">{erro}</p>
+                    <button onClick={fetchProducts} className="btn-secondary">
+                      Tentar novamente
+                    </button>
+                  </div>
+                )}
 
                 {/* Loading State */}
                 {loading ? (
@@ -195,7 +214,7 @@ function LojaContent() {
                       </div>
                     ))}
                   </div>
-                ) : filteredProducts.length > 0 ? (
+                ) : erro ? null : filteredProducts.length > 0 ? (
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {filteredProducts.map((product) => (
                       <ProductCard key={product._id} product={product} />
