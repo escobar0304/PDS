@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
+import { fetchList } from '@/lib/api';
 
 interface Category {
   _id: string;
@@ -19,18 +20,20 @@ interface Category {
 export default function Catalogo() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = async () => {
+    setErro(null);
     try {
-      const response = await fetch('/api/categories');
-      const data = await response.json();
-      setCategories(data);
+      setCategories(await fetchList<Category>('/api/categories'));
     } catch (error) {
       console.error('Erro ao carregar categorias:', error);
+      setErro('Não foi possível carregar as categorias.');
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -62,6 +65,24 @@ export default function Catalogo() {
                 Descubra a categoria perfeita para encontrar o seu cristal ideal
               </p>
             </div>
+
+            {!loading && erro && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-200 bg-red-50 p-6 text-center"
+              >
+                <p className="mb-4 text-base text-red-800">{erro}</p>
+                <button
+                  onClick={() => {
+                    setLoading(true);
+                    fetchCategories();
+                  }}
+                  className="btn-secondary"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            )}
 
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -108,7 +129,7 @@ export default function Catalogo() {
               </div>
             )}
 
-            {!loading && categories.length === 0 && (
+            {!loading && !erro && categories.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-lg text-[#6b6b6b]">
                   Nenhuma categoria disponível no momento.
