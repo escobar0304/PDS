@@ -105,8 +105,11 @@ test('todos os campos de formulário têm etiqueta associada', async ({ page }) 
         campos
           .filter((c) => {
             const id = c.getAttribute('id');
-            const temLabel = id && document.querySelector(`label[for="${CSS.escape(id)}"]`);
-            return !temLabel && !c.getAttribute('aria-label');
+            // Tres formas validas de dar nome a um campo: um <label for>, o
+            // campo dentro do proprio <label>, ou um aria-label.
+            const porFor = id && document.querySelector(`label[for="${CSS.escape(id)}"]`);
+            const porDentro = c.closest('label');
+            return !porFor && !porDentro && !c.getAttribute('aria-label');
           })
           .map((c) => c.outerHTML.slice(0, 80)),
       );

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { identificacaoCompleta } from '@/lib/empresa';
 
 /**
  * O site so pode ser indexado depois de ter a camada legal obrigatoria:
@@ -10,7 +11,14 @@ import type { MetadataRoute } from 'next';
  * Para levantar o bloqueio basta definir SITE_INDEXAVEL=true no ambiente de
  * producao, depois de F4 a F9 estarem publicadas.
  */
-const indexavel = process.env.SITE_INDEXAVEL === 'true';
+/**
+ * Indexar exige duas coisas ao mesmo tempo: a intencao (a variavel de
+ * ambiente) e os dados obrigatorios do prestador preenchidos. A segunda nao
+ * se esquece nem se liga por engano — sem denominacao, NIF, morada, contactos
+ * e entidade de resolucao de litigios, o site continua bloqueado mesmo com a
+ * variavel a true.
+ */
+const indexavel = process.env.SITE_INDEXAVEL === 'true' && identificacaoCompleta();
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petalasdesonho.pt';
 
