@@ -10,6 +10,7 @@ export default function Footer() {
   const legalLinks = [
     { href: '/privacidade', label: 'Política de Privacidade' },
     { href: '/termos', label: 'Termos e Condições' },
+    { href: '/cookies', label: 'Cookies' },
     { href: 'https://www.livroreclamacoes.pt', label: 'Livro de Reclamações' },
     { href: '/envios', label: 'Envios e Devoluções' },
     { href: '/faq', label: 'Perguntas Frequentes' },

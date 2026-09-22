@@ -161,6 +161,11 @@ Tem de estar acessível de forma permanente e direta:
 **Preciso destes dados da tua parte.** É o único bloqueio de conteúdo desta fase.
 Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
 
+> **Confirmado em 22/09/2026: não é sociedade.** Sendo empresário em nome
+> individual, caem as duas últimas linhas da lista acima — não há conservatória,
+> número de matrícula nem capital social a indicar. Ficam por saber o nome, o
+> NIF, o domicílio e os contactos efetivos.
+
 ## F5. Livro de Reclamações e resolução de litígios
 
 **Base:** DL 156/2005, com as alterações do DL 74/2017, e Lei 144/2015, art. 18º.
@@ -206,6 +211,28 @@ Trabalho:
 - **Política de conservação** com prazos concretos por tipo de dado
 
 ## F7. Cookies e armazenamento local
+
+> **Feita em 22/09/2026, e com uma conclusão diferente da planeada.** O detalhe
+> está em `docs/COOKIES.md`.
+>
+> Esta secção previa banner de consentimento e painel de preferências. Depois de
+> **medir** o que o site guarda de facto — dois cookies do NextAuth, ambos de
+> sessão e `httpOnly`, mais o carrinho em `localStorage` — verificou-se que está
+> tudo isento ao abrigo do art. 5.º, n.º 3 da Diretiva ePrivacy. **Não há nada
+> para consentir**, e um banner pediria autorização para o que não precisa dela,
+> o que as orientações da CNPD desaconselham.
+>
+> O único terceiro era o mapa da Google em `/sobre-nos`, que carregava sozinho.
+> Passou a carregar só a pedido: um botão no lugar do mapa para aquela visita, e
+> um interruptor em `/cookies` para quem o quiser sempre. O mesmo interruptor dá
+> e retira, começa desligado, e a preferência fica no browser. Há uma página
+> `/cookies` com o inventário medido e testes que falham se aparecer um terceiro
+> novo ou se algo passar a estar ligado por omissão.
+>
+> O banner volta a ser a resposta certa no dia em que houver análise de tráfego,
+> publicidade ou *scripts* de pagamento fora do checkout. As regras para esse
+> dia ficam registadas abaixo.
+
 
 **Base:** Diretiva ePrivacy, Lei 41/2004 e as orientações da CNPD sobre cookies.
 
