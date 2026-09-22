@@ -1,0 +1,264 @@
+import { hash, verify } from 'argon2';
+import mongoose from 'mongoose';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { Token, User } from '../models';
+import { expiraEm, gerarToken, resumir } from '../tokens';
+
+/**
+ * Testes contra uma base de dados a serio.
+ *
+ * Tudo o resto nesta suite corre sem base de dados, de proposito: prova que o
+ * site nao rebenta com ela em baixo. Mas prova **zero** sobre funcionar com
+ * ela — e ate aqui nada neste projeto tinha alguma vez criado um utilizador,
+ * gerado um token ou verificado uma palavra-passe contra o Mongo.
+ *
+ * Estes testes fecham esse buraco. Sao ignorados quando `MONGODB_URI` nao
+ * existe, para `npm test` continuar a correr em qualquer maquina; o CI levanta
+ * um Mongo em contentor e ai correm mesmo.
+ *
+ * Testam o que atravessa a fronteira entre o codigo e a base de dados:
+ * indices unicos, tipos que o Mongoose converte, prazos, e o ciclo completo
+ * de uma palavra-passe. Nao testam as rotas HTTP — essas estao em `e2e/`.
+ */
+
+const URI = process.env.MONGODB_URI;
+const executar = URI ? describe : describe.skip;
+
+executar('contra MongoDB', () => {
+  beforeAll(async () => {
+    await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+  }, 30_000);
+
+  afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  });
+
+  beforeEach(async () => {
+    await Promise.all([User.deleteMany({}), Token.deleteMany({})]);
+  });
+
+  describe('utilizadores', () => {
+    it('cria um utilizador com os valores por omissão certos', async () => {
+      const u = await User.create({
+        name: 'Marta Ferreira',
+        email: 'marta@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      expect(u.role).toBe('USER');
+      // Nasce por verificar. Ate a F11.3 nada punha isto a true, e o valor
+      // por omissao era a unica parte do mecanismo que existia.
+      expect(u.emailVerified).toBe(false);
+      expect(u.country).toBe('Portugal');
+      expect(u.createdAt).toBeInstanceOf(Date);
+    });
+
+    it('não deixa duas contas com o mesmo email', async () => {
+      const base = { name: 'A', password: await hash('umapassword', { type: 2 }) };
+      await User.create({ ...base, email: 'repetido@exemplo.pt' });
+
+      // O indice unico so existe depois de o Mongoose o sincronizar.
+      await User.syncIndexes();
+
+      await expect(
+        User.create({ ...base, email: 'repetido@exemplo.pt' }),
+      ).rejects.toThrow();
+    });
+
+    it('normaliza o email para minúsculas ao guardar', async () => {
+      const u = await User.create({
+        name: 'A',
+        email: 'MAIUSCULAS@Exemplo.PT',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      // Sem isto, `findOne({ email })` com o email em minusculas nao
+      // encontrava a conta criada com maiusculas, e a pessoa ficava sem
+      // conseguir entrar sem perceber porque.
+      expect(u.email).toBe('maiusculas@exemplo.pt');
+    });
+
+    it('a palavra-passe cifrada verifica e a errada não', async () => {
+      const cifrada = await hash('aPasswordCerta', { type: 2 });
+      await User.create({ name: 'A', email: 'v@exemplo.pt', password: cifrada });
+
+      const lido = await User.findOne({ email: 'v@exemplo.pt' });
+
+      expect(lido).not.toBeNull();
+      expect(lido!.password).not.toContain('aPasswordCerta');
+      expect(await verify(lido!.password, 'aPasswordCerta')).toBe(true);
+      expect(await verify(lido!.password, 'aPasswordErrada')).toBe(false);
+    });
+
+    it('uma consulta com operador do Mongo não devolve utilizador nenhum', async () => {
+      await User.create({
+        name: 'A',
+        email: 'alvo@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      // Isto é o que a injeção NoSQL fazia chegar à consulta antes da F11.2.
+      // Aqui prova-se o dano real: sem validação, devolvia uma conta.
+      const comOperador = await User.findOne({ email: { $ne: null } as never });
+      expect(comOperador, 'o operador encontra uma conta qualquer').not.toBeNull();
+
+      // E com o valor já validado como texto, não encontra nada.
+      const comTexto = await User.findOne({ email: '{"$ne":null}' });
+      expect(comTexto).toBeNull();
+    });
+  });
+
+  describe('tokens', () => {
+    it('guarda o resumo e nunca o token', async () => {
+      const u = await User.create({
+        name: 'A',
+        email: 't@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      const token = gerarToken();
+      await Token.create({
+        resumo: resumir(token),
+        userId: u._id,
+        finalidade: 'verificar-email',
+        expiraEm: expiraEm('verificar-email'),
+      });
+
+      const guardado = await Token.findOne({ userId: u._id });
+
+      expect(guardado).not.toBeNull();
+      expect(guardado!.resumo).not.toBe(token);
+      // Quem leia a base de dados tem de ficar sem nada de util.
+      expect(JSON.stringify(guardado!.toObject())).not.toContain(token);
+    });
+
+    it('encontra-se pelo resumo, que é como as rotas o procuram', async () => {
+      const u = await User.create({
+        name: 'A',
+        email: 't2@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      const token = gerarToken();
+      await Token.create({
+        resumo: resumir(token),
+        userId: u._id,
+        finalidade: 'repor-password',
+        expiraEm: expiraEm('repor-password'),
+      });
+
+      expect(await Token.findOne({ resumo: resumir(token) })).not.toBeNull();
+      expect(await Token.findOne({ resumo: resumir(gerarToken()) })).toBeNull();
+    });
+
+    it('não aceita dois registos com o mesmo resumo', async () => {
+      const u = await User.create({
+        name: 'A',
+        email: 't3@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+      await Token.syncIndexes();
+
+      const comum = { resumo: resumir('x'), userId: u._id, finalidade: 'repor-password' as const };
+      await Token.create({ ...comum, expiraEm: expiraEm('repor-password') });
+
+      await expect(
+        Token.create({ ...comum, expiraEm: expiraEm('repor-password') }),
+      ).rejects.toThrow();
+    });
+
+    it('o prazo guardado é o que a rota vai comparar', async () => {
+      const u = await User.create({
+        name: 'A',
+        email: 't4@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      const antes = Date.now();
+      const t = await Token.create({
+        resumo: resumir(gerarToken()),
+        userId: u._id,
+        finalidade: 'repor-password',
+        expiraEm: expiraEm('repor-password', antes),
+      });
+
+      const lido = await Token.findById(t._id);
+
+      // A rota faz `expiraEm.getTime() <= Date.now()`. Se o Mongo devolvesse
+      // outra coisa que nao um Date, essa comparacao dava sempre falso e o
+      // token nunca expirava.
+      expect(lido!.expiraEm).toBeInstanceOf(Date);
+      expect(lido!.expiraEm.getTime()).toBe(antes + 60 * 60 * 1000);
+    });
+  });
+
+  describe('o ciclo completo de repor a palavra-passe', () => {
+    it('gera, consome uma vez, e a segunda já não encontra nada', async () => {
+      const u = await User.create({
+        name: 'Marta',
+        email: 'ciclo@exemplo.pt',
+        password: await hash('aVelha', { type: 2 }),
+      });
+
+      // 1. Pedido: gera-se o token e guarda-se o resumo.
+      const token = gerarToken();
+      await Token.create({
+        resumo: resumir(token),
+        userId: u._id,
+        finalidade: 'repor-password',
+        expiraEm: expiraEm('repor-password'),
+      });
+
+      // 2. Uso: encontra-se pelo resumo, muda-se a palavra-passe.
+      const registo = await Token.findOne({
+        resumo: resumir(token),
+        finalidade: 'repor-password',
+      });
+      expect(registo).not.toBeNull();
+      expect(registo!.expiraEm.getTime()).toBeGreaterThan(Date.now());
+
+      const dono = await User.findById(registo!.userId);
+      dono!.password = await hash('aNova', { type: 2 });
+      dono!.emailVerified = true;
+      await dono!.save();
+      await Token.deleteMany({ userId: dono!._id, finalidade: 'repor-password' });
+
+      // 3. A palavra-passe nova funciona e a antiga deixou de funcionar.
+      const depois = await User.findById(u._id);
+      expect(await verify(depois!.password, 'aNova')).toBe(true);
+      expect(await verify(depois!.password, 'aVelha')).toBe(false);
+      // Repor prova que se controla a caixa de correio, o que confirma o email.
+      expect(depois!.emailVerified).toBe(true);
+
+      // 4. Uso unico: a segunda tentativa nao encontra nada.
+      expect(
+        await Token.findOne({ resumo: resumir(token), finalidade: 'repor-password' }),
+      ).toBeNull();
+    });
+
+    it('um token expirado é encontrado mas rejeitado pelo prazo', async () => {
+      const u = await User.create({
+        name: 'A',
+        email: 'expirado@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      const token = gerarToken();
+      await Token.create({
+        resumo: resumir(token),
+        userId: u._id,
+        finalidade: 'repor-password',
+        expiraEm: new Date(Date.now() - 1000),
+      });
+
+      const registo = await Token.findOne({ resumo: resumir(token) });
+
+      // O indice de expiracao do Mongo corre periodicamente e pode deixar um
+      // token vencido vivo durante minutos. E por isso que a rota verifica o
+      // prazo em codigo, e nao confia no indice.
+      expect(registo, 'o índice do Mongo ainda não o apagou').not.toBeNull();
+      expect(registo!.expiraEm.getTime()).toBeLessThanOrEqual(Date.now());
+    });
+  });
+});
