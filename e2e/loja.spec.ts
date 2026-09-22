@@ -17,7 +17,7 @@ test('a grelha mostra os produtos devolvidos pela API', async ({ page }) => {
 test('a pesquisa filtra no cliente', async ({ page }) => {
   await page.goto('/loja');
 
-  await page.getByPlaceholder('Nome do produto...').fill('ametista');
+  await page.getByLabel('Pesquisar').fill('ametista');
 
   await expect(page.getByRole('heading', { name: 'Ametista Polida' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Quartzo Rosa Bruto' })).toHaveCount(0);
@@ -27,10 +27,10 @@ test('a pesquisa filtra no cliente', async ({ page }) => {
 test('a pesquisa sem resultados mostra estado vazio e deixa limpar', async ({ page }) => {
   await page.goto('/loja');
 
-  await page.getByPlaceholder('Nome do produto...').fill('zzzz');
+  await page.getByLabel('Pesquisar').fill('zzzz');
   await expect(page.getByText('Nenhum produto encontrado')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Limpar Filtros' }).click();
+  await page.getByRole('button', { name: 'Limpar filtros' }).click();
   await expect(page.getByRole('heading', { name: 'Quartzo Rosa Bruto' })).toBeVisible();
 });
 

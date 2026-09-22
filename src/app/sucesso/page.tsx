@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { botaoClasses } from '@/components/ui/Button';
 
 export const metadata = { title: 'Pagamento concluído - Pétalas de Sonho' };
 
@@ -15,7 +16,7 @@ export default function SucessoPage() {
         <p className="mx-auto mb-8 max-w-md text-ink-muted">
           Obrigado pela sua compra. Receberá um email de confirmação em breve.
         </p>
-        <Link href="/loja" className="btn-primary">
+        <Link href="/loja" className={botaoClasses()}>
           Continuar a comprar
         </Link>
       </main>

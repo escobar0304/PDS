@@ -3,17 +3,18 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Diamond, Gift, Sparkle, SquaresFour, Truck } from '@phosphor-icons/react';
+import { Alert, botaoClasses, Button, EmptyState, Skeleton } from '@/components/ui';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
 import { fetchList } from '@/lib/api';
-import { Gem, Gift, Sparkles, Truck } from 'lucide-react';
 
 const CARACTERISTICAS = [
-  { Icone: Gem, titulo: 'Autênticos', detalhe: 'Todos os cristais são 100% autênticos' },
+  { Icone: Diamond, titulo: 'Autênticos', detalhe: 'Todos os cristais são 100% autênticos' },
   { Icone: Gift, titulo: 'Embalagem', detalhe: 'Embalagem cuidada e sustentável' },
   { Icone: Truck, titulo: 'Envio Rápido', detalhe: 'Entrega em 2-3 dias úteis' },
-  { Icone: Sparkles, titulo: 'Energia', detalhe: 'Limpeza energética antes do envio' },
+  { Icone: Sparkle, titulo: 'Energia', detalhe: 'Limpeza energética antes do envio' },
 ];
 
 interface Category {
@@ -75,27 +76,29 @@ export default function Catalogo() {
             </div>
 
             {!loading && erro && (
-              <div
-                role="alert"
-                className="rounded-lg border border-danger-700/25 bg-danger-100 p-6 text-center"
+              <Alert
+                tone="erro"
+                action={
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setLoading(true);
+                      fetchCategories();
+                    }}
+                  >
+                    Tentar novamente
+                  </Button>
+                }
               >
-                <p className="mb-4 text-base text-danger-700">{erro}</p>
-                <button
-                  onClick={() => {
-                    setLoading(true);
-                    fetchCategories();
-                  }}
-                  className="btn-secondary"
-                >
-                  Tentar novamente
-                </button>
-              </div>
+                {erro}
+              </Alert>
             )}
 
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="bg-surface-sunken rounded-lg h-80 animate-pulse"></div>
+                  <Skeleton key={i} className="h-80 rounded-lg" />
                 ))}
               </div>
             ) : (
@@ -138,11 +141,16 @@ export default function Catalogo() {
             )}
 
             {!loading && !erro && categories.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-lg text-ink-muted">
-                  Nenhuma categoria disponível no momento.
-                </p>
-              </div>
+              <EmptyState
+                icon={<SquaresFour className="h-10 w-10" />}
+                title="Ainda não há categorias"
+                description="Estamos a preparar o catálogo. Entretanto pode ver a loja."
+                action={
+                  <Link href="/loja" className={botaoClasses({ variant: 'secondary' })}>
+                    Ir à loja
+                  </Link>
+                }
+              />
             )}
           </div>
         </section>
@@ -159,7 +167,7 @@ export default function Catalogo() {
                 de cristais e pedras preciosas. Explore nossas coleções e descubra peças únicas 
                 que ressoam com a sua energia e intenções.
               </p>
-              <Link href="/loja" className="btn-primary inline-block">
+              <Link href="/loja" className={botaoClasses()}>
                 Ver Todos os Produtos
               </Link>
             </div>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, User, Menu, X } from 'lucide-react';
+import { List, ShoppingCart, User, X } from '@phosphor-icons/react';
 import { useCart } from '@/contexts/CartContext';
 
 export default function Header() {
@@ -59,7 +59,14 @@ export default function Header() {
             
             <Link
               href="/carrinho"
-              className="p-2 text-surface hover:text-rose-300 transition-smooth relative"
+              onClick={(e) => {
+                // Continua a ser uma ligacao: sem JS, com o botao do meio ou
+                // com Ctrl/Cmd abre a pagina do carrinho como sempre abriu.
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                e.preventDefault();
+                openCart();
+              }}
+              className="relative p-2 text-surface transition-smooth hover:text-rose-300"
               aria-label="Carrinho de Compras"
             >
               <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
@@ -70,7 +77,7 @@ export default function Header() {
               )}
             </Link>
 
-            {/* Mobile Menu Button */}
+            {/* Botao do menu em telemovel */}
             <button
               className="md:hidden p-2 text-surface hover:text-rose-300 transition-smooth"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -80,13 +87,13 @@ export default function Header() {
               {mobileMenuOpen ? (
                 <X className="w-7 h-7" />
               ) : (
-                <Menu className="w-7 h-7" />
+                <List className="w-7 h-7" />
               )}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Menu em telemovel */}
         {mobileMenuOpen && (
           <nav className="fade-in border-t border-line-plum py-4 md:hidden">
             <div className="flex flex-col gap-1 justify-center items-center text-center">

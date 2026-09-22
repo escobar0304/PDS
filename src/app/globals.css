@@ -133,63 +133,6 @@ img {
    hover e uma mudanca de tom; ao clicar, um deslocamento de 1px para baixo.
    ========================================================================== */
 
-.btn-primary,
-.btn-secondary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.75rem;
-  border-radius: 4px;
-  font-weight: 500;
-  line-height: 1.2;
-  text-align: center;
-  cursor: pointer;
-  transition: background-color 200ms ease, color 200ms ease,
-    border-color 200ms ease, transform 100ms ease;
-}
-
-.btn-primary {
-  background: var(--rose-700);
-  color: var(--surface);
-  border: 1px solid var(--rose-700);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--rose-600);
-  border-color: var(--rose-600);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--rose-700);
-  border: 1px solid var(--rose-700);
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: var(--rose-100);
-}
-
-.btn-primary:active:not(:disabled),
-.btn-secondary:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.btn-primary:disabled,
-.btn-secondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* Variantes sobre a superficie escura */
-.on-plum .btn-secondary {
-  color: var(--rose-200);
-  border-color: var(--rose-200);
-}
-
-.on-plum .btn-secondary:hover:not(:disabled) {
-  background: rgb(246 203 209 / 0.12);
-}
 
 /* ==========================================================================
    Utilitarios

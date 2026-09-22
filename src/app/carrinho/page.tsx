@@ -5,7 +5,8 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Check, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import { botaoClasses } from '@/components/ui/Button';
+import { ArrowLeft, Check, Minus, Plus, ShoppingBag, Trash } from '@phosphor-icons/react';
 
 export default function Carrinho() {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -16,16 +17,16 @@ export default function Carrinho() {
         <Header />
         <main className="min-h-screen bg-surface py-12">
           <div className="container-custom">
-            <div className="max-w-2xl mx-auto text-center py-16">
-              <ShoppingBag className="w-24 h-24 mx-auto text-rose-200 mb-6" />
-              <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-4">
-                Carrinho Vazio
+            <div className="mx-auto max-w-2xl py-16 text-center">
+              <ShoppingBag className="mx-auto mb-6 h-16 w-16 text-ink-muted/50" aria-hidden />
+              <h1 className="mb-4 font-serif text-3xl text-rose-700 md:text-4xl">
+                Carrinho vazio
               </h1>
-              <p className="text-lg text-ink-muted mb-8">
+              <p className="mb-8 text-lg text-ink-muted">
                 Ainda não adicionou nenhum produto ao carrinho
               </p>
-              <Link href="/loja" className="btn-primary inline-block">
-                Ir às Compras
+              <Link href="/loja" className={botaoClasses()}>
+                Ir às compras
               </Link>
             </div>
           </div>
@@ -91,7 +92,7 @@ export default function Carrinho() {
                           className="p-2 hover:bg-danger-100 text-danger-700 rounded-lg transition-smooth flex-shrink-0"
                           aria-label="Remover item"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash className="w-5 h-5" />
                         </button>
                       </div>
 
@@ -172,14 +173,14 @@ export default function Carrinho() {
 
                 <Link
                   href="/checkout"
-                  className="btn-primary w-full text-center mb-3"
+                  className={botaoClasses({ fullWidth: true, className: 'mb-3' })}
                 >
                   Finalizar Compra
                 </Link>
 
                 <Link
                   href="/loja"
-                  className="btn-secondary w-full text-center"
+                  className={botaoClasses({ variant: 'secondary', fullWidth: true })}
                 >
                   Continuar a Comprar
                 </Link>

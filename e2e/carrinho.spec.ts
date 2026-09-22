@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const contador = (page: import('@playwright/test').Page) =>
-  page.getByRole('banner').locator('a[aria-label="Carrinho de Compras"] span');
+  page.getByRole('banner').locator('[aria-label="Carrinho de Compras"] span');
 
 test('adicionar da loja abre o painel e conta a unidade', async ({ page }) => {
   await page.goto('/loja');
@@ -85,4 +85,24 @@ test.fixme('finalizar compra leva a um checkout que funciona', async ({ page }) 
   await page.goto('/carrinho');
   await page.getByRole('link', { name: 'Finalizar Compra' }).click();
   await expect(page).toHaveURL(/\/checkout/);
+});
+
+test('o ícone do cabeçalho abre o painel do carrinho sem sair da página', async ({ page }) => {
+  await mockApi(page);
+  await page.goto('/loja');
+
+  await page
+    .getByRole('article')
+    .first()
+    .getByRole('button', { name: 'Adicionar ao carrinho' })
+    .click();
+
+  const painel = page.getByRole('dialog', { name: /carrinho/i });
+  await painel.getByRole('button', { name: /fechar/i }).click();
+  await expect(painel).toBeHidden();
+
+  await page.getByRole('banner').getByLabel('Carrinho de Compras').click();
+
+  await expect(painel).toBeVisible();
+  await expect(page).toHaveURL(/\/loja/);
 });

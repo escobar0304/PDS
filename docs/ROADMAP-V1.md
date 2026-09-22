@@ -328,12 +328,26 @@ Confirma se é o caso. Mesmo estando isento, o alvo deve ser WCAG 2.1 AA.
 
 ## F15. SEO e partilha
 
-- `sitemap.ts` e `robots.ts`
-- Metadata por página. Hoje só o layout raiz tem título e descrição, por isso
-  **todas as páginas do site partilham o mesmo título**
+**Nota de 22/09/2026 — esta fase foi dividida.** Deixá-la inteira para o fim
+tinha um problema de ordem: sem `robots.ts`, pôr o site no ar antes da camada
+legal significa deixar o Google indexar afirmações comerciais por validar (F9)
+sem nenhuma das páginas obrigatórias. Isso é exposição real, não é SEO.
+
+O que passou para a frente:
+
+- **`robots.ts`, feito na F3.** Bloqueia todos os motores de busca enquanto
+  `SITE_INDEXAVEL` não for `true`. Levanta-se quando F4 a F9 estiverem
+  publicadas, e só aí passa a listar as rotas privadas no `disallow`
+- **Metadata por página** passa a fazer-se à medida que cada página é
+  construída, não retroativamente aqui no fim
+
+O que fica nesta fase, porque depende do logótipo (F1) e da copy (F9):
+
+- `sitemap.ts`
 - Open Graph com imagem por página
 - JSON-LD: `Organization`, `LocalBusiness`, `BreadcrumbList` e, mais tarde, `Product`
 - Canónicos e `lang` correto
+- Revisão dos títulos e descrições de todas as páginas
 
 ---
 
@@ -370,7 +384,7 @@ F11 Segurança                    independente, pode correr em paralelo
 F12 Área pessoal                 depende de F3 e F6
 F13 Acessibilidade               depois de F10
 F14 Performance                  depois de F1
-F15 SEO                          por último
+F15 SEO                          robots.ts feito na F3; o resto por último
 ```
 
 F0 e F11 não dependem de ti e podem arrancar imediatamente.

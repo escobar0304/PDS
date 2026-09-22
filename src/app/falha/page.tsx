@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { botaoClasses } from '@/components/ui/Button';
 
 export const metadata = { title: 'Pagamento não concluído - Pétalas de Sonho' };
 
@@ -16,10 +17,10 @@ export default function FalhaPage() {
           Nada foi cobrado. Pode tentar novamente ou falar connosco.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          <Link href="/carrinho" className="btn-primary">
+          <Link href="/carrinho" className={botaoClasses()}>
             Voltar ao carrinho
           </Link>
-          <Link href="/sobre-nos" className="btn-secondary">
+          <Link href="/sobre-nos" className={botaoClasses({ variant: 'secondary' })}>
             Falar connosco
           </Link>
         </div>

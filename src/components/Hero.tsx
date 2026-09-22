@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { botaoClasses } from '@/components/ui/Button';
 
 interface HeroProps {
   title: string;
@@ -33,11 +34,24 @@ export default function Hero({
     full: 'h-[70vh] sm:h-[80vh] md:h-screen',
   };
 
-  const overlayClasses = {
-    light: 'bg-black bg-opacity-20',
-    medium: 'bg-black bg-opacity-40',
-    dark: 'bg-black bg-opacity-60',
+  // Duas camadas em vez de uma lavagem preta uniforme.
+  //
+  // A primeira e um veu leve em ameixa, que assenta a fotografia no resto do
+  // site sem a acinzentar. A segunda e uma vinheta concentrada atras do texto:
+  // o titulo e o subtitulo ficam ao centro, muitas vezes sobre a zona mais
+  // clara da imagem, e texto claro sobre pedra clara nao se le.
+  //
+  // O valor de 0.82 nao e arbitrario. Para #fbfaf4 passar 4.5:1 sobre uma
+  // pedra de luminancia ~0.85, a opacidade do veu tem de chegar a 0.82. Nas
+  // margens desvanece e a fotografia volta a aparecer inteira.
+  const veuBase = {
+    light: 'bg-plum/15',
+    medium: 'bg-plum/25',
+    dark: 'bg-plum/40',
   };
+
+  const vinheta =
+    'bg-[radial-gradient(ellipse_75%_55%_at_50%_50%,rgb(42_25_29/0.82)_0%,rgb(42_25_29/0.55)_45%,transparent_78%)]';
 
   return (
     <section className={`relative ${heightClasses[height]}`}>
@@ -51,7 +65,8 @@ export default function Hero({
           priority
           quality={90}
         />
-        <div className={`absolute inset-0 ${overlayClasses[overlay]}`}></div>
+        <div aria-hidden className={`absolute inset-0 ${veuBase[overlay]}`} />
+        <div aria-hidden className={`absolute inset-0 ${vinheta}`} />
       </div>
       
       {/* Content */}
@@ -70,7 +85,7 @@ export default function Hero({
           {showCta && (
             <Link 
               href={ctaLink} 
-              className="btn-primary inline-block text-sm md:text-base"
+              className={botaoClasses({ className: 'text-sm md:text-base' })}
             >
               {ctaText}
             </Link>
