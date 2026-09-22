@@ -1,25 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertCircle, Check } from 'lucide-react';
+import { Alert, Button, Input, Select, Textarea } from '@/components/ui';
+
+const ASSUNTOS = [
+  { value: 'informacao', label: 'Informação sobre produtos' },
+  { value: 'encomenda', label: 'Dúvida sobre encomenda' },
+  { value: 'personalizado', label: 'Pedido personalizado' },
+  { value: 'outro', label: 'Outro' },
+];
+
+const VAZIO = { name: '', email: '', phone: '', subject: '', message: '' };
 
 export default function ContactForm() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
-  });
+  const [formData, setFormData] = useState(VAZIO);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,9 +33,7 @@ export default function ContactForm() {
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -42,14 +42,8 @@ export default function ContactForm() {
       }
 
       setSuccess(true);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
-      });
-    } catch (err) {
+      setFormData(VAZIO);
+    } catch {
       setError('Erro ao enviar mensagem. Por favor, tente novamente.');
     } finally {
       setLoading(false);
@@ -58,121 +52,73 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
-      {/* Nome */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-ink mb-2">
-          Nome *
-        </label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
-          placeholder="O seu nome"
-        />
-      </div>
-
-      {/* Email */}
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-ink mb-2">
-          Email *
-        </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
-          placeholder="seuemail@exemplo.com"
-        />
-      </div>
-
-      {/* Telefone */}
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium text-ink mb-2">
-          Telefone
-        </label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
-          placeholder="+351 xxx xxx xxx"
-        />
-      </div>
-
-      {/* Assunto */}
-      <div>
-        <label htmlFor="subject" className="block text-sm font-medium text-ink mb-2">
-          Assunto *
-        </label>
-        <select
-          id="subject"
-          name="subject"
-          value={formData.subject}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth"
-        >
-          <option value="">Selecione um assunto</option>
-          <option value="informacao">Informação sobre produtos</option>
-          <option value="encomenda">Dúvida sobre encomenda</option>
-          <option value="personalizado">Pedido personalizado</option>
-          <option value="outro">Outro</option>
-        </select>
-      </div>
-
-      {/* Mensagem */}
-      <div>
-        <label htmlFor="message" className="block text-sm font-medium text-ink mb-2">
-          Mensagem *
-        </label>
-        <textarea
-          id="message"
-          name="message"
-          value={formData.message}
-          onChange={handleChange}
-          required
-          rows={5}
-          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent transition-smooth resize-none"
-          placeholder="Escreva a sua mensagem aqui..."
-        />
-      </div>
-
-      {/* Mensagens de sucesso/erro */}
       {success && (
-        <div className="p-4 bg-sage-100 border border-sage-600/25 rounded-lg">
-          <p className="flex items-start gap-2 text-sm text-sage-600">
-            <Check className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden />
-            Mensagem enviada com sucesso. Entraremos em contacto em breve.
-          </p>
-        </div>
+        <Alert tone="sucesso">
+          Mensagem enviada. Respondemos assim que possível.
+        </Alert>
       )}
+      {error && <Alert tone="erro">{error}</Alert>}
 
-      {error && (
-        <div className="p-4 bg-danger-100 border border-danger-700/25 rounded-lg">
-          <p className="flex items-start gap-2 text-sm text-danger-700">
-            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden />
-            {error}
-          </p>
-        </div>
-      )}
+      <Input
+        label="Nome *"
+        type="text"
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        required
+        autoComplete="name"
+        placeholder="O seu nome"
+      />
 
-      {/* Botão Submit */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+      <Input
+        label="Email *"
+        type="email"
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        required
+        autoComplete="email"
+        placeholder="seuemail@exemplo.com"
+      />
+
+      <Input
+        label="Telefone"
+        type="tel"
+        name="phone"
+        value={formData.phone}
+        onChange={handleChange}
+        autoComplete="tel"
+        placeholder="+351 xxx xxx xxx"
+      />
+
+      <Select
+        label="Assunto *"
+        name="subject"
+        value={formData.subject}
+        onChange={handleChange}
+        required
       >
-        {loading ? 'Enviando...' : 'Enviar Mensagem'}
-      </button>
+        <option value="">Selecione um assunto</option>
+        {ASSUNTOS.map((a) => (
+          <option key={a.value} value={a.value}>
+            {a.label}
+          </option>
+        ))}
+      </Select>
+
+      <Textarea
+        label="Mensagem *"
+        name="message"
+        value={formData.message}
+        onChange={handleChange}
+        required
+        rows={5}
+        placeholder="Escreva a sua mensagem aqui…"
+      />
+
+      <Button type="submit" fullWidth loading={loading}>
+        {loading ? 'A enviar…' : 'Enviar mensagem'}
+      </Button>
     </form>
   );
 }

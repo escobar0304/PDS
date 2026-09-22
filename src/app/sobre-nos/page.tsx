@@ -5,7 +5,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
 import ContactForm from '@/components/contactForm';
-import { Clock, Gem, Leaf, Mail, MapPin, Phone, Search } from 'lucide-react';
+import { Clock, Diamond, Envelope, Leaf, MagnifyingGlass, MapPin, Phone } from '@phosphor-icons/react';
 
 export default function SobreNos() {
   return (
@@ -78,7 +78,7 @@ export default function SobreNos() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {/* Autenticidade */}
               <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
-                <Gem className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
+                <Diamond className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
                 <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
                   Autenticidade
                 </h3>
@@ -90,7 +90,7 @@ export default function SobreNos() {
 
               {/* Transparência */}
               <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
-                <Search className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
+                <MagnifyingGlass className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
                 <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
                   Transparência
                 </h3>
@@ -149,7 +149,7 @@ export default function SobreNos() {
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                      <Envelope className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Email</p>
                         <a href="mailto:info@petalasdesonho.pt" className="text-sm text-ink-muted hover:text-rose-700 transition-smooth">

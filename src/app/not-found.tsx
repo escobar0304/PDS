@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { botaoClasses } from '@/components/ui/Button';
 
 export const metadata = { title: 'Página não encontrada - Pétalas de Sonho' };
 
@@ -13,10 +14,10 @@ export default function NotFound() {
         A ligação pode estar errada ou a página pode ter mudado de sítio.
       </p>
       <div className="flex flex-wrap justify-center gap-3">
-        <Link href="/" className="btn-primary">
+        <Link href="/" className={botaoClasses()}>
           Voltar ao início
         </Link>
-        <Link href="/loja" className="btn-secondary">
+        <Link href="/loja" className={botaoClasses({ variant: 'secondary' })}>
           Ver a loja
         </Link>
       </div>

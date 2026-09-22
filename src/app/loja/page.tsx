@@ -5,13 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
-import { Headphones, RotateCcw, ShieldCheck, Truck } from 'lucide-react';
+import { ArrowCounterClockwise, Headphones, MagnifyingGlass, ShieldCheck, Truck } from '@phosphor-icons/react';
 import { fetchList } from '@/lib/api';
+import { Alert, Button, EmptyState, Input, Select, SkeletonCartao } from '@/components/ui';
 
 const GARANTIAS = [
   { Icone: ShieldCheck, titulo: 'Pagamento Seguro', detalhe: 'Stripe SSL certificado' },
   { Icone: Truck, titulo: 'Envio Grátis', detalhe: 'Em compras acima de 50€' },
-  { Icone: RotateCcw, titulo: 'Devoluções', detalhe: '14 dias para devolução' },
+  { Icone: ArrowCounterClockwise, titulo: 'Devoluções', detalhe: '14 dias para devolução' },
   { Icone: Headphones, titulo: 'Suporte', detalhe: 'Atendimento personalizado' },
 ];
 
@@ -114,17 +115,15 @@ function LojaContent() {
               {/* Sidebar - Filtros */}
               <aside className="lg:col-span-1">
                 <div className="bg-surface-raised rounded-lg p-4 md:p-6 shadow-soft sticky top-24">
-                  {/* Pesquisa */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-ink mb-2">
-                      Pesquisar
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nome do produto..."
+                    <Input
+                      label="Pesquisar"
+                      type="search"
+                      name="pesquisa"
+                      placeholder="Nome do produto…"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
+                      className="py-2 text-sm"
                     />
                   </div>
 
@@ -136,7 +135,7 @@ function LojaContent() {
                     <div className="space-y-2">
                       <button
                         onClick={() => setSelectedCategory('')}
-                        className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-smooth ${
+                        className={`w-full rounded px-3 py-2 text-left text-sm transition-smooth ${
                           selectedCategory === ''
                             ? 'bg-rose-700 text-surface'
                             : 'text-ink-muted hover:bg-surface-sunken'
@@ -148,7 +147,7 @@ function LojaContent() {
                         <button
                           key={category._id}
                           onClick={() => setSelectedCategory(category.slug)}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-smooth ${
+                          className={`w-full rounded px-3 py-2 text-left text-sm transition-smooth ${
                             selectedCategory === category.slug
                               ? 'bg-rose-700 text-surface'
                               : 'text-ink-muted hover:bg-surface-sunken'
@@ -160,15 +159,13 @@ function LojaContent() {
                     </div>
                   </div>
 
-                  {/* Ordenar */}
                   <div>
-                    <h3 className="text-sm font-semibold text-ink mb-3">
-                      Ordenar por
-                    </h3>
-                    <select
+                    <Select
+                      label="Ordenar por"
+                      name="ordenar"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700 focus:border-transparent"
+                      className="py-2 text-sm"
                     >
                       <option value="featured">Destaques</option>
                       <option value="price-asc">Preço: Baixo para Alto</option>
@@ -176,7 +173,7 @@ function LojaContent() {
                       <option value="name-asc">Nome: A-Z</option>
                       <option value="name-desc">Nome: Z-A</option>
                       <option value="newest">Mais Recentes</option>
-                    </select>
+                    </Select>
                   </div>
                 </div>
               </aside>
@@ -198,28 +195,23 @@ function LojaContent() {
 
                 {/* Erro de carregamento */}
                 {!loading && erro && (
-                  <div
-                    role="alert"
-                    className="rounded-lg border border-danger-700/25 bg-danger-100 p-6 text-center"
+                  <Alert
+                    tone="erro"
+                    action={
+                      <Button variant="secondary" size="sm" onClick={fetchProducts}>
+                        Tentar novamente
+                      </Button>
+                    }
                   >
-                    <p className="mb-4 text-base text-danger-700">{erro}</p>
-                    <button onClick={fetchProducts} className="btn-secondary">
-                      Tentar novamente
-                    </button>
-                  </div>
+                    {erro}
+                  </Alert>
                 )}
 
                 {/* Loading State */}
                 {loading ? (
                   <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="bg-surface-raised rounded-lg overflow-hidden shadow-soft">
-                        <div className="bg-surface-sunken h-64 animate-pulse"></div>
-                        <div className="p-4 space-y-3">
-                          <div className="h-4 bg-surface-sunken rounded animate-pulse"></div>
-                          <div className="h-4 bg-surface-sunken rounded w-2/3 animate-pulse"></div>
-                        </div>
-                      </div>
+                      <SkeletonCartao key={i} />
                     ))}
                   </div>
                 ) : erro ? null : filteredProducts.length > 0 ? (
@@ -229,20 +221,22 @@ function LojaContent() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12 bg-surface-raised rounded-lg">
-                    <p className="text-lg text-ink-muted mb-4">
-                      Nenhum produto encontrado
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSelectedCategory('');
-                        setSearchQuery('');
-                      }}
-                      className="btn-secondary"
-                    >
-                      Limpar Filtros
-                    </button>
-                  </div>
+                  <EmptyState
+                    icon={<MagnifyingGlass className="h-10 w-10" />}
+                    title="Nenhum produto encontrado"
+                    description="Experimente outra categoria ou limpe a pesquisa."
+                    action={
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setSelectedCategory('');
+                          setSearchQuery('');
+                        }}
+                      >
+                        Limpar filtros
+                      </Button>
+                    }
+                  />
                 )}
               </div>
             </div>
@@ -295,13 +289,7 @@ function LojaFallback() {
           <div className="container-custom">
             <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="bg-surface-raised rounded-lg overflow-hidden shadow-soft">
-                  <div className="bg-surface-sunken h-64 animate-pulse"></div>
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-surface-sunken rounded animate-pulse"></div>
-                    <div className="h-4 bg-surface-sunken rounded w-2/3 animate-pulse"></div>
-                  </div>
-                </div>
+                <SkeletonCartao key={i} />
               ))}
             </div>
           </div>

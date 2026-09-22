@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import { Envelope, FacebookLogo, InstagramLogo, MapPin, Phone } from '@phosphor-icons/react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -79,7 +79,7 @@ export default function Footer() {
                 </a>
               </li>
               <li className="flex items-start gap-2 text-sm text-rose-200">
-                <Mail className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <Envelope className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <a
                   href="mailto:info@petalasdesonho.pt"
                   className="hover:text-surface transition-smooth break-all"
@@ -103,7 +103,7 @@ export default function Footer() {
                 className="text-rose-200 hover:text-surface transition-smooth"
                 aria-label="Instagram"
               >
-                <Instagram className="w-6 h-6" />
+                <InstagramLogo className="w-6 h-6" />
               </a>
               <a
                 href="https://www.facebook.com/PetalasDeSonho"
@@ -112,7 +112,7 @@ export default function Footer() {
                 className="text-rose-200 hover:text-surface transition-smooth"
                 aria-label="Facebook"
               >
-                <Facebook className="w-6 h-6" />
+                <FacebookLogo className="w-6 h-6" />
               </a>
             </div>
           </div>

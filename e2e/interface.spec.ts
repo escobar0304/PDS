@@ -85,3 +85,32 @@ test('as marcas estruturais da página existem', async ({ page }) => {
   await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByRole('contentinfo')).toHaveCount(1);
 });
+
+test('os motores de busca estão bloqueados até haver camada legal', async ({ request }) => {
+  const res = await request.get('/robots.txt');
+  expect(res.ok()).toBeTruthy();
+  const corpo = await res.text();
+  expect(corpo).toContain('Disallow: /');
+  expect(corpo).not.toContain('Allow: /');
+});
+
+test('todos os campos de formulário têm etiqueta associada', async ({ page }) => {
+  for (const rota of ['/auth/login', '/auth/register', '/sobre-nos', '/loja']) {
+    await page.goto(rota);
+
+    const semEtiqueta = await page
+      .getByRole('main')
+      .locator('input:not([type=hidden]), select, textarea')
+      .evaluateAll((campos) =>
+        campos
+          .filter((c) => {
+            const id = c.getAttribute('id');
+            const temLabel = id && document.querySelector(`label[for="${CSS.escape(id)}"]`);
+            return !temLabel && !c.getAttribute('aria-label');
+          })
+          .map((c) => c.outerHTML.slice(0, 80)),
+      );
+
+    expect(semEtiqueta, `campos sem etiqueta em ${rota}`).toEqual([]);
+  }
+});

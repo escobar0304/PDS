@@ -1,31 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Heart, Package, SignOut, User } from '@phosphor-icons/react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import { User, Package, Heart, LogOut, Settings } from 'lucide-react';
-import Link from 'next/link';
+import { Alert, Card, Container, Input, Spinner, EmptyState } from '@/components/ui';
+import { botaoClasses } from '@/components/ui/Button';
 
-interface Order {
-  _id: string;
-  createdAt: string;
-  total: number;
-  status: string;
-  items: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
-}
+type Separador = 'perfil' | 'encomendas' | 'favoritos';
+
+const SEPARADORES: { id: Separador; label: string; Icone: typeof User }[] = [
+  { id: 'perfil', label: 'Perfil', Icone: User },
+  { id: 'encomendas', label: 'Encomendas', Icone: Package },
+  { id: 'favoritos', label: 'Favoritos', Icone: Heart },
+];
 
 export default function AreaPessoal() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'perfil' | 'encomendas' | 'favoritos'>('perfil');
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [separador, setSeparador] = useState<Separador>('perfil');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -33,311 +29,122 @@ export default function AreaPessoal() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    if (status === 'authenticated' && activeTab === 'encomendas') {
-      // Dados simulados - substituir por API real
-      const mockOrders: Order[] = [
-        {
-          _id: '1',
-          createdAt: '2025-03-15',
-          total: 89.90,
-          status: 'COMPLETED',
-          items: [
-            { name: 'Ametista Bruta', quantity: 1, price: 29.90 },
-            { name: 'Colar Quartzo Rosa', quantity: 2, price: 30.00 }
-          ]
-        },
-        {
-          _id: '2',
-          createdAt: '2025-03-10',
-          total: 45.50,
-          status: 'SHIPPED',
-          items: [
-            { name: 'Japamala Ágata', quantity: 1, price: 45.50 }
-          ]
-        }
-      ];
-      setOrders(mockOrders);
-    }
-    setLoading(false);
-  }, [status, activeTab]);
-
-  const handleLogout = async () => {
+  const sair = async () => {
     await signOut({ callbackUrl: '/' });
   };
 
-  if (status === 'loading' || loading) {
+  if (status === 'loading') {
     return (
       <>
         <Header />
-        <main className="min-h-screen bg-surface py-12 flex items-center justify-center">
-          <div className="loading"></div>
+        <main className="flex min-h-screen items-center justify-center bg-surface py-12">
+          <Spinner label="A carregar a sua área pessoal" />
         </main>
         <Footer />
       </>
     );
   }
 
-  if (!session) {
-    return null;
-  }
-
-  // Tres tons em vez de seis pares de cor: neutro para o que esta a decorrer,
-  // salvia para o que terminou bem, vermelho para o que foi cancelado.
-  const statusMap: Record<string, { label: string; color: string }> = {
-    PENDING: { label: 'Pendente', color: 'bg-surface-sunken text-ink-muted' },
-    PROCESSING: { label: 'A Processar', color: 'bg-surface-sunken text-ink-muted' },
-    SHIPPED: { label: 'Enviado', color: 'bg-rose-100 text-rose-900' },
-    READY_PICKUP: { label: 'Pronto', color: 'bg-sage-100 text-sage-600' },
-    COMPLETED: { label: 'Concluído', color: 'bg-sage-100 text-sage-600' },
-    CANCELLED: { label: 'Cancelado', color: 'bg-danger-100 text-danger-700' },
-  };
+  if (!session) return null;
 
   return (
     <>
       <Header />
-      
+
       <main className="min-h-screen bg-surface py-8 md:py-12">
-        <div className="container-custom">
-          <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-8">
-            Área Pessoal
-          </h1>
+        <Container>
+          <h1 className="mb-8 font-serif text-3xl text-rose-700 md:text-4xl">Área pessoal</h1>
 
-          <div className="grid lg:grid-cols-4 gap-6 md:gap-8">
-            {/* Sidebar */}
+          <div className="grid gap-6 md:gap-8 lg:grid-cols-4">
             <aside className="lg:col-span-1">
-              <div className="bg-surface-raised rounded-lg shadow-soft p-4 space-y-2">
-                <button
-                  onClick={() => setActiveTab('perfil')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-smooth ${
-                    activeTab === 'perfil'
-                      ? 'bg-rose-700 text-surface'
-                      : 'text-ink-muted hover:bg-surface-sunken'
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span className="font-medium">Perfil</span>
-                </button>
+              <Card className="space-y-1 p-3">
+                {SEPARADORES.map(({ id, label, Icone }) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setSeparador(id)}
+                    aria-current={separador === id ? 'page' : undefined}
+                    className={`flex w-full items-center gap-3 rounded px-4 py-3 text-left transition-smooth ${
+                      separador === id
+                        ? 'bg-rose-700 text-surface'
+                        : 'text-ink-muted hover:bg-surface-sunken hover:text-ink'
+                    }`}
+                  >
+                    <Icone className="h-5 w-5" aria-hidden />
+                    <span className="font-medium">{label}</span>
+                  </button>
+                ))}
 
                 <button
-                  onClick={() => setActiveTab('encomendas')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-smooth ${
-                    activeTab === 'encomendas'
-                      ? 'bg-rose-700 text-surface'
-                      : 'text-ink-muted hover:bg-surface-sunken'
-                  }`}
+                  type="button"
+                  onClick={sair}
+                  className="flex w-full items-center gap-3 rounded px-4 py-3 text-left text-danger-700 transition-smooth hover:bg-danger-100"
                 >
-                  <Package className="w-5 h-5" />
-                  <span className="font-medium">Encomendas</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('favoritos')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-smooth ${
-                    activeTab === 'favoritos'
-                      ? 'bg-rose-700 text-surface'
-                      : 'text-ink-muted hover:bg-surface-sunken'
-                  }`}
-                >
-                  <Heart className="w-5 h-5" />
-                  <span className="font-medium">Favoritos</span>
-                </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-danger-700 hover:bg-danger-100 transition-smooth"
-                >
-                  <LogOut className="w-5 h-5" />
+                  <SignOut className="h-5 w-5" aria-hidden />
                   <span className="font-medium">Sair</span>
                 </button>
-              </div>
+              </Card>
             </aside>
 
-            {/* Conteúdo */}
             <div className="lg:col-span-3">
-              {/* Tab: Perfil */}
-              {activeTab === 'perfil' && (
-                <div className="bg-surface-raised rounded-lg shadow-soft p-6 md:p-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-serif text-rose-700">
-                      Informações Pessoais
-                    </h2>
-                    <button className="p-2 hover:bg-surface-sunken rounded-lg transition-smooth">
-                      <Settings className="w-5 h-5 text-ink-muted" />
-                    </button>
+              {separador === 'perfil' && (
+                <Card className="p-6 shadow-soft md:p-8">
+                  <h2 className="mb-6 font-serif text-2xl text-rose-700">Informações pessoais</h2>
+
+                  <div className="space-y-4">
+                    <Input
+                      label="Nome"
+                      name="nome"
+                      type="text"
+                      value={session.user?.name ?? ''}
+                      readOnly
+                      hint="Para alterar o nome, contacte-nos."
+                    />
+                    <Input
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={session.user?.email ?? ''}
+                      readOnly
+                      hint="O email identifica a conta e não pode ser alterado aqui."
+                    />
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-2">
-                          Nome Completo
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue="Cliente Teste"
-                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-2">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          defaultValue="cliente@teste.com"
-                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-2">
-                          Telefone
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="+351 xxx xxx xxx"
-                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-2">
-                          Código Postal
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="4000-000"
-                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-ink mb-2">
-                        Morada
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Rua, número, andar"
-                        className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                      />
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-2">
-                          Cidade
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Porto"
-                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-ink mb-2">
-                          País
-                        </label>
-                        <input
-                          type="text"
-                          defaultValue="Portugal"
-                          className="w-full px-4 py-3 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-700"
-                        />
-                      </div>
-                    </div>
-
-                    <button className="btn-primary">
-                      Guardar Alterações
-                    </button>
-                  </div>
-                </div>
+                  <Alert tone="info" className="mt-6">
+                    A morada de envio e os dados de faturação são pedidos na finalização da
+                    compra. Guardá-los na conta fica disponível quando a loja abrir.
+                  </Alert>
+                </Card>
               )}
 
-              {/* Tab: Encomendas */}
-              {activeTab === 'encomendas' && (
-                <div className="space-y-4">
-                  <h2 className="text-2xl font-serif text-rose-700 mb-6">
-                    Histórico de Encomendas
-                  </h2>
-
-                  {orders.length === 0 ? (
-                    <div className="bg-surface-raised rounded-lg shadow-soft p-12 text-center">
-                      <Package className="w-16 h-16 mx-auto text-rose-200 mb-4" />
-                      <p className="text-lg text-ink-muted">
-                        Ainda não fez nenhuma encomenda
-                      </p>
-                      <Link href="/loja" className="btn-primary inline-block mt-6">
-                        Ir às Compras
-                      </Link>
-                    </div>
-                  ) : (
-                    orders.map((order) => (
-                      <div key={order._id} className="bg-surface-raised rounded-lg shadow-soft p-6">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 pb-4 border-b">
-                          <div>
-                            <p className="text-sm text-ink-muted">
-                              Encomenda #{order._id}
-                            </p>
-                            <p className="text-sm text-ink-muted">
-                              {new Date(order.createdAt).toLocaleDateString('pt-PT')}
-                            </p>
-                          </div>
-                          <span className={`rounded-sm px-2.5 py-1 text-sm font-medium ${statusMap[order.status]?.color || 'bg-surface-sunken'}`}>
-                            {statusMap[order.status]?.label || order.status}
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 mb-4">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="flex justify-between text-sm">
-                              <span className="text-ink">
-                                {item.quantity}x {item.name}
-                              </span>
-                              <span className="font-medium text-rose-700">
-                                {(item.price * item.quantity).toFixed(2)}€
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="flex justify-between items-center pt-4 border-t">
-                          <span className="text-lg font-semibold text-ink">
-                            Total
-                          </span>
-                          <span className="text-2xl font-bold text-rose-700">
-                            {order.total.toFixed(2)}€
-                          </span>
-                        </div>
-
-                        <button className="btn-secondary w-full mt-4">
-                          Repetir Encomenda
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
+              {separador === 'encomendas' && (
+                <EmptyState
+                  icon={<Package className="h-10 w-10" />}
+                  title="Ainda não tem encomendas"
+                  description="Assim que fizer a primeira compra, o histórico aparece aqui."
+                  action={
+                    <Link href="/loja" className={botaoClasses()}>
+                      Ver a loja
+                    </Link>
+                  }
+                />
               )}
 
-              {/* Tab: Favoritos */}
-              {activeTab === 'favoritos' && (
-                <div className="bg-surface-raised rounded-lg shadow-soft p-12 text-center">
-                  <Heart className="w-16 h-16 mx-auto text-rose-200 mb-4" />
-                  <h2 className="text-2xl font-serif text-rose-700 mb-2">
-                    Lista de Favoritos
-                  </h2>
-                  <p className="text-lg text-ink-muted mb-6">
-                    Ainda não adicionou produtos aos favoritos
-                  </p>
-                  <Link href="/loja" className="btn-primary inline-block">
-                    Explorar Produtos
-                  </Link>
-                </div>
+              {separador === 'favoritos' && (
+                <EmptyState
+                  icon={<Heart className="h-10 w-10" />}
+                  title="Ainda não tem favoritos"
+                  description="Guarde aqui as peças que quer rever mais tarde."
+                  action={
+                    <Link href="/loja" className={botaoClasses()}>
+                      Explorar peças
+                    </Link>
+                  }
+                />
               )}
             </div>
           </div>
-        </div>
+        </Container>
       </main>
 
       <Footer />

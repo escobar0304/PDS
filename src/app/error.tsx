@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { botaoClasses } from '@/components/ui/Button';
 
 // Provisorio. Ganha o tratamento visual definitivo na F10 do roteiro.
 export default function Error({
@@ -22,7 +23,7 @@ export default function Error({
       <p className="mb-8 max-w-md text-ink-muted">
         Não conseguimos carregar esta página. Tenta novamente dentro de momentos.
       </p>
-      <button onClick={reset} className="btn-primary">
+      <button onClick={reset} className={botaoClasses()}>
         Tentar novamente
       </button>
       {error.digest && (

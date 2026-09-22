@@ -33,11 +33,11 @@ test('o registo recusa passwords diferentes sem ir ao servidor', async ({ page }
   });
 
   await page.goto('/auth/register');
-  await page.getByLabel('Nome Completo').fill('Marta Ferreira');
+  await page.getByLabel('Nome').fill('Marta Ferreira');
   await page.getByLabel('Email').fill('marta@exemplo.pt');
   await page.getByLabel('Password', { exact: true }).fill('umapassword');
-  await page.getByLabel('Confirmar Password').fill('outrapassword');
-  await page.getByRole('button', { name: 'Criar Conta' }).click();
+  await page.getByLabel('Confirmar password').fill('outrapassword');
+  await page.getByRole('button', { name: 'Criar conta' }).click();
 
   await expect(page.getByText('As passwords não coincidem')).toBeVisible();
   expect(chamouServidor, 'não devia ter chamado o servidor').toBe(false);
@@ -53,11 +53,11 @@ test('um erro do servidor no registo é mostrado ao utilizador', async ({ page }
   );
 
   await page.goto('/auth/register');
-  await page.getByLabel('Nome Completo').fill('Marta Ferreira');
+  await page.getByLabel('Nome').fill('Marta Ferreira');
   await page.getByLabel('Email').fill('marta@exemplo.pt');
   await page.getByLabel('Password', { exact: true }).fill('umapassword');
-  await page.getByLabel('Confirmar Password').fill('umapassword');
-  await page.getByRole('button', { name: 'Criar Conta' }).click();
+  await page.getByLabel('Confirmar password').fill('umapassword');
+  await page.getByRole('button', { name: 'Criar conta' }).click();
 
   await expect(page.getByText('Este email já está registado')).toBeVisible();
 });

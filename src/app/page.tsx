@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import { botaoClasses } from '@/components/ui/Button';
 
 // O texto e o mesmo de antes. A revisao das afirmacoes comerciais e a F9 do
 // roteiro e precisa de decisoes de negocio, nao de design.
@@ -68,7 +69,7 @@ export default function Home() {
                 <p className="mb-8 max-w-xl text-lg leading-relaxed text-rose-100 md:text-xl">
                   Descubra pedras preciosas e cristais para a sua jornada espiritual
                 </p>
-                <Link href="/loja" className="btn-primary">
+                <Link href="/loja" className={botaoClasses()}>
                   Descobrir Mais
                 </Link>
               </div>
@@ -145,10 +146,10 @@ export default function Home() {
                 jornada.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/loja" className="btn-primary">
+                <Link href="/loja" className={botaoClasses()}>
                   Ver Loja
                 </Link>
-                <Link href="/catalogo" className="btn-secondary">
+                <Link href="/catalogo" className={botaoClasses({ variant: 'secondary' })}>
                   Catálogo
                 </Link>
               </div>

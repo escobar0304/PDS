@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, ShoppingCart } from 'lucide-react';
+import { Check, ShoppingCart } from '@phosphor-icons/react';
 import { useCart } from '../contexts/CartContext';
 
 interface Product {
@@ -49,7 +49,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     : 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=600&h=600&fit=crop';
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition-smooth hover:border-rose-300">
+    <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition-smooth hover:border-rose-300">
       <Link href={`/produto/${product.slug}`} className="block shrink-0">
         <div className="relative h-64 overflow-hidden bg-surface-sunken">
           <Image
@@ -119,6 +119,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

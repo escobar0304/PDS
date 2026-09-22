@@ -8,7 +8,8 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
-import { Check, ChevronLeft, ChevronRight, Dot, Heart, Minus, Plus, RotateCcw, Share2, Shield, ShoppingCart, Sparkle, Truck } from 'lucide-react';
+import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Heart, Minus, Plus, ShareNetwork, Shield, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
+import { botaoClasses } from '@/components/ui/Button';
 
 interface Product {
   _id: string;
@@ -150,7 +151,7 @@ export default function ProdutoPage() {
             <h1 className="text-3xl font-serif text-rose-700 mb-4">
               Produto não encontrado
             </h1>
-            <Link href="/loja" className="btn-primary inline-block">
+            <Link href="/loja" className={botaoClasses()}>
               Voltar à Loja
             </Link>
           </div>
@@ -220,14 +221,14 @@ export default function ProdutoPage() {
                       className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-2 text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Imagem anterior"
                     >
-                      <ChevronLeft className="w-6 h-6" />
+                      <CaretLeft className="w-6 h-6" />
                     </button>
                     <button
                       onClick={nextImage}
                       className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-2 text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Próxima imagem"
                     >
-                      <ChevronRight className="w-6 h-6" />
+                      <CaretRight className="w-6 h-6" />
                     </button>
                   </>
                 )}
@@ -348,7 +349,7 @@ export default function ProdutoPage() {
                   <button
                     onClick={handleAddToCart}
                     disabled={product.stock === 0 || isAdding}
-                    className="flex-1 btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={botaoClasses({ className: 'flex-1' })}
                   >
                     {isAdding ? (
                       <>
@@ -379,7 +380,7 @@ export default function ProdutoPage() {
                     className="rounded border border-line p-4 text-ink-muted transition-smooth hover:border-rose-700 hover:text-rose-700"
                     aria-label="Partilhar"
                   >
-                    <Share2 className="w-5 h-5" />
+                    <ShareNetwork className="w-5 h-5" />
                   </button>
                 </div>
               </div>
@@ -394,7 +395,7 @@ export default function ProdutoPage() {
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <RotateCcw className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
+                  <ArrowCounterClockwise className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="font-medium text-ink">Devoluções</p>
                     <p className="text-sm text-ink-muted">14 dias para devolução</p>
