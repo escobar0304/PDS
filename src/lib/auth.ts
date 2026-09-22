@@ -8,6 +8,22 @@ import connectDB from '@/lib/db';
 import { User } from '@/lib/models';
 import bcrypt from 'bcryptjs';
 import { verify as argon2Verify } from 'argon2';
+import { consumir } from '@/lib/limites';
+import { esquemaCredenciais } from '@/lib/validacao';
+
+/** Mensagem unica para credenciais erradas, seja qual for a metade que falhou. */
+const CREDENCIAIS_INVALIDAS = 'Email ou password incorretos';
+
+const LIMITE_ENTRADA_IP = { max: 10, janelaMs: 15 * 60 * 1000 };
+const LIMITE_ENTRADA_CONTA = { max: 5, janelaMs: 15 * 60 * 1000 };
+
+/**
+ * Hash descartavel, usado quando a conta nao existe, para o tempo de resposta
+ * nao denunciar a diferenca. Corresponde a uma password aleatoria que nunca
+ * foi atribuida a ninguem.
+ */
+const HASH_INEXISTENTE =
+  '$argon2id$v=19$m=65536,t=3,p=4$c2FsdGVkc2FsdGVkc2FsdA$8pTfL9VYfvGZ3LrXKkLvVYQqf1ZPZ0rB3xQwLxX7tKo';
 
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
@@ -25,33 +41,49 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e password são obrigatórios');
+      async authorize(credentials, pedido) {
+        // Validacao de esquema, nao de presenca. `credentials` vem do corpo
+        // do pedido e pode trazer objectos: `{"email": {"$ne": null}}` passa
+        // num `if (!credentials.email)` e transforma a consulta seguinte em
+        // "devolve-me um utilizador qualquer".
+        const v = esquemaCredenciais.safeParse(credentials);
+        if (!v.success) {
+          throw new Error(CREDENCIAIS_INVALIDAS);
+        }
+        const { email, password } = v.data;
+
+        const ip = pedido?.headers?.['x-forwarded-for']?.split(',')[0]?.trim() ?? 'desconhecido';
+        const porIp = consumir(`entrada:ip:${ip}`, LIMITE_ENTRADA_IP);
+        const porConta = consumir(`entrada:conta:${email}`, LIMITE_ENTRADA_CONTA);
+        if (!porIp.permitido || !porConta.permitido) {
+          throw new Error('Demasiadas tentativas. Tente mais tarde.');
         }
 
         await connectDB();
 
-        // Buscar user na base de dados
-        const user = await User.findOne({ email: credentials.email });
+        const user = await User.findOne({ email });
 
-        if (!user) {
-          throw new Error('Utilizador não encontrado');
+        // Verificar sempre, mesmo sem utilizador.
+        //
+        // Sem isto ha dois canais a dizer se a conta existe: a mensagem de
+        // erro, e o tempo de resposta — nao existindo, respondia-se de
+        // imediato; existindo, esperava-se pelo argon2. Verificar contra um
+        // hash de referencia gasta o mesmo tempo nos dois casos.
+        const hashParaVerificar = user?.password ?? HASH_INEXISTENTE;
+
+        let passwordCorreta = false;
+        try {
+          passwordCorreta = hashParaVerificar.startsWith('$2')
+            ? await bcrypt.compare(password, hashParaVerificar)
+            : await argon2Verify(hashParaVerificar, password);
+        } catch {
+          passwordCorreta = false;
         }
 
-        // Verificar password (bcrypt antigo ou Argon2id)
-        let isPasswordValid = false;
-
-        if (user.password.startsWith('$2')) {
-          // bcrypt
-          isPasswordValid = await bcrypt.compare(credentials.password, user.password);
-        } else {
-          // Argon2id
-          isPasswordValid = await argon2Verify(user.password, credentials.password);
-        }
-
-        if (!isPasswordValid) {
-          throw new Error('Password incorreta');
+        // Uma mensagem so para os dois casos: dizer qual deles falhou entrega
+        // a lista de emails com conta a quem estiver a sondar.
+        if (!user || !passwordCorreta) {
+          throw new Error(CREDENCIAIS_INVALIDAS);
         }
 
         // Retornar user data
