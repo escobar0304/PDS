@@ -4,6 +4,10 @@
 > Âmbito: **só design**. Nenhum ficheiro de código foi alterado nesta fase.
 > Método: varrimento integral do repo + skills de design (`redesign-existing-projects`,
 > `design-taste-frontend`, `ui-ux-pro-max`).
+>
+> **Correção (2026-09-22):** as contagens de uso de classe na secção 3.1 foram
+> revistas. A primeira medição contava também nomes de variáveis com o mesmo texto
+> (`loading`, por exemplo). Os números abaixo são contagens de `className` reais.
 
 ---
 
@@ -34,7 +38,7 @@ causas mecânicas**, e todas elas têm arranjo:
 
 1. **Metade do sistema de design nunca chega ao browser.** O ficheiro
    `src/styles/globals.css` (207 linhas: botões, container, transições, sombras,
-   animações) **nunca é importado**. Mais de 130 usos de classe no JSX não fazem
+   animações) **nunca é importado**. Cerca de 120 usos de classe no JSX não fazem
    absolutamente nada.
 2. **Existem dois sites com o mesmo header.** Uma home preta-azulada com roxo néon,
    e uma loja/catálogo creme com roxo-e-dourado. São duas marcas diferentes coladas.
@@ -76,15 +80,15 @@ Cada linha foi verificada no código, não é impressão.
 
 | Classe no JSX | Usos | O que devia fazer | O que faz hoje |
 |---|---|---|---|
-| `transition-smooth` | **52** | transição 300ms cubic-bezier | nada: todos os hovers são instantâneos |
-| `container-custom` | **25** | max-width + padding responsivo | nada: o conteúdo cola-se às margens e estica até à borda do ecrã |
-| `shadow-soft` | **21** | elevação subtil | nada: cartões brancos sobre fundo creme, sem separação |
-| `btn-primary` | **16** | botão gradiente, pill, 1rem 2rem | nada: **os CTAs principais são texto azul sublinhado** |
-| `loading` | **26** | pulsar de carregamento | nada: `<div class="loading"></div>` é uma div vazia e invisível |
-| `btn-secondary` | 6 | botão outline | nada |
-| `shadow-medium` / `shadow-strong` | 5 / 3 | elevação média/alta | nada |
-| `fade-in` | 3 | entrada 0.6s | nada |
-| `overlay-dark` | 3 | overlay 40% | nada |
+| `transition-smooth` | **51** | transição 300ms cubic-bezier | nada: todos os hovers são instantâneos |
+| `container-custom` | **20** | max-width + padding responsivo | nada: o conteúdo cola-se às margens e estica até à borda do ecrã |
+| `shadow-soft` | **20** | elevação subtil | nada: cartões brancos sobre fundo creme, sem separação |
+| `btn-primary` | **14** | botão gradiente, pill, 1rem 2rem | nada: **os CTAs principais são texto azul sublinhado** |
+| `loading` | 2 | pulsar de carregamento | nada: `<div class="loading"></div>` é uma div sem dimensões, invisível de qualquer forma |
+| `btn-secondary` | 4 | botão outline | nada |
+| `shadow-medium` / `shadow-strong` | 4 / 2 | elevação média/alta | nada |
+| `fade-in` | 2 | entrada 0.6s | nada |
+| `overlay-dark` | 0 | overlay 40% | classe definida e nunca usada |
 
 Consequência prática: **"Finalizar Compra" no carrinho, "Adicionar ao Carrinho" na
 página de produto, "Criar Conta" e "Entrar" são neste momento links de texto por
@@ -528,7 +532,7 @@ do token e o tamanho da escala.
 
 ### P0 - desbloqueio (nada de estético funciona antes disto)
 
-1. Importar / fundir `src/styles/globals.css`. Devolve botões, container, sombras e transições a **130+ pontos do site**
+1. Importar / fundir `src/styles/globals.css`. Devolve botões, container, sombras e transições a **cerca de 120 pontos do site**
 2. Corrigir `params.slug` → `params.id` na página de produto
 3. Criar `/checkout` ou desviar o CTA do carrinho
 4. Resolver a duplicação de configuração PostCSS / Tailwind
