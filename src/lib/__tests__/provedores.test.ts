@@ -92,3 +92,48 @@ describe('o bloco EntrarComGoogle', () => {
     expect(fonte).toContain('if (!disponivel) return null;');
   });
 });
+
+describe('entrar pela Google', () => {
+  // Chama o callback a serio, nao le a fonte: o que interessa e o que ele
+  // decide, e estes casos decidem antes de tocar na base de dados.
+  const entrar = async (profile: Record<string, unknown> | undefined, email = 'a@exemplo.pt') => {
+    const { authOptions } = await import('../auth');
+    return authOptions.callbacks!.signIn!({
+      user: { id: 'x', email, name: 'A' },
+      account: { provider: 'google', type: 'oauth', providerAccountId: '1' },
+      profile: profile as never,
+    } as never);
+  };
+
+  it('recusa um email que a Google não verificou', async () => {
+    // Numa conta Workspace de um domínio qualquer, `email_verified` pode vir
+    // falso. Aceitá-lo era entregar a conta de quem se registou com esse email.
+    expect(await entrar({ email_verified: false })).toBe(false);
+    expect(await entrar({})).toBe(false);
+    expect(await entrar(undefined)).toBe(false);
+  });
+
+  it('não deixa a entrada por email e palavra-passe depender disto', async () => {
+    const { authOptions } = await import('../auth');
+    expect(
+      await authOptions.callbacks!.signIn!({
+        user: { id: 'x' },
+        account: { provider: 'credentials', type: 'credentials', providerAccountId: 'x' },
+      } as never),
+    ).toBe(true);
+  });
+
+  it('uma conta sem palavra-passe é válida para o modelo', async () => {
+    // Era aqui que rebentava: `password: ''` falhava o `required` e ninguém
+    // conseguia entrar pela Google pela primeira vez.
+    const { User } = await import('../models');
+    const u = new User({ name: 'A', email: 'a@exemplo.pt', emailVerified: true });
+    expect(u.validateSync()).toBeUndefined();
+  });
+
+  it('já não há adaptador, nem a dependência que o trazia', () => {
+    // Duas fontes de verdade para a mesma conta foi o que partiu isto.
+    expect(ler('src', 'lib', 'auth.ts')).not.toMatch(/adapter:/);
+    expect(ler('package.json')).not.toContain('mongodb-adapter');
+  });
+});

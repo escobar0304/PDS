@@ -42,7 +42,7 @@ export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   phone?: string;
   address?: string;
   city?: string;
@@ -205,10 +205,12 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
+    // Nao e obrigatoria: quem entra pela Google nao tem palavra-passe, e
+    // exigi-la aqui fazia rebentar a criacao dessas contas. O registo por
+    // email exige-a no servidor, em `esquemaRegisto`. O `minlength` que estava
+    // aqui aplicava-se ao hash, onde nao quer dizer nada.
     password: {
       type: String,
-      required: [true, 'Password é obrigatória'],
-      minlength: [6, 'Password deve ter no mínimo 6 caracteres'],
     },
     phone: {
       type: String,

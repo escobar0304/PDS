@@ -33,6 +33,76 @@ identificação está incompleta, a própria página o diz em vez de fingir.
 | Sessão | tokens do NextAuth | MongoDB |
 | Carrinho | conteúdo | só no navegador, nunca chega ao servidor |
 
+## Os direitos do titular, na área pessoal
+
+Um separador novo, «Os seus dados», com duas coisas.
+
+### O que motivou isto não foi o roteiro
+
+A política de privacidade já dizia, sobre os dados da conta: **«Enquanto
+mantiver a conta. Apaga-se quando a apagar.»** Não havia forma nenhuma de a
+apagar. O sítio prometia um direito que não oferecia — a mesma falha do rodapé
+que ligava para páginas inexistentes, mas aqui com o **artigo 17.º** por trás
+em vez de só a estética.
+
+### Descarregar (art. 15.º e 20.º)
+
+`GET /api/conta/dados` devolve JSON, que é o «formato estruturado, de uso
+corrente e de leitura automática» que o artigo 20.º pede.
+
+**A palavra-passe cifrada fica de fora.** Exportar um hash argon2 não serve ao
+titular para nada e, num ficheiro que vai parar aos downloads ou a um email, dá
+a quem o apanhe material para atacar offline. O artigo 15.º, n.º 4 cobre a
+recusa: o direito de acesso não prejudica direitos de terceiros — e aqui
+prejudicaria o próprio.
+
+### Apagar (art. 17.º)
+
+`DELETE /api/conta`. Apaga o utilizador, os tokens de verificação e de
+reposição, e as coleções `accounts` e `sessions` que o adaptador do NextAuth
+usava — não têm modelo Mongoose e passariam despercebidas. O adaptador saiu
+(ver `SEGURANCA.md`), mas a limpeza fica: uma instalação que o tenha tido
+pode guardar lá registos antigos. Deixar qualquer uma para
+trás é deixar dados pessoais para trás, e uma ligação de reposição viva para
+uma conta que já não existe.
+
+**As encomendas não se apagam: desligam-se da conta.** A conservação fiscal dos
+documentos de venda sobrepõe-se ao direito ao apagamento — artigo 17.º, n.º 3,
+alínea b), tratamento necessário para cumprir uma obrigação legal. Ficam sem
+`userId`.
+
+**Desligar não é anonimizar**, e a primeira versão deste texto dizia que era.
+A encomenda guarda o nome, o email e o telefone de quem comprou, porque o
+documento de venda precisa deles — continua a ser um dado pessoal de uma pessoa
+identificada. O que muda é que deixa de estar preso a uma conta. Deu-se por
+isto ao escrever os testes com encomendas completas; há agora um que falha se
+alguém voltar a afirmar o contrário no código.
+
+Consequência para quando houver loja: o prazo de conservação fiscal tem de
+constar da política de privacidade, e ao pedido de apagamento responde-se a
+dizer que as encomendas ficam, e porquê. Hoje não há encomendas nenhumas.
+
+### A confirmação muda conforme a conta
+
+Quem entrou por email confirma com a palavra-passe. **Quem entrou pela Google
+não tem palavra-passe** — o callback `signIn` cria essas contas com
+`password: ''`. Pedir-lhes a palavra-passe seria pedir uma coisa que nunca
+tiveram, e deixá-las sem forma nenhuma de apagar a conta, o que transformava o
+direito numa porta fechada para metade dos utilizadores.
+
+Para essas, escreve-se o próprio email. Não prova posse de um segredo — prova
+intenção, que é o que esta confirmação existe para garantir: que ninguém apaga
+a conta por engano.
+
+### O que isto não resolve
+
+A sessão é um JWT e **continua válida até expirar, mesmo sem conta por trás**.
+A interface termina a sessão logo a seguir a apagar, o que cobre o caso normal;
+quem guarde o token continua a poder apresentá-lo. As rotas respondem 404
+quando a conta não existe, por isso não há acesso a dados — mas a dívida é a
+mesma que já estava registada em `docs/SEGURANCA.md` para a reposição de
+palavra-passe, e agora tem mais uma razão para ser paga.
+
 ## Aviso, não caixa de consentimento
 
 O roteiro previa consentimento explícito no formulário de contacto. Está errado,
@@ -69,9 +139,7 @@ palavra-passe.
 - **Dados do prestador.** Confirmado que não é sociedade, logo não há
   conservatória, matrícula nem capital social. Faltam nome, NIF, domicílio,
   contactos efetivos e a entidade de resolução alternativa de litígios
-- **Direitos operacionais.** Exportar os meus dados e apagar a conta, na área
-  pessoal. Hoje o exercício é por email, o que é legal mas pior do que podia
-  ser quando a funcionalidade é trivial. Fica para uma fase própria
+- ~~**Direitos operacionais.**~~ Feito. Ver «Os direitos do titular» abaixo
 - **Registo de atividades de tratamento** (art. 30.º), documento interno
 - **Injeção de HTML no email de contacto.** O nome e a mensagem são
   interpolados direto no corpo do email; quem submeter HTML no nome escreve no

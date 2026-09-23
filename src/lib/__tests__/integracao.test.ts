@@ -1,7 +1,8 @@
 import { hash, verify } from 'argon2';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Token, User } from '../models';
+import { Order, Token, User } from '../models';
+import { apagarConta, exportarDados } from '../conta';
 import { expiraEm, gerarToken, resumir } from '../tokens';
 
 /**
@@ -47,7 +48,14 @@ executar('contra MongoDB', () => {
   });
 
   beforeEach(async () => {
-    await Promise.all([User.deleteMany({}), Token.deleteMany({})]);
+    await Promise.all([User.deleteMany({}), Token.deleteMany({}), Order.deleteMany({})]);
+    const bd = mongoose.connection.db;
+    if (bd) {
+      await Promise.all([
+        bd.collection('accounts').deleteMany({}),
+        bd.collection('sessions').deleteMany({}),
+      ]);
+    }
   });
 
   describe('utilizadores', () => {
@@ -99,8 +107,8 @@ executar('contra MongoDB', () => {
 
       expect(lido).not.toBeNull();
       expect(lido!.password).not.toContain('aPasswordCerta');
-      expect(await verify(lido!.password, 'aPasswordCerta')).toBe(true);
-      expect(await verify(lido!.password, 'aPasswordErrada')).toBe(false);
+      expect(await verify(lido!.password!, 'aPasswordCerta')).toBe(true);
+      expect(await verify(lido!.password!, 'aPasswordErrada')).toBe(false);
     });
 
     it('uma consulta com operador do Mongo não devolve utilizador nenhum', async () => {
@@ -205,6 +213,141 @@ executar('contra MongoDB', () => {
     });
   });
 
+    describe('os direitos do titular sobre a propria conta', () => {
+    async function conta(email: string) {
+      return User.create({
+        name: 'Marta Ferreira',
+        email,
+        password: await hash('umapassword', { type: 2 }),
+        phone: '910000000',
+      });
+    }
+
+    /**
+     * Uma encomenda que o `orderSchema` aceita. A primeira versao destes
+     * testes criava encomendas so com `userId`, `status` e `total`, e o
+     * Mongoose recusava-as todas — os campos do cliente, o tipo de entrega, o
+     * subtotal e as linhas sao obrigatorios. Foi o CI que o disse.
+     */
+    function encomenda(userId: mongoose.Types.ObjectId, total: number) {
+      return Order.create({
+        userId,
+        customerName: 'Marta Ferreira',
+        customerEmail: 'marta@exemplo.pt',
+        customerPhone: '910000000',
+        deliveryType: 'PICKUP',
+        subtotal: total,
+        total,
+        items: [
+          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', price: total, quantity: 1 },
+        ],
+      });
+    }
+
+    it('a exportacao nunca inclui a palavra-passe cifrada', async () => {
+      const u = await conta('exportar@exemplo.pt');
+
+      const dados = await exportarDados(u._id.toString());
+
+      expect(dados).not.toBeNull();
+      expect(dados!.conta.email).toBe('exportar@exemplo.pt');
+      expect(dados!.conta.phone).toBe('910000000');
+      // Um hash argon2 num ficheiro que vai parar aos downloads da a quem o
+      // apanhe material para atacar offline, e ao titular nao serve de nada.
+      expect(dados!.conta.password).toBeUndefined();
+      expect(JSON.stringify(dados)).not.toContain('$argon2');
+    });
+
+    it('a exportacao so traz as encomendas de quem pede', async () => {
+      const eu = await conta('eu@exemplo.pt');
+      const outro = await conta('outro@exemplo.pt');
+
+      await encomenda(eu._id, 10);
+      await encomenda(outro._id, 99);
+
+      const dados = await exportarDados(eu._id.toString());
+
+      // Nao procurar "99" no JSON: ids e datas sao aleatorios e contem-no por
+      // acaso. Compara-se o dono e o valor.
+      expect(dados!.encomendas).toHaveLength(1);
+      expect(dados!.encomendas[0].total).toBe(10);
+      expect(String(dados!.encomendas[0].userId)).toBe(eu._id.toString());
+    });
+
+    it('um id que nao existe devolve nulo, e um id malformado tambem', async () => {
+      expect(await exportarDados(new mongoose.Types.ObjectId().toString())).toBeNull();
+      // Sem esta guarda, o Mongoose lanca e a rota devolvia 500 em vez de 404.
+      expect(await exportarDados('nao-e-um-id')).toBeNull();
+      expect(await apagarConta('nao-e-um-id')).toBeNull();
+    });
+
+    it('apagar limpa **todas** as coleccoes, nao so o utilizador', async () => {
+      const u = await conta('apagar@exemplo.pt');
+      const bd = mongoose.connection.db!;
+
+      await Token.create({
+        resumo: resumir(gerarToken()),
+        userId: u._id,
+        finalidade: 'repor-password',
+        expiraEm: expiraEm('repor-password'),
+      });
+      await bd.collection('accounts').insertOne({ userId: u._id, provider: 'google' });
+      await bd.collection('sessions').insertOne({ userId: u._id, sessionToken: 'x' });
+
+      const r = await apagarConta(u._id.toString());
+
+      expect(r).not.toBeNull();
+      expect(await User.findById(u._id)).toBeNull();
+      // Deixar qualquer uma para tras e deixar dados pessoais para tras — e um
+      // token de reposicao vivo para uma conta que ja nao existe.
+      expect(await Token.countDocuments({ userId: u._id })).toBe(0);
+      expect(await bd.collection('accounts').countDocuments({ userId: u._id })).toBe(0);
+      expect(await bd.collection('sessions').countDocuments({ userId: u._id })).toBe(0);
+    });
+
+    it('apagar nao destroi encomendas: desliga-as da conta', async () => {
+      const u = await conta('fiscal@exemplo.pt');
+      const e = await encomenda(u._id, 42);
+
+      await apagarConta(u._id.toString());
+
+      const depois = await Order.findById(e._id);
+      // A conservacao fiscal dos documentos de venda sobrepoe-se ao direito ao
+      // apagamento (art. 17.º, n.º 3, alinea b). A encomenda fica, sem dono.
+      expect(depois).not.toBeNull();
+      expect(depois!.total).toBe(42);
+      expect(depois!.userId).toBeUndefined();
+      // E fica com o nome e o email de quem comprou: o documento fiscal
+      // precisa deles. Desligar da conta nao anonimiza — este teste existe
+      // para ninguem voltar a escrever que sim.
+      expect(depois!.customerEmail).toBe('marta@exemplo.pt');
+    });
+
+    it('apagar uma conta nao toca na de mais ninguem', async () => {
+      const eu = await conta('some@exemplo.pt');
+      const outro = await conta('fica@exemplo.pt');
+      await Token.create({
+        resumo: resumir(gerarToken()),
+        userId: outro._id,
+        finalidade: 'verificar-email',
+        expiraEm: expiraEm('verificar-email'),
+      });
+
+      await apagarConta(eu._id.toString());
+
+      expect(await User.findById(outro._id)).not.toBeNull();
+      expect(await Token.countDocuments({ userId: outro._id })).toBe(1);
+    });
+
+    it('apagar duas vezes a mesma conta nao rebenta', async () => {
+      const u = await conta('duas@exemplo.pt');
+
+      expect(await apagarConta(u._id.toString())).not.toBeNull();
+      // Acontece a quem carregue duas vezes, ou com o JWT ainda em maos.
+      expect(await apagarConta(u._id.toString())).toBeNull();
+    });
+  });
+
   describe('o ciclo completo de repor a palavra-passe', () => {
     it('gera, consome uma vez, e a segunda já não encontra nada', async () => {
       const u = await User.create({
@@ -238,8 +381,8 @@ executar('contra MongoDB', () => {
 
       // 3. A palavra-passe nova funciona e a antiga deixou de funcionar.
       const depois = await User.findById(u._id);
-      expect(await verify(depois!.password, 'aNova')).toBe(true);
-      expect(await verify(depois!.password, 'aVelha')).toBe(false);
+      expect(await verify(depois!.password!, 'aNova')).toBe(true);
+      expect(await verify(depois!.password!, 'aVelha')).toBe(false);
       // Repor prova que se controla a caixa de correio, o que confirma o email.
       expect(depois!.emailVerified).toBe(true);
 
@@ -271,6 +414,63 @@ executar('contra MongoDB', () => {
       // prazo em codigo, e nao confia no indice.
       expect(registo, 'o índice do Mongo ainda não o apagou').not.toBeNull();
       expect(registo!.expiraEm.getTime()).toBeLessThanOrEqual(Date.now());
+    });
+  });
+  describe('entrar pela Google', () => {
+    const entrar = async (email: string) => {
+      const { authOptions } = await import('../auth');
+      return authOptions.callbacks!.signIn!({
+        user: { id: 'google-sub', email, name: 'Marta Ferreira' },
+        account: { provider: 'google', type: 'oauth', providerAccountId: 'google-sub' },
+        profile: { email_verified: true },
+      } as never);
+    };
+
+    it('a primeira entrada cria a conta, sem palavra-passe', async () => {
+      // Ate aqui isto rebentava: a conta era criada com `password: ''` e o
+      // Mongoose recusava-a. Ninguem conseguia entrar pela Google pela
+      // primeira vez.
+      expect(await entrar('Nova@Exemplo.pt')).toBe(true);
+
+      const u = await User.findOne({ email: 'nova@exemplo.pt' });
+      expect(u, 'a conta foi criada, e com o email em minúsculas').not.toBeNull();
+      expect(u!.password).toBeUndefined();
+      expect(u!.emailVerified).toBe(true);
+    });
+
+    it('entrar outra vez não duplica a conta', async () => {
+      await entrar('repete@exemplo.pt');
+      await entrar('repete@exemplo.pt');
+      expect(await User.countDocuments({ email: 'repete@exemplo.pt' })).toBe(1);
+    });
+
+    it('depois de mudar o nome, a sessão lê-o da base de dados e não do cliente', async () => {
+      const { authOptions } = await import('../auth');
+      const u = await User.create({ name: 'Nome Novo', email: 'sessao@exemplo.pt' });
+
+      const token = await authOptions.callbacks!.jwt!({
+        token: { userId: u._id.toString(), name: 'Nome Antigo', role: 'USER' },
+        trigger: 'update',
+        // O que o cliente manda em `update()`. Tem de ser ignorado.
+        session: { name: 'Escolhido pelo cliente', role: 'ADMIN' },
+      } as never);
+
+      expect(token.name).toBe('Nome Novo');
+      expect(token.role).toBe('USER');
+    });
+
+    it('quem já tinha conta por email entra nela, e a palavra-passe fica', async () => {
+      await User.create({
+        name: 'Marta Ferreira',
+        email: 'ambas@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      expect(await entrar('ambas@exemplo.pt')).toBe(true);
+
+      expect(await User.countDocuments({ email: 'ambas@exemplo.pt' })).toBe(1);
+      const u = await User.findOne({ email: 'ambas@exemplo.pt' });
+      expect(await verify(u!.password!, 'umapassword')).toBe(true);
     });
   });
 });

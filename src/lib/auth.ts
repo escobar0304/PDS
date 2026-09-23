@@ -2,8 +2,6 @@
 import type { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { MongoDBAdapter } from '@next-auth/mongodb-adapter';
-import clientPromise from '@/lib/mongodb';
 import connectDB from '@/lib/db';
 import { User } from '@/lib/models';
 import bcrypt from 'bcryptjs';
@@ -43,8 +41,26 @@ export const googleConfigurado = Boolean(
   process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
 );
 
+/**
+ * Sem adaptador, e de proposito.
+ *
+ * Havia um `MongoDBAdapter` e, ao mesmo tempo, o callback `signIn` a criar o
+ * utilizador pelo Mongoose. Duas fontes de verdade para a mesma conta, e as
+ * duas partiam a entrada pela Google a quem chegasse pela primeira vez:
+ *
+ * 1. o callback criava o utilizador com `password: ''`, e o Mongoose recusava
+ *    ("Password e obrigatoria") — o `signIn` rebentava ali;
+ * 2. mesmo sem isso, o adaptador procurava a ligacao em `accounts`, nao a
+ *    encontrava, via um utilizador com o mesmo email e recusava com
+ *    `OAuthAccountNotLinked`.
+ *
+ * Com sessoes JWT, o adaptador so servia para guardar utilizadores e
+ * ligacoes. O modelo `User` ja faz a primeira coisa, e a segunda nao faz falta
+ * a ninguem. Sair daqui levou tambem a cadeia `mongodb@5` → `socks` →
+ * `ip-address`, que estava em `docs/SEGURANCA.md` como vulnerabilidade alta
+ * sem saida.
+ */
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise),
   providers: [
     ...(googleConfigurado
       ? [
@@ -119,7 +135,18 @@ export const authOptions: NextAuthOptions = {
   ],
   
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
+      // Depois de a pessoa mudar o nome, a interface chama `update()`. O que
+      // vem nesse pedido e do cliente e nao se usa: le-se o nome da base de
+      // dados. Aceitar o que o cliente manda deixava-o escrever na propria
+      // sessao o que quisesse — incluindo, noutro campo, o `role`.
+      if (trigger === 'update' && token.userId) {
+        await connectDB();
+        const atual = await User.findById(token.userId).select('name').lean();
+        if (atual) token.name = atual.name;
+        return token;
+      }
+
       if (user) {
         token.role = user.role || 'USER';
         token.userId = user.id;
@@ -128,7 +155,7 @@ export const authOptions: NextAuthOptions = {
       // Atualizar token se login via Google
       if (account?.provider === 'google' && user) {
         await connectDB();
-        const dbUser = await User.findOne({ email: user.email });
+        const dbUser = await User.findOne({ email: user.email?.toLowerCase() });
         if (dbUser) {
           token.role = dbUser.role;
           token.userId = dbUser._id.toString();
@@ -146,20 +173,29 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     
-    async signIn({ user, account }) {
-      if (account?.provider === 'google') {
-        await connectDB();
-        const existingUser = await User.findOne({ email: user.email });
-        
-        if (!existingUser) {
-          await User.create({
-            name: user.name,
-            email: user.email,
-            emailVerified: true,
-            role: 'USER',
-            password: '', // Google users não têm password local
-          });
-        }
+    async signIn({ user, account, profile }) {
+      if (account?.provider !== 'google') return true;
+
+      // A Google so garante o email quando diz que o verificou. Numa conta
+      // Google Workspace de um dominio qualquer, `email_verified` pode vir
+      // falso — e aceitar esse email era deixar quem controla esse dominio
+      // entrar na conta de outra pessoa que se tenha registado aqui com ele.
+      const verificado = (profile as { email_verified?: boolean } | undefined)?.email_verified;
+      if (verificado !== true || !user.email) return false;
+
+      const email = user.email.toLowerCase();
+      await connectDB();
+      const existente = await User.findOne({ email });
+
+      if (!existente) {
+        // Sem `password`, e nao com ela vazia: e a ausencia que diz que a
+        // conta nao tem palavra-passe (`GET /api/conta` le isso).
+        await User.create({
+          name: user.name || email.split('@')[0],
+          email,
+          emailVerified: true,
+          role: 'USER',
+        });
       }
       return true;
     }

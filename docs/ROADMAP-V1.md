@@ -53,7 +53,8 @@ volta a acontecer.
   rebenta a meio do build com uma mensagem críptica se faltar `MONGODB_URI`.
   Falhar cedo e com nome
 - **`.env.example`** com todas as chaves necessárias, sem valores
-- **`error.tsx`, `not-found.tsx` e `loading.tsx`** na raiz do App Router. Hoje um erro
+- **`error.tsx` e `not-found.tsx`** na raiz do App Router (o `loading.tsx` da raiz
+  saiu em 23/09/2026: ver `docs/PERFORMANCE.md`). Hoje um erro
   de runtime mostra o ecrã por omissão do Next
 - **Testes.** Vitest para a lógica pura e Playwright para os percursos, divididos
   por domínio em vez de um ficheiro único:
@@ -400,11 +401,28 @@ Encontrado durante a análise:
 
 ## F12. Área pessoal
 
-- Substituir as encomendas mock, hoje hardcoded no ficheiro, por dados reais ou
-  por um estado vazio honesto
-- Editar perfil e morada
-- Exportar dados e apagar conta, vindos de F6
-- Favoritos: o botão de coração da página de produto não guarda nada
+- ~~Substituir as encomendas mock por um estado vazio honesto~~ — feito
+- ~~Exportar dados e apagar conta, vindos de F6~~ — feito. Era o mais urgente
+  dos quatro e não por estar no roteiro: a política de privacidade prometia
+  «apaga-se quando a apagar» sem haver como apagar. Ver `DADOS-PESSOAIS.md`
+- ~~Editar o nome~~ — feito em 23/09/2026. A área pessoal dizia «para alterar
+  o nome, contacte-nos», com os contactos a `null` até à F4: o direito de
+  retificação (art. 16.º) não tinha caminho. `PATCH /api/conta` aceita o nome
+  e **só** o nome — um esquema `strict()` recusa `role`, `email` ou qualquer
+  outro campo, em vez de os ignorar. A sessão relê o nome da base de dados,
+  nunca o que o cliente manda
+- **O email continua fixo, de propósito.** Mudá-lo exige provar a posse do
+  endereço novo, que é outro fluxo. Não é bloqueante: a conta pode ser apagada
+  e criada de novo, e o pedido pode ser feito pelo contacto quando existir
+- A morada só passa a fazer sentido quando o checkout existir — guardá-la
+  agora é guardar um dado pessoal que ninguém usa. **Passa para a v2**
+- ~~Favoritos~~ — **passam para a v2, e o coração saiu.** Mudava de cor e não
+  guardava nada. Construí-los agora era trabalho de loja numa versão que é
+  institucional; deixá-lo era um controlo a mentir. O separador «Favoritos»
+  da área pessoal, que prometia «guarde aqui as peças», saiu com ele
+- ~~O botão de partilhar do produto~~ — não tinha `onClick`. Passou a usar a
+  partilha nativa, ou a copiar a ligação onde ela não existe. Há agora uma
+  guarda que falha se algum `<button>` do sítio não tiver acção nenhuma
 
 ---
 
@@ -571,6 +589,7 @@ Fica registado para não se perder:
 - Gestão de stock
 - Faturação certificada, obrigatória em Portugal
 - Condições gerais de venda e formulário de livre resolução
+- Favoritos e morada guardada na conta, retirados da F12
 - Painel de administração a sério. Os três ficheiros de `admin/` estavam vazios e
   partiam o build; ficaram com marcadores mínimos
 
@@ -591,7 +610,7 @@ F8  Termos                       precisa de validação jurídica
 F9  Afirmações comerciais        precisa de decisões tuas sobre o negócio
 F10 Páginas institucionais       feita; /termos e /envios bloqueados
 F11 Segurança                    independente, pode correr em paralelo
-F12 Área pessoal                 depende de F3 e F6
+F12 Área pessoal                 feita; favoritos e morada passam à v2
 F13 Acessibilidade               feita
 F14 Performance                  feita
 F15 SEO                          robots.ts feito na F3; o resto por último

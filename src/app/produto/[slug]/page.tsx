@@ -8,7 +8,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Heart, Minus, Plus, ShareNetwork, Shield, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Minus, Plus, ShareNetwork, Shield, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
 import { botaoClasses } from '@/components/ui/Button';
 import { AnuncioEstado, Skeleton } from '@/components/ui';
 
@@ -48,7 +48,31 @@ export default function ProdutoPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [partilha, setPartilha] = useState('');
+
+  /**
+   * O botao estava la sem `onClick`: um controlo que nao fazia nada. A
+   * partilha nativa abre o menu do sistema (no telemovel, e o que se espera);
+   * onde nao existe, copia-se a ligacao e diz-se que se copiou.
+   */
+  const partilhar = async () => {
+    const url = window.location.href;
+    setPartilha('');
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product?.name, url });
+      } catch {
+        // Fechar o menu sem escolher tambem rejeita. Nao e um erro.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setPartilha('Ligação copiada.');
+    } catch {
+      setPartilha('Não foi possível copiar a ligação.');
+    }
+  };
 
   useEffect(() => {
     fetchProduct();
@@ -374,24 +398,17 @@ export default function ProdutoPage() {
                   </button>
 
                   <button
-                    onClick={() => setIsFavorite(!isFavorite)}
-                    className={`rounded border p-4 transition-smooth ${
-                      isFavorite
-                        ? 'border-rose-700 bg-rose-100 text-rose-700'
-                        : 'border-line text-ink-muted hover:border-rose-700 hover:text-rose-700'
-                    }`}
-                    aria-label="Adicionar aos favoritos"
-                  >
-                    <Heart className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
-                  </button>
-
-                  <button
+                    type="button"
+                    onClick={partilhar}
                     className="rounded border border-line p-4 text-ink-muted transition-smooth hover:border-rose-700 hover:text-rose-700"
                     aria-label="Partilhar"
                   >
-                    <ShareNetwork className="w-5 h-5" />
+                    <ShareNetwork className="w-5 h-5" aria-hidden />
                   </button>
                 </div>
+                <p role="status" className="mt-2 min-h-5 text-sm text-ink-muted">
+                  {partilha}
+                </p>
               </div>
 
               {/* Informações Adicionais */}

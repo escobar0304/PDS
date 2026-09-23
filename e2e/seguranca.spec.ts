@@ -225,3 +225,44 @@ test.describe('limites que esgotam a quota', () => {
     expect(estados).toContain(429);
   });
 });
+
+test.describe('os direitos sobre a própria conta', () => {
+  test('exportar os dados exige sessão', async ({ request }) => {
+    const r = await request.get('/api/conta/dados');
+
+    // Sem sessao e 401, nunca 200 com dados de outra pessoa.
+    expect(r.status()).toBe(401);
+    expect(await r.text()).not.toContain('@');
+  });
+
+  test('apagar a conta exige sessão', async ({ request }) => {
+    const r = await request.delete('/api/conta', { data: { password: 'seja o que for' } });
+
+    expect(r.status()).toBe(401);
+  });
+
+  test('saber se a conta tem palavra-passe exige sessão', async ({ request }) => {
+    // Sem isto, a rota dizia a qualquer um se uma conta usa Google ou
+    // credenciais — um detalhe que nao tem de ser publico.
+    const r = await request.get('/api/conta');
+
+    expect(r.status()).toBe(401);
+    expect(await r.text()).not.toContain('temPassword');
+  });
+
+  test('a rota de apagar não aceita GET nem POST', async ({ request }) => {
+    for (const metodo of ['post', 'put'] as const) {
+      const r = await request[metodo]('/api/conta', { data: {} });
+      // 405 do Next para um método sem handler. O que interessa e que nao
+      // apaga nada por um caminho que ninguem pensou em proteger.
+      expect([401, 405]).toContain(r.status());
+    }
+  });
+});
+
+test.describe('mudar o nome', () => {
+  test('exige sessão', async ({ request }) => {
+    const r = await request.patch('/api/conta', { data: { name: 'Outro nome' } });
+    expect(r.status()).toBe(401);
+  });
+});
