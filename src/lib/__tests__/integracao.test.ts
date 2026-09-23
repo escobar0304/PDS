@@ -223,6 +223,27 @@ executar('contra MongoDB', () => {
       });
     }
 
+    /**
+     * Uma encomenda que o `orderSchema` aceita. A primeira versao destes
+     * testes criava encomendas so com `userId`, `status` e `total`, e o
+     * Mongoose recusava-as todas — os campos do cliente, o tipo de entrega, o
+     * subtotal e as linhas sao obrigatorios. Foi o CI que o disse.
+     */
+    function encomenda(userId: mongoose.Types.ObjectId, total: number) {
+      return Order.create({
+        userId,
+        customerName: 'Marta Ferreira',
+        customerEmail: 'marta@exemplo.pt',
+        customerPhone: '910000000',
+        deliveryType: 'PICKUP',
+        subtotal: total,
+        total,
+        items: [
+          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', price: total, quantity: 1 },
+        ],
+      });
+    }
+
     it('a exportacao nunca inclui a palavra-passe cifrada', async () => {
       const u = await conta('exportar@exemplo.pt');
 
@@ -241,13 +262,16 @@ executar('contra MongoDB', () => {
       const eu = await conta('eu@exemplo.pt');
       const outro = await conta('outro@exemplo.pt');
 
-      await Order.create({ userId: eu._id, status: 'PENDING', total: 10 });
-      await Order.create({ userId: outro._id, status: 'PENDING', total: 99 });
+      await encomenda(eu._id, 10);
+      await encomenda(outro._id, 99);
 
       const dados = await exportarDados(eu._id.toString());
 
+      // Nao procurar "99" no JSON: ids e datas sao aleatorios e contem-no por
+      // acaso. Compara-se o dono e o valor.
       expect(dados!.encomendas).toHaveLength(1);
-      expect(JSON.stringify(dados!.encomendas)).not.toContain('99');
+      expect(dados!.encomendas[0].total).toBe(10);
+      expect(String(dados!.encomendas[0].userId)).toBe(eu._id.toString());
     });
 
     it('um id que nao existe devolve nulo, e um id malformado tambem', async () => {
@@ -283,16 +307,20 @@ executar('contra MongoDB', () => {
 
     it('apagar nao destroi encomendas: desliga-as da conta', async () => {
       const u = await conta('fiscal@exemplo.pt');
-      const encomenda = await Order.create({ userId: u._id, status: 'PAID', total: 42 });
+      const e = await encomenda(u._id, 42);
 
       await apagarConta(u._id.toString());
 
-      const depois = await Order.findById(encomenda._id);
+      const depois = await Order.findById(e._id);
       // A conservacao fiscal dos documentos de venda sobrepoe-se ao direito ao
       // apagamento (art. 17.º, n.º 3, alinea b). A encomenda fica, sem dono.
       expect(depois).not.toBeNull();
       expect(depois!.total).toBe(42);
       expect(depois!.userId).toBeUndefined();
+      // E fica com o nome e o email de quem comprou: o documento fiscal
+      // precisa deles. Desligar da conta nao anonimiza — este teste existe
+      // para ninguem voltar a escrever que sim.
+      expect(depois!.customerEmail).toBe('marta@exemplo.pt');
     });
 
     it('apagar uma conta nao toca na de mais ninguem', async () => {

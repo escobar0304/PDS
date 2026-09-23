@@ -78,8 +78,13 @@ export interface ResultadoApagar {
  * As encomendas **nao** se apagam, e isso e deliberado: ha obrigacao de
  * conservacao fiscal dos documentos de venda que se sobrepoe ao direito ao
  * apagamento (art. 17.º, n.º 3, alinea b) — o tratamento necessario para
- * cumprir uma obrigacao legal. Desligam-se da conta, ficando sem `userId`,
- * para deixarem de ser dados de uma pessoa identificada aqui.
+ * cumprir uma obrigacao legal. Desligam-se da conta, ficando sem `userId`.
+ *
+ * Desligar **nao** anonimiza: a encomenda guarda o nome, o email e o telefone
+ * de quem comprou, porque o documento de venda precisa deles. O que muda e que
+ * deixam de estar presos a uma conta que se pode abrir. Ficam pelo prazo
+ * fiscal, e esse prazo tem de estar na politica de privacidade no dia em que
+ * houver encomendas.
  *
  * Hoje nao ha encomendas nenhumas, mas a regra fica escrita antes de existirem
  * — e mais barato agora do que quando houver.

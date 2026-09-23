@@ -67,9 +67,18 @@ uma conta que já não existe.
 **As encomendas não se apagam: desligam-se da conta.** A conservação fiscal dos
 documentos de venda sobrepõe-se ao direito ao apagamento — artigo 17.º, n.º 3,
 alínea b), tratamento necessário para cumprir uma obrigação legal. Ficam sem
-`userId`, deixando de ser dados de uma pessoa identificada aqui. Hoje não há
-encomendas nenhumas; a regra fica escrita antes de existirem, que é mais barato
-do que depois.
+`userId`.
+
+**Desligar não é anonimizar**, e a primeira versão deste texto dizia que era.
+A encomenda guarda o nome, o email e o telefone de quem comprou, porque o
+documento de venda precisa deles — continua a ser um dado pessoal de uma pessoa
+identificada. O que muda é que deixa de estar preso a uma conta. Deu-se por
+isto ao escrever os testes com encomendas completas; há agora um que falha se
+alguém voltar a afirmar o contrário no código.
+
+Consequência para quando houver loja: o prazo de conservação fiscal tem de
+constar da política de privacidade, e ao pedido de apagamento responde-se a
+dizer que as encomendas ficam, e porquê. Hoje não há encomendas nenhumas.
 
 ### A confirmação muda conforme a conta
 
