@@ -259,3 +259,10 @@ test.describe('os direitos sobre a própria conta', () => {
     }
   });
 });
+
+test.describe('mudar o nome', () => {
+  test('exige sessão', async ({ request }) => {
+    const r = await request.patch('/api/conta', { data: { name: 'Outro nome' } });
+    expect(r.status()).toBe(401);
+  });
+});

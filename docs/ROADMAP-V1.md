@@ -405,11 +405,24 @@ Encontrado durante a análise:
 - ~~Exportar dados e apagar conta, vindos de F6~~ — feito. Era o mais urgente
   dos quatro e não por estar no roteiro: a política de privacidade prometia
   «apaga-se quando a apagar» sem haver como apagar. Ver `DADOS-PESSOAIS.md`
-- Editar perfil e morada. O nome e o email estão em leitura apenas, com um
-  aviso a dizer para contactar. A morada só passa a fazer sentido quando o
-  checkout existir — guardá-la agora é guardar um dado pessoal que ninguém usa
-- Favoritos: o botão de coração da página de produto não guarda nada. Precisa
-  de campo no `userSchema` e de rota própria
+- ~~Editar o nome~~ — feito em 23/09/2026. A área pessoal dizia «para alterar
+  o nome, contacte-nos», com os contactos a `null` até à F4: o direito de
+  retificação (art. 16.º) não tinha caminho. `PATCH /api/conta` aceita o nome
+  e **só** o nome — um esquema `strict()` recusa `role`, `email` ou qualquer
+  outro campo, em vez de os ignorar. A sessão relê o nome da base de dados,
+  nunca o que o cliente manda
+- **O email continua fixo, de propósito.** Mudá-lo exige provar a posse do
+  endereço novo, que é outro fluxo. Não é bloqueante: a conta pode ser apagada
+  e criada de novo, e o pedido pode ser feito pelo contacto quando existir
+- A morada só passa a fazer sentido quando o checkout existir — guardá-la
+  agora é guardar um dado pessoal que ninguém usa. **Passa para a v2**
+- ~~Favoritos~~ — **passam para a v2, e o coração saiu.** Mudava de cor e não
+  guardava nada. Construí-los agora era trabalho de loja numa versão que é
+  institucional; deixá-lo era um controlo a mentir. O separador «Favoritos»
+  da área pessoal, que prometia «guarde aqui as peças», saiu com ele
+- ~~O botão de partilhar do produto~~ — não tinha `onClick`. Passou a usar a
+  partilha nativa, ou a copiar a ligação onde ela não existe. Há agora uma
+  guarda que falha se algum `<button>` do sítio não tiver acção nenhuma
 
 ---
 
@@ -576,6 +589,7 @@ Fica registado para não se perder:
 - Gestão de stock
 - Faturação certificada, obrigatória em Portugal
 - Condições gerais de venda e formulário de livre resolução
+- Favoritos e morada guardada na conta, retirados da F12
 - Painel de administração a sério. Os três ficheiros de `admin/` estavam vazios e
   partiam o build; ficaram com marcadores mínimos
 
@@ -596,7 +610,7 @@ F8  Termos                       precisa de validação jurídica
 F9  Afirmações comerciais        precisa de decisões tuas sobre o negócio
 F10 Páginas institucionais       feita; /termos e /envios bloqueados
 F11 Segurança                    independente, pode correr em paralelo
-F12 Área pessoal                 depende de F3 e F6
+F12 Área pessoal                 feita; favoritos e morada passam à v2
 F13 Acessibilidade               feita
 F14 Performance                  feita
 F15 SEO                          robots.ts feito na F3; o resto por último

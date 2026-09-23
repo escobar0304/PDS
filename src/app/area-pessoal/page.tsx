@@ -4,23 +4,22 @@ import { useEffect, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { DownloadSimple, Heart, Package, ShieldCheck, SignOut, Trash, User } from '@phosphor-icons/react';
+import { DownloadSimple, Package, ShieldCheck, SignOut, Trash, User } from '@phosphor-icons/react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Alert, Button, Card, Container, Input, Spinner, EmptyState } from '@/components/ui';
 import { botaoClasses } from '@/components/ui/Button';
 
-type Separador = 'perfil' | 'encomendas' | 'favoritos' | 'dados';
+type Separador = 'perfil' | 'encomendas' | 'dados';
 
 const SEPARADORES: { id: Separador; label: string; Icone: typeof User }[] = [
   { id: 'perfil', label: 'Perfil', Icone: User },
   { id: 'encomendas', label: 'Encomendas', Icone: Package },
-  { id: 'favoritos', label: 'Favoritos', Icone: Heart },
   { id: 'dados', label: 'Os seus dados', Icone: ShieldCheck },
 ];
 
 export default function AreaPessoal() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
   const [separador, setSeparador] = useState<Separador>('perfil');
   const [aApagar, setAApagar] = useState(false);
@@ -28,9 +27,49 @@ export default function AreaPessoal() {
   const [erroDados, setErroDados] = useState('');
   const [ocupado, setOcupado] = useState(false);
 
+  // `null` enquanto a pessoa nao mexer: o campo mostra o nome da sessao.
+  const [nome, setNome] = useState<string | null>(null);
+  const [erroNome, setErroNome] = useState('');
+  const [guardado, setGuardado] = useState(false);
+  const [aGuardar, setAGuardar] = useState(false);
+
+  const guardarNome = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const novo = (nome ?? '').trim();
+    setGuardado(false);
+    // Feito tambem no servidor. Aqui so poupa um pedido que se sabe perdido.
+    if (!novo) {
+      setErroNome('Escreva o seu nome.');
+      return;
+    }
+    setAGuardar(true);
+    setErroNome('');
+    try {
+      const r = await fetch('/api/conta', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: novo }),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        setErroNome(d.error ?? 'Não foi possível guardar.');
+        return;
+      }
+      // O nome da sessao vem do JWT; sem isto o cabecalho mostrava o antigo
+      // ate a sessao expirar. O servidor le o nome da base de dados.
+      await update();
+      setNome(null);
+      setGuardado(true);
+    } catch {
+      setErroNome('Não foi possível guardar.');
+    } finally {
+      setAGuardar(false);
+    }
+  };
+
   /**
    * Quem entrou pela Google nao tem palavra-passe: o callback `signIn` cria
-   * essas contas com `password: ''`. Pedir-lhes a palavra-passe seria pedir
+   * essas contas sem ela. Pedir-lhes a palavra-passe seria pedir
    * uma coisa que nunca tiveram, e deixa-las sem forma de apagar a conta.
    * Confirmam escrevendo o proprio email.
    *
@@ -149,15 +188,37 @@ export default function AreaPessoal() {
                 <Card className="p-6 shadow-soft md:p-8">
                   <h2 className="mb-6 font-serif text-2xl text-rose-700">Informações pessoais</h2>
 
-                  <div className="space-y-4">
+                  <form onSubmit={guardarNome} noValidate className="space-y-4">
                     <Input
                       label="Nome"
                       name="nome"
                       type="text"
-                      value={session.user?.name ?? ''}
-                      readOnly
-                      hint="Para alterar o nome, contacte-nos."
+                      autoComplete="name"
+                      maxLength={120}
+                      value={nome ?? session.user?.name ?? ''}
+                      onChange={(e) => {
+                        setNome(e.target.value);
+                        setGuardado(false);
+                      }}
+                      error={erroNome || undefined}
                     />
+                    <div className="flex items-center gap-4">
+                      <Button
+                        type="submit"
+                        loading={aGuardar}
+                        disabled={nome === null || nome.trim() === (session.user?.name ?? '')}
+                      >
+                        Guardar o nome
+                      </Button>
+                      {/* Montado sempre: uma regiao de estado que so aparece com a
+                          mensagem nao e anunciada de forma fiavel (4.1.3). */}
+                      <p role="status" className="text-sm text-ink-muted">
+                        {guardado ? 'O nome foi guardado.' : ''}
+                      </p>
+                    </div>
+                  </form>
+
+                  <div className="mt-6 space-y-4">
                     <Input
                       label="Email"
                       name="email"
@@ -302,18 +363,6 @@ export default function AreaPessoal() {
                 </div>
               )}
 
-              {separador === 'favoritos' && (
-                <EmptyState
-                  icon={<Heart className="h-10 w-10" />}
-                  title="Ainda não tem favoritos"
-                  description="Guarde aqui as peças que quer rever mais tarde."
-                  action={
-                    <Link href="/loja" className={botaoClasses()}>
-                      Explorar peças
-                    </Link>
-                  }
-                />
-              )}
             </div>
           </div>
         </Container>

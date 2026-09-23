@@ -36,6 +36,19 @@ export const esquemaRegisto = z.object({
 
 export type DadosRegisto = z.infer<typeof esquemaRegisto>;
 
+/**
+ * O que a propria pessoa pode mudar no perfil: o nome, e so o nome.
+ *
+ * `strict()` e o que isto tem de importante. Sem ele, o zod descarta em
+ * silencio os campos que nao conhece — o que ja chegava, porque a rota so
+ * escreve `name`. Com ele, um pedido com `role`, `email` ou `emailVerified`
+ * e **recusado**, em vez de aceite a meio. Uma rota de perfil que passe o
+ * corpo inteiro para a base de dados e o caminho classico para alguem se
+ * promover a ADMIN; recusar o que nao se pediu torna isso visivel a quem
+ * experimente, em vez de parecer que funcionou.
+ */
+export const esquemaPerfil = z.object({ name: texto(120) }).strict();
+
 export const esquemaCredenciais = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   password: z.string().min(1).max(200),

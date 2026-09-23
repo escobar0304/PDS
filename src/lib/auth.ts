@@ -135,7 +135,18 @@ export const authOptions: NextAuthOptions = {
   ],
   
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
+      // Depois de a pessoa mudar o nome, a interface chama `update()`. O que
+      // vem nesse pedido e do cliente e nao se usa: le-se o nome da base de
+      // dados. Aceitar o que o cliente manda deixava-o escrever na propria
+      // sessao o que quisesse — incluindo, noutro campo, o `role`.
+      if (trigger === 'update' && token.userId) {
+        await connectDB();
+        const atual = await User.findById(token.userId).select('name').lean();
+        if (atual) token.name = atual.name;
+        return token;
+      }
+
       if (user) {
         token.role = user.role || 'USER';
         token.userId = user.id;

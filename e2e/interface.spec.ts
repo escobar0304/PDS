@@ -219,3 +219,28 @@ test('as páginas estáticas chegam inteiras, sem spinner à entrada', async ({ 
     );
   }
 });
+
+test('partilhar um produto faz alguma coisa', async ({ page, context }) => {
+  // O botao estava la sem `onClick`. Em Chromium de secretaria nao ha partilha
+  // nativa, por isso cai no caminho de copiar a ligacao.
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/produto/quartzo-rosa-bruto');
+  await expect(page.getByRole('heading', { name: 'Quartzo Rosa Bruto' })).toBeVisible();
+
+  const temPartilhaNativa = await page.evaluate(() => typeof navigator.share === 'function');
+  test.skip(temPartilhaNativa, 'este browser abre o menu do sistema, que um teste não fecha');
+
+  await page.getByRole('button', { name: 'Partilhar' }).click();
+
+  await expect(page.getByRole('status').filter({ hasText: 'Ligação copiada.' })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
+    '/produto/quartzo-rosa-bruto',
+  );
+});
+
+test('a página de produto não oferece favoritos que não guarda', async ({ page }) => {
+  // O coracao mudava de cor e nao guardava nada. Favoritos e loja: v2.
+  await page.goto('/produto/quartzo-rosa-bruto');
+  await expect(page.getByRole('heading', { name: 'Quartzo Rosa Bruto' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /favorit/i })).toHaveCount(0);
+});

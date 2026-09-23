@@ -7,7 +7,7 @@ import { User } from '@/lib/models';
 import { exigirSessao } from '@/lib/autorizacao';
 import { apagarConta } from '@/lib/conta';
 import { consumir, identificar } from '@/lib/limites';
-import { lerCorpo } from '@/lib/validacao';
+import { esquemaPerfil, lerCorpo } from '@/lib/validacao';
 
 /**
  * Direito ao apagamento (RGPD, art. 17.º).
@@ -126,5 +126,51 @@ export async function DELETE(pedido: Request) {
   } catch (erro) {
     console.error('Erro ao apagar conta:', erro);
     return NextResponse.json({ error: 'Não foi possível apagar a conta.' }, { status: 500 });
+  }
+}
+
+const LIMITE_PERFIL = { max: 20, janelaMs: 15 * 60 * 1000 };
+
+/**
+ * Direito de retificacao (RGPD, art. 16.º).
+ *
+ * A area pessoal dizia "para alterar o nome, contacte-nos" — e os contactos
+ * estao a `null` ate a F4 estar preenchida. O direito existia no papel e nao
+ * tinha caminho.
+ *
+ * So o nome. O email identifica a conta e muda-lo exige provar a posse do
+ * novo endereco, que e outro fluxo. O que se escreve e sempre `name`, na conta
+ * da sessao: nunca o corpo do pedido, e nunca um id vindo dele.
+ */
+export async function PATCH(pedido: Request) {
+  const permissao = await exigirSessao();
+  if (!permissao.ok) return permissao.resposta;
+
+  const quota = consumir(`perfil:${permissao.sessao.id}`, LIMITE_PERFIL);
+  if (!quota.permitido) {
+    return NextResponse.json(
+      { error: 'Demasiadas alterações. Tente mais tarde.' },
+      { status: 429 },
+    );
+  }
+
+  const corpo = await lerCorpo(pedido, esquemaPerfil);
+  if (!corpo.ok) {
+    return NextResponse.json({ error: corpo.erro }, { status: 400 });
+  }
+
+  try {
+    await connectDB();
+    const r = await User.updateOne(
+      { _id: permissao.sessao.id },
+      { $set: { name: corpo.dados.name } },
+    );
+    if (r.matchedCount === 0) {
+      return NextResponse.json({ error: 'Conta não encontrada' }, { status: 404 });
+    }
+    return NextResponse.json({ name: corpo.dados.name });
+  } catch (erro) {
+    console.error('Erro ao atualizar o perfil:', erro);
+    return NextResponse.json({ error: 'Não foi possível guardar.' }, { status: 500 });
   }
 }

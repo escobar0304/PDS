@@ -444,6 +444,21 @@ executar('contra MongoDB', () => {
       expect(await User.countDocuments({ email: 'repete@exemplo.pt' })).toBe(1);
     });
 
+    it('depois de mudar o nome, a sessão lê-o da base de dados e não do cliente', async () => {
+      const { authOptions } = await import('../auth');
+      const u = await User.create({ name: 'Nome Novo', email: 'sessao@exemplo.pt' });
+
+      const token = await authOptions.callbacks!.jwt!({
+        token: { userId: u._id.toString(), name: 'Nome Antigo', role: 'USER' },
+        trigger: 'update',
+        // O que o cliente manda em `update()`. Tem de ser ignorado.
+        session: { name: 'Escolhido pelo cliente', role: 'ADMIN' },
+      } as never);
+
+      expect(token.name).toBe('Nome Novo');
+      expect(token.role).toBe('USER');
+    });
+
     it('quem já tinha conta por email entra nela, e a palavra-passe fica', async () => {
       await User.create({
         name: 'Marta Ferreira',
