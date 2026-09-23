@@ -200,11 +200,8 @@ críticas e 4 altas.** A pior superfície deste projeto não era código nosso.
 
 Ficaram **4 → 3**, e nenhuma se fecha sem uma decisão maior:
 
-**`next` continua crítica.** O 14.2.35 fecha as duas falhas com correção na
-linha 14.2, mas a linha deixou de receber retroportações: mais de vinte
-avisos só se fecham em `15.5.24+`. Isso é uma migração de major com mudanças
-de API — `params` passa a assíncrono, entre outras — e é trabalho próprio,
-com o seu PR. Não se despacha de passagem.
+**`next` era crítica, e deixou de ser.** A migração para o `15.5.26` foi
+feita a seguir, e está descrita abaixo.
 
 **`postcss` alta** vem empacotado dentro do `next`. Sai quando o `next` sair.
 As falhas são a analisar CSS de origem não confiável; nós não analisamos CSS
@@ -227,6 +224,41 @@ nodemailer. O *peer* é irrelevante aqui, e o `overrides` diz exatamente isso.
 Se algum dia se acrescentar o `EmailProvider`, esta entrada tem de ser
 reavaliada.
 
+## A migração para o Next 15
+
+Feita logo a seguir ao upgrade acima, e mais pequena do que eu a tinha
+pintado.
+
+**A previsão estava errada.** Eu disse que o risco real era o React 19 que o
+Next 15 arrasta. O `next@15.5.26` declara `react: "^18.2.0 || ^19.0.0"` —
+aceita o React 18 que já temos. Fica no 18.3.1; o salto para o 19 é outra
+decisão, e não entrou aqui.
+
+**A superfície medida antes de começar:** `cookies()`, `headers()` e
+`draftMode()` não são usados em lado nenhum, e o `params` do servidor aparece
+num **único** sítio. Todo o resto é `useParams`/`useSearchParams` — hooks de
+cliente, inalterados — ou `new URL(request.url)`.
+
+O ficheiro foi `src/app/api/products/[slug]/route.ts`: `params` passa a
+`Promise` e o `slug` passa a ser esperado.
+
+### O que isto ensinou sobre o `typecheck`
+
+**O `npm run typecheck` passou limpo com o código errado.** A rota declara o
+seu próprio tipo inline e nada o confronta com a assinatura que o Next
+espera. Quem valida isso é o `next build`, que gera os tipos das rotas — e foi
+lá que rebentou, com o `tsc` verde.
+
+Um `tsc` limpo não chega para dizer que uma rota está certa. É mais uma
+instância da mesma lição do 4.1.3: saber o que cada ferramenta *não* vê vale
+tanto como o que ela vê.
+
+### O que fecha
+
+O `next` desce de **crítica para moderada**. O que sobra — essa moderada e a
+alta do `postcss` que o next empacota (8.4.31) — só fecha no Next 16, em "Por
+fazer". O `ip-address` continua pela cadeia do `@next-auth/mongodb-adapter`.
+
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
@@ -238,9 +270,11 @@ reavaliada.
   entrado até o token expirar. Resolver isto exige guardar um marcador de
   invalidação por utilizador e verificá-lo em cada pedido. Fica registado como
   dívida conhecida, não como esquecimento
-- **Migrar para o Next 15.** A linha 14.2 deixou de receber retroportações de
-  segurança e mais de vinte avisos só fecham em `15.5.24+`, um deles crítico.
-  É uma migração de major com mudanças de API (`params` assíncrono, entre
-  outras) e precisa do seu próprio PR, com a suite a validar cada passo
+- **Migrar para o Next 16**, que fecha a moderada que resta no `next` e a alta
+  do `postcss` que ele empacota. Não se fez de seguida de propósito: o Next 16
+  exige o ESLint 9, que obriga a migrar para *flat config* **e** a substituir
+  o `next lint`, removido nessa versão. Isso é mexer na própria ferramenta do
+  portão de qualidade, e empilhá-lo em cima de dois majors na mesma sessão
+  torna impossível saber qual mudança partiu o quê
 - **Correr `npm audit --omit=dev` antes de cada versão.** Passou toda a F11
   sem ser corrido, e a pior superfície do projeto estava aí
