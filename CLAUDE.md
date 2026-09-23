@@ -33,6 +33,11 @@ quando o PR fecha. Nunca empurrar para `master` diretamente.
 Antes de qualquer PR: `npm run typecheck`, `npm run lint`, `npm test`,
 `npm run build` e `npx playwright test`. Todos verdes, sem exceção.
 
+**Os testes de integração não correm aqui.** `src/lib/__tests__/integracao.test.ts`
+precisa de `MONGODB_URI` e é ignorado sem ela — o binário do MongoDB não é
+descarregável deste ambiente. Correm no CI, em contentor. Uma alteração que lhes
+toque só se sabe verdadeira depois do CI passar; dizer o contrário é mentir.
+
 ## Onde está o raciocínio
 
 Os documentos em `docs/` explicam o **porquê**, não o quê — o quê lê-se no

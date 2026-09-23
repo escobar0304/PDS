@@ -77,6 +77,30 @@ volta a acontecer.
 
 # Fase 1 - Identidade
 
+## F0c. Integração com a base de dados
+
+> **Feita em 22/09/2026.**
+>
+> **O buraco:** nada neste projeto tinha alguma vez corrido contra uma base de
+> dados. A suite corre com `MONGODB_URI` por definir de propósito — prova que
+> o site aguenta a base de dados em baixo, e prova **zero** sobre funcionar com
+> ela. Registo, entrada, tokens de verificação e reposição: tudo escrito, nada
+> exercitado.
+>
+> Não é possível corrigir isto no ambiente onde o trabalho decorre: o binário
+> do MongoDB não é descarregável daqui (o proxy recusa `fastdl.mongodb.org`) e
+> não existe nos repositórios do sistema. Os testes ficam ignorados quando
+> `MONGODB_URI` não existe, e o CI levanta um Mongo em contentor para os
+> correr.
+>
+> Testam o que atravessa a fronteira: índices únicos, conversão de tipos pelo
+> Mongoose, prazos guardados como `Date`, normalização do email para
+> minúsculas, e o ciclo completo de repor uma palavra-passe. Um deles demonstra
+> o dano concreto da injeção NoSQL — com o operador, a consulta devolve mesmo
+> uma conta.
+
+---
+
 ## F1. Marca
 
 > **Feita em 22/09/2026.** O detalhe está em `docs/MARCA.md`. Fica uma decisão
@@ -172,7 +196,10 @@ Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
 
 - **Livro de Reclamações Eletrónico.** A ligação para `livroreclamacoes.pt` já existe
   no footer, mas tem de estar visível e identificada, não perdida numa lista de seis
-- **Página `/livro-de-reclamacoes`** com explicação e a ligação direta
+- ~~**Página `/livro-de-reclamacoes`** com explicação e a ligação direta~~
+  **Retirado em 22/09/2026.** O DL 156/2005 exige a **ligação** para a
+  plataforma, em local visível — não exige página própria. A ligação no rodapé
+  cumpre. Isto era trabalho inventado acima da obrigação
 - **Entidade de resolução alternativa de litígios.** É obrigatório informar o
   consumidor de qual é a entidade competente, com nome e sítio. Sendo a morada no
   Porto, o candidato natural é o CICAP, o Centro de Informação de Consumo e

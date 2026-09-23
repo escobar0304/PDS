@@ -41,6 +41,44 @@ jobs:
       - name: Build
         run: npm run build
 
+  # Os testes que atravessam a fronteira com a base de dados.
+  #
+  # Nao correm no ambiente de desenvolvimento deste projeto, onde nao ha
+  # MongoDB disponivel: sao ignorados quando MONGODB_URI nao existe, para o
+  # `npm test` continuar a correr em qualquer maquina. E aqui que correm mesmo.
+  integracao:
+    name: Integração com a base de dados
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Testes de integracao
+        run: npm test
+
   e2e:
     name: Testes de ponta a ponta
     runs-on: ubuntu-latest
