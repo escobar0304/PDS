@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import ClientProviders from '@/components/ClientProviders';
 import { DESCRICAO_SITIO } from '@/lib/afirmacoes';
+import { SITE_URL } from '@/lib/site';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' });
@@ -14,7 +15,7 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfa
  * As paginas sao anotadas a medida que sao construidas, nao de uma vez no fim.
  */
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petalasdesonho.pt'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Pétalas de Sonho',
     template: '%s · Pétalas de Sonho',

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { identificacaoCompleta } from '@/lib/empresa';
 import { paginasObrigatoriasProntas } from '@/lib/paginas';
+import { ROTAS_PRIVADAS, SITE_URL } from '@/lib/site';
 
 /**
  * O site so pode ser indexado depois de ter a camada legal obrigatoria:
@@ -25,7 +26,6 @@ const indexavel =
   identificacaoCompleta() &&
   paginasObrigatoriasProntas();
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petalasdesonho.pt';
 
 export default function robots(): MetadataRoute.Robots {
   if (!indexavel) {
@@ -37,7 +37,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/area-pessoal/', '/auth/', '/carrinho', '/sucesso', '/falha'],
+        disallow: [...ROTAS_PRIVADAS],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

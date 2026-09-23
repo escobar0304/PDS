@@ -126,3 +126,40 @@ test('as ligações em texto corrido não dependem só da cor', async ({ page })
     expect(decoracao, 'ligação em texto sem sublinhado em repouso').toContain('underline');
   }
 });
+
+/**
+ * 2.4.2 Page Titled (nivel A): o titulo diz de que pagina se trata.
+ *
+ * Oito paginas tinham o mesmo, "Petalas de Sonho" — num separador, no
+ * historico ou num leitor de ecra, indistinguiveis. O `axe` nao o apanha: a
+ * regra `document-title` so verifica que o titulo existe.
+ */
+test('cada página tem um título seu', async ({ request }) => {
+  const rotas = [
+    '/',
+    '/loja',
+    '/catalogo',
+    '/sobre-nos',
+    '/contacto',
+    '/privacidade',
+    '/cookies',
+    '/faq',
+    '/carrinho',
+    '/area-pessoal',
+    '/auth/login',
+    '/auth/register',
+    '/auth/recuperar-password',
+  ];
+  const titulos = new Map<string, string>();
+  for (const rota of rotas) {
+    const html = await (await request.get(rota)).text();
+    const titulo = html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
+    expect(titulo, `${rota} sem título`).not.toBe('');
+    titulos.set(rota, titulo);
+  }
+
+  const repetidos = [...titulos].filter(
+    ([rota, t]) => [...titulos].some(([outra, u]) => outra !== rota && u === t),
+  );
+  expect(repetidos, 'páginas com o mesmo título').toEqual([]);
+});

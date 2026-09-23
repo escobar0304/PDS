@@ -6,6 +6,7 @@ import { Alert, Container, PageHeader } from '@/components/ui';
 import { camposEmFalta, EMPRESA, moradaFormatada } from '@/lib/empresa';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/privacidade' },
   title: 'Política de privacidade',
   description:
     'Que dados pessoais a Pétalas de Sonho recolhe, para que servem, quanto tempo ficam guardados e que direitos tem sobre eles.',

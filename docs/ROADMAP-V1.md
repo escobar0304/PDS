@@ -555,11 +555,23 @@ O que passou para a frente:
 
 O que fica nesta fase, porque depende do logótipo (F1) e da copy (F9):
 
-- `sitemap.ts`
+- ~~`sitemap.ts`~~ — feito em 23/09/2026. O `robots.ts` já o anunciava e
+  ele não existia. Só lista o que é público e existe; as rotas privadas saem
+  da mesma lista que o `robots.ts` bloqueia (`src/lib/site.ts`)
 - Open Graph com imagem por página
-- JSON-LD: `Organization`, `LocalBusiness`, `BreadcrumbList` e, mais tarde, `Product`
-- Canónicos e `lang` correto
-- Revisão dos títulos e descrições de todas as páginas
+- JSON-LD: `Organization`, `LocalBusiness`, `BreadcrumbList` e, mais tarde,
+  `Product`. **Bloqueado na F4**: `Organization` sem nome, morada nem
+  contactos é um bloco vazio, e inventá-los é o que o `empresa.ts` impede
+- ~~Canónicos~~ — feito. O `lang` já estava certo (`pt-PT`)
+- ~~Revisão dos títulos~~ — feito, e era mais do que SEO: **oito páginas
+  tinham o mesmo título**, o que falha o 2.4.2 da WCAG, nível A. Ver
+  `docs/ACESSIBILIDADE.md`
+
+**Fica por confirmar o domínio.** `https://petalasdesonho.pt` é o valor por
+omissão desde o início do projeto e ninguém confirmou que é o do negócio. Os
+canónicos e o mapa do sítio dizem aos motores de busca qual é o endereço
+verdadeiro de cada página: com o domínio errado, dizem-lhes o de outra
+pessoa. Em produção, `NEXT_PUBLIC_SITE_URL` tem de estar definido.
 
 ---
 

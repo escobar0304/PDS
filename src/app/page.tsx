@@ -1,5 +1,4 @@
-'use client';
-
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/header';
@@ -36,6 +35,12 @@ const PILARES = [
     detalhe: AVISO_TRADICAO,
   },
 ];
+
+// Era 'use client' sem usar nada do cliente, e por isso nao podia declarar
+// metadados. O titulo fica o de omissao, que aqui e o certo: e a pagina da marca.
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 export default function Home() {
   return (
