@@ -193,3 +193,29 @@ test('nenhuma imagem fica por carregar', async ({ page }) => {
     expect(partidas, `imagens partidas em ${rota}`).toEqual([]);
   }
 });
+
+/**
+ * Uma pagina pre-renderizada chega inteira, sem passar por um spinner.
+ *
+ * Havia um `loading.tsx` na raiz. Com o React 19, que veio com o Next 15, esse
+ * limite Suspense a volta de todas as paginas fazia o HTML estatico chegar com
+ * o spinner a vista e a pagina escondida em `<div hidden id="S:0">`, revelada
+ * depois: 21 a 107 ms de spinner em cada primeiro carregamento, em todas as
+ * rotas, e um `role="status"` a anunciar "A carregar a pagina" ao leitor de
+ * ecra. Pelo meio havia um instante com a pagina duas vezes no DOM, e era isso
+ * que fazia falhar ao acaso os testes do mapa em `privacidade.spec.ts`.
+ *
+ * Le-se o HTML servido e nao o DOM: e deterministico, e e onde o defeito esta.
+ */
+test('as páginas estáticas chegam inteiras, sem spinner à entrada', async ({ request }) => {
+  for (const rota of ['/', '/sobre-nos', '/loja', '/catalogo', '/privacidade', '/cookies']) {
+    const html = await (await request.get(rota)).text();
+
+    expect(html, `${rota} chega com a página escondida à espera de ser revelada`).not.toMatch(
+      /<div hidden id="S:\d+"/,
+    );
+    expect(html, `${rota} chega com um spinner à frente do conteúdo`).not.toContain(
+      'A carregar a página',
+    );
+  }
+});

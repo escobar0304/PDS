@@ -53,7 +53,8 @@ volta a acontecer.
   rebenta a meio do build com uma mensagem críptica se faltar `MONGODB_URI`.
   Falhar cedo e com nome
 - **`.env.example`** com todas as chaves necessárias, sem valores
-- **`error.tsx`, `not-found.tsx` e `loading.tsx`** na raiz do App Router. Hoje um erro
+- **`error.tsx` e `not-found.tsx`** na raiz do App Router (o `loading.tsx` da raiz
+  saiu em 23/09/2026: ver `docs/PERFORMANCE.md`). Hoje um erro
   de runtime mostra o ecrã por omissão do Next
 - **Testes.** Vitest para a lógica pura e Playwright para os percursos, divididos
   por domínio em vez de um ficheiro único:

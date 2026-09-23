@@ -105,9 +105,45 @@ clique não há nada que suspenda. A espera real é a do `fetch`, que acontece
 
 Escrever `loading.tsx` por rota seria, hoje, código morto.
 
-Não se apaga o da raiz: volta a contar no dia em que uma página passar a
-componente de servidor com dados assíncronos — que é para onde a F15 tem de
-ir, porque o JSON-LD precisa dos dados no HTML servido.
+~~Não se apaga o da raiz: volta a contar no dia em que uma página passar a
+componente de servidor com dados assíncronos.~~
+
+**Correção de 23/09/2026: o da raiz também saiu, e a medição acima não
+chegava.** Media só a navegação por `next/link`. Não media o **primeiro
+carregamento**, e foi aí que o defeito apareceu, depois da migração para o
+Next 15.
+
+O Next 15 trouxe o React 19, que atrasa de propósito a revelação dos limites
+Suspense durante o *streaming*. Com um `loading.tsx` na raiz, todas as páginas
+ficam dentro de um desses limites, as estáticas incluídas. O HTML pré-renderizado
+passou a chegar com o spinner à vista e a página escondida num
+`<div hidden id="S:0">`, à espera de ser revelada. Medido no servidor de
+produção, com um `MutationObserver`:
+
+| | com `loading.tsx` | sem |
+|---|---|---|
+| primeiro carregamento com spinner (`/`, `/sobre-nos`, `/privacidade`, `/cookies`) | 8 em 8, em todas | 0 em 8 |
+| tempo com o spinner à frente de `/sobre-nos` | 21–107 ms | — |
+| instantes com a página duas vezes no DOM | 2 a 5 em 8 | 0 em 8 |
+
+Isto tinha três custos. Um clarão de spinner à frente de conteúdo que já vinha
+pronto do servidor. O conteúdo revelado mais tarde, o que atrasa o LCP. E um
+`role="status"` a anunciar «A carregar a página» ao leitor de ecrã em cada
+página, quando não havia nada a carregar.
+
+Deu-se por isto porque dois testes do mapa em `e2e/privacidade.spec.ts`
+falhavam ao acaso, também no `master`: o `getByLabel` encontrava duas caixas,
+a visível e a da cópia escondida. **Não era um teste instável.** Era o site a
+servir cada página duas vezes, e o teste a ver isso.
+
+Há agora uma guarda em `e2e/interface.spec.ts` que lê o HTML servido e falha
+se uma página estática chegar com a página escondida ou com o spinner à frente.
+Verificou-se que falha com o ficheiro reposto.
+
+Quando uma página passar a componente de servidor com dados assíncronos (a
+F15 vai por aí, porque o JSON-LD precisa dos dados no HTML servido), o
+`loading.tsx` entra **na pasta dessa rota**, e só nela. Na raiz embrulha
+tudo, até o que não espera por nada.
 
 **Nota de método, para não se repetir.** A primeira versão desta medição
 estava errada: criava um `<a>` normal em vez de usar uma ligação do
