@@ -1,0 +1,82 @@
+# Quem vigia as dependencias quando ninguem esta a olhar.
+#
+# Este ficheiro existe porque `npm audit --omit=dev` passou toda a F11 sem ser
+# corrido, e quando finalmente o foi trouxe duas criticas e quatro altas em
+# producao — mais do que toda a auditoria ao codigo escrito aqui encontrou.
+#
+# A regra deste projeto e que uma correcao sem automacao e uma fotografia que
+# envelhece. O `npm audit` continua na revisao antes de cada versao, mas
+# depender de memoria humana foi exactamente o que falhou. Isto nao depende.
+
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Lisbon"
+
+    # Um PR por grupo, nao um por pacote. Com esta arvore de dependencias, sem
+    # agrupar sao dezenas de PRs por mes e ninguem os le — e um Dependabot que
+    # se ignora e pior do que nenhum, porque da a sensacao de estar coberto.
+    groups:
+      producao:
+        dependency-type: "production"
+        update-types: ["minor", "patch"]
+      desenvolvimento:
+        dependency-type: "development"
+        update-types: ["minor", "patch"]
+      seguranca:
+        applies-to: security-updates
+        patterns: ["*"]
+
+    # Deixa a versao assentar antes de a propor. Uma correcao de seguranca em
+    # patch nao espera tanto: a janela entre o aviso publico e a exploracao e
+    # curta, e o risco de um patch mau e menor do que o de ficar exposto.
+    cooldown:
+      default-days: 5
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 2
+
+    ignore:
+      # O salto para o Next 15 fecha mais de vinte avisos, um deles critico,
+      # mas traz mudancas de API — `params` passa a assincrono, entre outras.
+      # E trabalho com PR proprio e a suite a validar cada passo, nao uma
+      # atualizacao automatica. Ver "Por fazer" em docs/SEGURANCA.md.
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      # O mongoose 9 e o mesmo caso: major com mudancas de comportamento no
+      # casting, e este projeto depende disso para a defesa contra injeccao.
+      - dependency-name: "mongoose"
+        update-types: ["version-update:semver-major"]
+
+    labels:
+      - "dependencias"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    open-pull-requests-limit: 5
+
+  # As proprias accoes do CI. O aviso de que o `actions/checkout@v4` e o
+  # `actions/setup-node@v4` ja estao a ser forcados para Node 24 apareceu nos
+  # registos de uma execucao; e o tipo de coisa que parte o CI um dia sem nada
+  # ter mudado do nosso lado.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Lisbon"
+    groups:
+      accoes:
+        patterns: ["*"]
+    labels:
+      - "ci"
+    commit-message:
+      prefix: "ci"
