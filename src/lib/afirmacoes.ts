@@ -27,9 +27,11 @@ export interface Informacao {
 
 /** Ao lado da loja, do produto e do carrinho. */
 export const INFORMACAO_COMPRA = {
+  // Decidido pelo negocio: continente, CTT, portes pelo peso. Os detalhes
+  // (tabela, prazo) estao em `condicoes.ts` e em /envios.
   envios: {
     titulo: 'Envios',
-    detalhe: 'Prazos e custos indicados antes de concluir a compra',
+    detalhe: 'Para Portugal continental, pelos CTT. Portes pelo peso',
   },
   livreResolucao: {
     titulo: 'Livre resolução',
@@ -73,7 +75,12 @@ export const RETIRADAS: { frase: RegExp; porque: string }[] = [
   { frase: /limpeza energética/i, porque: 'serviço que ninguém confirmou prestar' },
   { frase: /mais de uma década/i, porque: 'antiguidade do negócio por confirmar' },
   { frase: /sustentáve/i, porque: 'alegação ambiental genérica (Diretiva 2024/825)' },
-  { frase: /pagamento seguro/i, porque: 'não há pagamento: o checkout é da v2' },
+  {
+    frase: /pagamento seguro/i,
+    // O negocio quer escreve-lo, e vai ser verdade — com a Stripe, na v2.
+    // Ate la seria afirmar a seguranca de um pagamento que nao existe.
+    porque: 'não há pagamento: entra quando o checkout existir',
+  },
   { frase: /pedras? preciosas?/i, porque: 'quartzo e ametista não são pedras preciosas' },
   { frase: /benefícios energéticos/i, porque: 'alegação de efeito, em vez de tradição' },
   { frase: /atendimento personalizado/i, porque: 'serviço que ninguém confirmou prestar' },

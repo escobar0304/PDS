@@ -21,6 +21,9 @@ const ROTAS = [
   '/auth/register',
   '/cookies',
   '/privacidade',
+  '/contacto',
+  '/termos',
+  '/envios',
 ];
 
 const NORMAS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
@@ -144,6 +147,8 @@ test('cada página tem um título seu', async ({ request }) => {
     '/privacidade',
     '/cookies',
     '/faq',
+    '/termos',
+    '/envios',
     '/carrinho',
     '/area-pessoal',
     '/auth/login',

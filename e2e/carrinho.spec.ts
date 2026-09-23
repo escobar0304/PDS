@@ -78,13 +78,21 @@ test('o carrinho vazio convida a ir à loja', async ({ page }) => {
   await expect(page).toHaveURL(/\/loja$/);
 });
 
-// O checkout ainda nao existe. Fica registado para nao passar despercebido.
-test.fixme('finalizar compra leva a um checkout que funciona', async ({ page }) => {
+// O checkout e da v2. Ate la, o botao principal do carrinho levava a
+// /checkout, que nao existe — este teste era um `fixme` a lembra-lo. Agora
+// verifica o contrario: que o carrinho diz a verdade e leva a um sitio que
+// existe. Quando o checkout chegar, este teste muda com ele.
+test('sem checkout, o carrinho diz que não aceita encomendas e leva ao contacto', async ({ page }) => {
   await page.goto('/produto/ametista-polida');
   await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
   await page.goto('/carrinho');
-  await page.getByRole('link', { name: 'Finalizar Compra' }).click();
-  await expect(page).toHaveURL(/\/checkout/);
+
+  await expect(page.getByText('A loja online ainda não aceita encomendas')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Finalizar Compra' })).toHaveCount(0);
+  await expect(page.locator('a[href="/checkout"]')).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Falar connosco' }).click();
+  await expect(page).toHaveURL(/\/contacto$/);
 });
 
 test('o ícone do cabeçalho abre o painel do carrinho sem sair da página', async ({ page }) => {

@@ -210,6 +210,11 @@ Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
   até 5000 €, a arbitragem é obrigatória para a empresa se o consumidor a
   escolher (Lei 63/2019), com ou sem adesão.
 
+  **A loja física traz uma obrigação fora do sítio:** o livro de reclamações
+  em papel, na loja, com o letreiro visível a dizer que existe (DL 156/2005).
+  O eletrónico não o substitui. Não é código, fica dito aqui para não se
+  perder.
+
   **Uma condição fica pendente da F4:** a competência do CICAP é territorial,
   os 16 municípios da Área Metropolitana do Porto. Quando a morada chegar, tem
   de ficar num deles — a lista está em `src/lib/empresa.ts`
@@ -321,7 +326,26 @@ Trabalho:
 
 ## F8. Termos e condições
 
-> **Bloqueado no negócio.** As perguntas, por ordem de peso:
+> **Feita em 23/09/2026, com as respostas do negócio:** continente, CTT,
+> expedição no próprio dia útil, portes pelo peso, loja física, devolução
+> paga pelo cliente, preços com IVA. Estão em `src/lib/condicoes.ts`, e
+> `/envios` e `/termos` leem daí. **Ficam três por preencher, e seguram a
+> indexação:** a tabela de portes, o prazo de entrega (depende do serviço dos
+> CTT) e a hora-limite de expedição (depende do horário). Por perguntar: se
+> se pode levantar na loja.
+>
+> **A pergunta 6 ficou com uma interpretação.** «As peças vão ter medida e as
+> pessoas escolhem» foi lido como tamanhos de uma lista — e isso **não** é
+> uma peça confecionada segundo as especificações de quem compra, por isso
+> a exceção à livre resolução não se aplica. Se houver peças feitas por
+> encomenda, a exceção vale só para essas e tem de ser dita em cada uma.
+>
+> **Também:** «Finalizar Compra», o botão principal do carrinho, levava a
+> `/checkout`, que não existe. Passou a dizer que a loja online ainda não
+> aceita encomendas e a levar ao contacto. Há uma guarda nova que falha se
+> algum `href` interno apontar para uma rota sem página.
+>
+> As perguntas originais, para referência:
 >
 > 1. **Para onde envias?** Continente, ilhas, União Europeia?
 > 2. **Com quem, e em quanto tempo** — o prazo que consegues de facto cumprir,
@@ -440,7 +464,7 @@ e criar a página que as sustenta. Isto é trabalho de copy, não de código.
 > `info@petalasdesonho.pt` escritos à mão. Passam a ler de `EMPRESA`, e há um
 > teste que falha se um contacto voltar a ser escrito à mão em qualquer `.tsx`.
 >
-> Por fazer, e bloqueado no negócio: `/termos` e `/envios`.
+> ~~Por fazer, e bloqueado no negócio: `/termos` e `/envios`.~~ Feitas na F8.
 
 
 - **`/contacto` autónomo.** Hoje o formulário vive dentro de `/sobre-nos` e o link
@@ -683,9 +707,9 @@ F4  Identificação do prestador   precisa dos teus dados legais
 F5  Livro de Reclamações e RAL   feita (CICAP); confirmar a morada na AMP
 F6  Proteção de dados            precisa de validação jurídica
 F7  Cookies                      depende de F6
-F8  Termos                       precisa de validação jurídica
+F8  Termos                       feita; tabela de portes e prazo por preencher
 F9  Afirmações comerciais        texto geral feito; fotografias por esclarecer
-F10 Páginas institucionais       feita; /termos e /envios bloqueados
+F10 Páginas institucionais       feita
 F11 Segurança                    independente, pode correr em paralelo
 F12 Área pessoal                 feita; favoritos e morada passam à v2
 F13 Acessibilidade               feita

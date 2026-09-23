@@ -164,20 +164,31 @@ export default function Carrinho() {
                   </div>
                   <div className="flex justify-between text-base">
                     <span className="text-ink-muted">Envio</span>
-                    <span className="text-sm text-ink-muted">Calculado no checkout</span>
+                    <span className="text-sm text-ink-muted">Pelo peso, à parte</span>
                   </div>
                 </div>
 
+                {/* "Total" sem os portes era um total que nao o era. */}
                 <div className="flex justify-between items-center mb-6">
-                  <span className="text-lg font-semibold text-ink">Total</span>
+                  <span className="text-lg font-semibold text-ink">Total das peças</span>
                   <span className="tabular text-3xl font-semibold text-rose-700">{total.toFixed(2)}€</span>
                 </div>
 
+                {/*
+                  "Finalizar Compra" levava a /checkout, que nao existe: um 404
+                  no botao principal do carrinho, no momento de mais intencao
+                  de toda a loja. O checkout e da v2; ate la, diz-se a verdade
+                  e leva-se a um sitio que existe.
+                */}
+                <p className="mb-4 text-sm text-ink-muted">
+                  A loja online ainda não aceita encomendas. Se quiser alguma destas peças,
+                  fale connosco.
+                </p>
                 <Link
-                  href="/checkout"
+                  href="/contacto"
                   className={botaoClasses({ fullWidth: true, className: 'mb-3' })}
                 >
-                  Finalizar Compra
+                  Falar connosco
                 </Link>
 
                 <Link

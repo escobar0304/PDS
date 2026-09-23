@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { identificacaoCompleta } from '@/lib/empresa';
 import { paginasObrigatoriasProntas } from '@/lib/paginas';
+import { condicoesCompletas } from '@/lib/condicoes';
 import { ROTAS_PRIVADAS, SITE_URL } from '@/lib/site';
 
 /**
@@ -24,7 +25,10 @@ import { ROTAS_PRIVADAS, SITE_URL } from '@/lib/site';
 const indexavel =
   process.env.SITE_INDEXAVEL === 'true' &&
   identificacaoCompleta() &&
-  paginasObrigatoriasProntas();
+  paginasObrigatoriasProntas() &&
+  // As paginas de envios e termos existem, mas com os portes e o prazo de
+  // entrega por preencher nao dizem o que a lei pede antes de uma compra.
+  condicoesCompletas();
 
 
 export default function robots(): MetadataRoute.Robots {
