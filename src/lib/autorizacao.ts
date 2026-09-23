@@ -58,3 +58,46 @@ export async function exigirAdmin(): Promise<
     },
   };
 }
+
+/**
+ * A sessao de quem esta autenticado, seja qual for o papel.
+ *
+ * Separado do `exigirAdmin` de proposito. As rotas da conta — exportar os
+ * proprios dados, apagar a propria conta — nao sao de administracao: qualquer
+ * pessoa autenticada tem direito a elas sobre **os seus** dados, e sobre mais
+ * nenhuns. Quem chamar isto fica com o `id` da sessao e e por esse que tem de
+ * consultar, nunca por um id vindo do pedido — senao troca-se um direito do
+ * RGPD por um IDOR.
+ */
+export async function exigirSessao(): Promise<
+  { ok: true; sessao: Sessao } | { ok: false; resposta: NextResponse }
+> {
+  const sessao = await getServerSession(authOptions);
+
+  if (!sessao?.user) {
+    return {
+      ok: false,
+      resposta: NextResponse.json({ error: 'Não autenticado' }, { status: 401 }),
+    };
+  }
+
+  const utilizador = sessao.user as { id?: string; email?: string; role?: string };
+
+  // Sem `id` na sessao nao ha por onde consultar. Acontece se o callback `jwt`
+  // mudar e deixar de o pôr la: melhor recusar do que adivinhar pelo email.
+  if (!utilizador.id) {
+    return {
+      ok: false,
+      resposta: NextResponse.json({ error: 'Sessão inválida' }, { status: 401 }),
+    };
+  }
+
+  return {
+    ok: true,
+    sessao: {
+      id: utilizador.id,
+      email: utilizador.email ?? '',
+      role: utilizador.role ?? 'USER',
+    },
+  };
+}

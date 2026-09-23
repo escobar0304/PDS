@@ -400,11 +400,15 @@ Encontrado durante a análise:
 
 ## F12. Área pessoal
 
-- Substituir as encomendas mock, hoje hardcoded no ficheiro, por dados reais ou
-  por um estado vazio honesto
-- Editar perfil e morada
-- Exportar dados e apagar conta, vindos de F6
-- Favoritos: o botão de coração da página de produto não guarda nada
+- ~~Substituir as encomendas mock por um estado vazio honesto~~ — feito
+- ~~Exportar dados e apagar conta, vindos de F6~~ — feito. Era o mais urgente
+  dos quatro e não por estar no roteiro: a política de privacidade prometia
+  «apaga-se quando a apagar» sem haver como apagar. Ver `DADOS-PESSOAIS.md`
+- Editar perfil e morada. O nome e o email estão em leitura apenas, com um
+  aviso a dizer para contactar. A morada só passa a fazer sentido quando o
+  checkout existir — guardá-la agora é guardar um dado pessoal que ninguém usa
+- Favoritos: o botão de coração da página de produto não guarda nada. Precisa
+  de campo no `userSchema` e de rota própria
 
 ---
 
