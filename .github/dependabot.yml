@@ -53,6 +53,25 @@ updates:
       # casting, e este projeto depende disso para a defesa contra injeccao.
       - dependency-name: "mongoose"
         update-types: ["version-update:semver-major"]
+      # O React 18 -> 19 sao 28 componentes de cliente, e ha que confirmar o
+      # next-auth@4 e o @phosphor-icons/react antes. O next@15 aceita o React
+      # 18, por isso nada forca a mao.
+      #
+      # Esta regra faltava, e o Dependabot mostrou porque: abriu um PR que
+      # subia `react` e `@types/react` para 19 e **deixava o `react-dom` no
+      # 18**. Fundi-lo partia o site. Um major que divide um par de pacotes
+      # nunca pode ser automatico.
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      # O Tailwind 4 nao e um upgrade, e uma reescrita: a configuracao passa a
+      # ser em CSS. Todo o sistema de cores, raios, sombras e espacamentos
+      # deste projeto vive em tokens no globals.css, derivados do logotipo
+      # (docs/PALETA.md). Merece medicao propria e um PR onde uma regressao
+      # visual seja visivel.
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
 
     labels:
       - "dependencias"
