@@ -89,15 +89,14 @@ export async function DELETE(pedido: Request) {
       return NextResponse.json({ error: 'Conta não encontrada' }, { status: 404 });
     }
 
-    const temPassword = Boolean(utilizador.password);
+    const guardada = utilizador.password;
 
-    if (temPassword) {
+    if (guardada) {
       const { password } = corpo.dados;
       if (!password) {
         return NextResponse.json({ error: 'Confirme a palavra-passe.' }, { status: 400 });
       }
 
-      const guardada = utilizador.password;
       const valida = guardada.startsWith('$argon2')
         ? await argon2Verify(guardada, password)
         : await bcrypt.compare(password, guardada);

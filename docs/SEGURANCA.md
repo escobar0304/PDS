@@ -207,11 +207,15 @@ feita a seguir, e está descrita abaixo.
 As falhas são a analisar CSS de origem não confiável; nós não analisamos CSS
 de terceiros.
 
-**`ip-address` alta** entra por `@next-auth/mongodb-adapter` → `mongodb@5` →
-`socks`. O adapter já está na última versão e o seu *peer* prende o `mongodb`
-ao `^5`; sair daqui implica o `@auth/mongodb-adapter` v3, que é para
-next-auth v5. As falhas são no *parsing* de endereços SOCKS, que nunca
-exercitamos — o Mongo liga diretamente.
+~~**`ip-address` alta** entra por `@next-auth/mongodb-adapter` → `mongodb@5` →
+`socks`.~~ **Fechada em 23/09/2026, e a explicação acima estava errada em
+metade.** O adaptador saiu (ver «A entrada pela Google» abaixo), e o
+`ip-address` ficou na auditoria na mesma: também entrava pelo `mongodb@6` do
+Mongoose, que declara o `socks` como *peer* opcional. O lockfile tinha o
+`socks@2.8.7`, preso a um `ip-address` vulnerável; o `socks@2.8.10` já pede
+`^10.1.1`. Fechou com `npm update socks ip-address`, dentro das gamas
+declaradas. Eu tinha escrito que não havia saída sem next-auth v5 — não tinha
+ido ver a árvore inteira.
 
 ### O `overrides` no `package.json`
 
@@ -257,7 +261,42 @@ tanto como o que ela vê.
 
 O `next` desce de **crítica para moderada**. O que sobra — essa moderada e a
 alta do `postcss` que o next empacota (8.4.31) — só fecha no Next 16, em "Por
-fazer". O `ip-address` continua pela cadeia do `@next-auth/mongodb-adapter`.
+fazer". ~~O `ip-address` continua pela cadeia do `@next-auth/mongodb-adapter`.~~
+Fechado, ver acima.
+
+## A entrada pela Google
+
+**Nunca funcionou para quem entrava pela primeira vez.** Deu-se por isso a ler
+o `signIn` para a F12, não por um teste — e nenhum a teria apanhado, porque
+sem credenciais da Google o provedor nem é registado.
+
+Havia dois defeitos, qualquer um suficiente:
+
+1. o callback criava o utilizador com `password: ''`, e o `userSchema`
+   declarava a palavra-passe `required`. O Mongoose trata a string vazia como
+   ausente e recusava: «Password é obrigatória». Verificado com
+   `validateSync`, sem base de dados;
+2. mesmo sem isso, havia um `MongoDBAdapter` **e** o callback a criar a conta
+   pelo Mongoose. O adaptador procurava a ligação em `accounts`, não a
+   encontrava, via um utilizador com o mesmo email e recusava com
+   `OAuthAccountNotLinked`.
+
+**O adaptador saiu.** Com sessões JWT só servia para guardar utilizadores e
+ligações; o modelo `User` já faz a primeira, e a segunda não serve ninguém.
+Duas fontes de verdade para a mesma conta era a causa, não um pormenor.
+
+**E passa a exigir-se `email_verified`.** Uma conta Google Workspace de um
+domínio qualquer pode vir com o email por verificar. Aceitá-lo era deixar
+quem controla esse domínio entrar na conta de quem se registou aqui com esse
+email — e a entrada pela Google liga-se à conta que já exista com o mesmo
+email, de propósito, para quem se registou por email poder depois usar a
+Google.
+
+Guardas em `provedores.test.ts` (chamam o callback a sério, e o modelo aceita
+uma conta sem palavra-passe) e três testes de integração: a primeira entrada
+cria a conta, a segunda não a duplica, e quem já tinha palavra-passe entra na
+mesma conta sem a perder. As duas primeiras guardas foram verificadas contra
+o defeito reposto.
 
 ## Por fazer
 

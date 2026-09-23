@@ -69,9 +69,9 @@ export interface ResultadoApagar {
 /**
  * Apaga a conta e tudo o que lhe esta preso.
  *
- * Nao chega apagar o documento em `users`. O adaptador do NextAuth guarda as
- * ligacoes a provedores em `accounts` e as sessoes em `sessions`, com o driver
- * do Mongo e nao pelo Mongoose; e os tokens de verificacao e de reposicao
+ * Nao chega apagar o documento em `users`. O adaptador do NextAuth, que
+ * existiu ate 23/09/2026, guardava as ligacoes a provedores em `accounts` e as
+ * sessoes em `sessions`, com o driver do Mongo e nao pelo Mongoose; e os tokens de verificacao e de reposicao
  * vivem em `tokens`. Deixar qualquer um para tras e deixar dados pessoais para
  * tras, e uma ligacao de reposicao viva para uma conta que ja nao existe.
  *
@@ -106,7 +106,9 @@ export async function apagarConta(idUtilizador: string): Promise<ResultadoApagar
   const tokens = await Token.deleteMany({ userId: id });
   apagados.tokens = tokens.deletedCount ?? 0;
 
-  // As coleccoes do adaptador nao tem modelo Mongoose. Vao pelo driver.
+  // Coleccoes do adaptador do NextAuth, que ja nao existe (ver `auth.ts`).
+  // Ficam na limpeza porque uma instalacao que o tenha tido pode la ter
+  // registos antigos. Nao tem modelo Mongoose; vao pelo driver.
   const bd = mongoose.connection.db;
   if (bd) {
     for (const nome of ['accounts', 'sessions'] as const) {

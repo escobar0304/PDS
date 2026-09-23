@@ -59,8 +59,10 @@ prejudicaria o próprio.
 ### Apagar (art. 17.º)
 
 `DELETE /api/conta`. Apaga o utilizador, os tokens de verificação e de
-reposição, e as coleções `accounts` e `sessions` do adaptador do NextAuth —
-que não têm modelo Mongoose e passariam despercebidas. Deixar qualquer uma para
+reposição, e as coleções `accounts` e `sessions` que o adaptador do NextAuth
+usava — não têm modelo Mongoose e passariam despercebidas. O adaptador saiu
+(ver `SEGURANCA.md`), mas a limpeza fica: uma instalação que o tenha tido
+pode guardar lá registos antigos. Deixar qualquer uma para
 trás é deixar dados pessoais para trás, e uma ligação de reposição viva para
 uma conta que já não existe.
 

@@ -107,8 +107,8 @@ executar('contra MongoDB', () => {
 
       expect(lido).not.toBeNull();
       expect(lido!.password).not.toContain('aPasswordCerta');
-      expect(await verify(lido!.password, 'aPasswordCerta')).toBe(true);
-      expect(await verify(lido!.password, 'aPasswordErrada')).toBe(false);
+      expect(await verify(lido!.password!, 'aPasswordCerta')).toBe(true);
+      expect(await verify(lido!.password!, 'aPasswordErrada')).toBe(false);
     });
 
     it('uma consulta com operador do Mongo não devolve utilizador nenhum', async () => {
@@ -381,8 +381,8 @@ executar('contra MongoDB', () => {
 
       // 3. A palavra-passe nova funciona e a antiga deixou de funcionar.
       const depois = await User.findById(u._id);
-      expect(await verify(depois!.password, 'aNova')).toBe(true);
-      expect(await verify(depois!.password, 'aVelha')).toBe(false);
+      expect(await verify(depois!.password!, 'aNova')).toBe(true);
+      expect(await verify(depois!.password!, 'aVelha')).toBe(false);
       // Repor prova que se controla a caixa de correio, o que confirma o email.
       expect(depois!.emailVerified).toBe(true);
 
@@ -414,6 +414,48 @@ executar('contra MongoDB', () => {
       // prazo em codigo, e nao confia no indice.
       expect(registo, 'o índice do Mongo ainda não o apagou').not.toBeNull();
       expect(registo!.expiraEm.getTime()).toBeLessThanOrEqual(Date.now());
+    });
+  });
+  describe('entrar pela Google', () => {
+    const entrar = async (email: string) => {
+      const { authOptions } = await import('../auth');
+      return authOptions.callbacks!.signIn!({
+        user: { id: 'google-sub', email, name: 'Marta Ferreira' },
+        account: { provider: 'google', type: 'oauth', providerAccountId: 'google-sub' },
+        profile: { email_verified: true },
+      } as never);
+    };
+
+    it('a primeira entrada cria a conta, sem palavra-passe', async () => {
+      // Ate aqui isto rebentava: a conta era criada com `password: ''` e o
+      // Mongoose recusava-a. Ninguem conseguia entrar pela Google pela
+      // primeira vez.
+      expect(await entrar('Nova@Exemplo.pt')).toBe(true);
+
+      const u = await User.findOne({ email: 'nova@exemplo.pt' });
+      expect(u, 'a conta foi criada, e com o email em minúsculas').not.toBeNull();
+      expect(u!.password).toBeUndefined();
+      expect(u!.emailVerified).toBe(true);
+    });
+
+    it('entrar outra vez não duplica a conta', async () => {
+      await entrar('repete@exemplo.pt');
+      await entrar('repete@exemplo.pt');
+      expect(await User.countDocuments({ email: 'repete@exemplo.pt' })).toBe(1);
+    });
+
+    it('quem já tinha conta por email entra nela, e a palavra-passe fica', async () => {
+      await User.create({
+        name: 'Marta Ferreira',
+        email: 'ambas@exemplo.pt',
+        password: await hash('umapassword', { type: 2 }),
+      });
+
+      expect(await entrar('ambas@exemplo.pt')).toBe(true);
+
+      expect(await User.countDocuments({ email: 'ambas@exemplo.pt' })).toBe(1);
+      const u = await User.findOne({ email: 'ambas@exemplo.pt' });
+      expect(await verify(u!.password!, 'umapassword')).toBe(true);
     });
   });
 });
