@@ -103,18 +103,21 @@ test('as perguntas frequentes não inventam perguntas', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Fazer uma pergunta' })).toBeVisible();
 });
 
-test('o rodapé não promete páginas que não existem', async ({ page }) => {
+test('o rodapé não promete páginas que não existem', async ({ page, request }) => {
   await page.goto('/');
 
-  const rotulos = await page
+  const hrefs = await page
     .getByRole('contentinfo')
     .locator('a[href^="/"]')
-    .evaluateAll((as) => as.map((a) => a.textContent?.trim()));
+    .evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''));
 
-  // Estas duas dependem de decisões do negócio e ainda não existem. Enquanto
-  // não existirem, não podem aparecer no rodapé.
-  expect(rotulos).not.toContain('Termos e Condições');
-  expect(rotulos).not.toContain('Envios e Devoluções');
+  // Termos e Envios entraram quando passaram a existir, e nao antes. O que
+  // interessa guardar e a regra, nao a lista: nenhuma ligacao do rodape da 404.
+  expect(hrefs).toContain('/termos');
+  expect(hrefs).toContain('/envios');
+  for (const h of hrefs) {
+    expect((await request.get(h.split('#')[0])).status(), h).toBe(200);
+  }
 });
 
 test('a entidade de resolução de litígios está acessível a partir de qualquer página', async ({ page }) => {

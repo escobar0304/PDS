@@ -36,24 +36,8 @@ export const PAGINAS: PaginaInstitucional[] = [
   { href: '/privacidade', rotulo: 'Política de Privacidade', existe: true, obrigatoria: true },
   { href: '/cookies', rotulo: 'Cookies', existe: true, obrigatoria: false },
   { href: '/contacto', rotulo: 'Contactos', existe: true, obrigatoria: true },
-  {
-    href: '/termos',
-    rotulo: 'Termos e Condições',
-    existe: false,
-    obrigatoria: true,
-    porQueFalta:
-      'Precisa de decisões do negócio: condições de venda, preços e IVA, ' +
-      'e se as fotografias são das peças à venda ou ilustrativas.',
-  },
-  {
-    href: '/envios',
-    rotulo: 'Envios e Devoluções',
-    existe: false,
-    obrigatoria: true,
-    porQueFalta:
-      'Precisa de decisões do negócio: portes, prazos de entrega e como se ' +
-      'processa o direito de livre resolução (DL 24/2014).',
-  },
+  { href: '/termos', rotulo: 'Termos e Condições', existe: true, obrigatoria: true },
+  { href: '/envios', rotulo: 'Envios e Devoluções', existe: true, obrigatoria: true },
   {
     href: '/faq',
     rotulo: 'Perguntas Frequentes',

@@ -15,8 +15,8 @@ describe('o mapa do sítio e o robots.txt não discordam', () => {
       (c) => !['/', '/loja', '/catalogo', '/sobre-nos'].includes(c),
     );
     for (const c of institucionais) expect(existem, c).toContain(c);
-    // /termos e /envios ainda nao existem: nao podem estar la.
-    expect(paginasDoMapa()).not.toContain('/termos');
+    // E todas as que existem la estao.
+    for (const e of existem) expect(paginasDoMapa(), e).toContain(e);
   });
 
   it('o robots.ts bloqueia exatamente a mesma lista', () => {

@@ -6,7 +6,18 @@ import { expect, test } from '@playwright/test';
  * de estar, o que lhes chega esta certo.
  */
 
-const PUBLICAS = ['/', '/loja', '/catalogo', '/sobre-nos', '/contacto', '/privacidade', '/cookies', '/faq'];
+const PUBLICAS = [
+  '/',
+  '/loja',
+  '/catalogo',
+  '/sobre-nos',
+  '/contacto',
+  '/privacidade',
+  '/cookies',
+  '/faq',
+  '/termos',
+  '/envios',
+];
 
 test('cada página pública declara o seu próprio endereço canónico', async ({ request }) => {
   for (const rota of PUBLICAS) {

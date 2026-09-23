@@ -73,3 +73,49 @@ describe('mudar o nome aceita o nome, e só o nome', () => {
     expect(patch).toContain('{ $set: { name: corpo.dados.name } }');
   });
 });
+
+describe('as ligações internas levam a páginas que existem', () => {
+  /** As rotas que o App Router serve: pastas com `page.tsx` ou `route.ts`. */
+  function rotas(): RegExp[] {
+    const encontradas: string[] = [];
+    const andar = (dir: string, caminho: string) => {
+      for (const nome of readdirSync(dir)) {
+        const c = join(dir, nome);
+        if (statSync(c).isDirectory()) andar(c, `${caminho}/${nome}`);
+        else if (nome === 'page.tsx' || nome === 'route.ts') encontradas.push(caminho);
+      }
+    };
+    andar(join(SRC, 'app'), '');
+    return encontradas.map((r) => new RegExp(`^${r.replace(/\[[^\]]+\]/g, '[^/]+')}$`));
+  }
+
+  it('nenhum href para uma rota sem página', () => {
+    // "Finalizar Compra" levava a /checkout desde o inicio do projeto, e o
+    // rodape chegou a ligar para quatro paginas que nao existiam. O mesmo
+    // erro, duas vezes: oferecer um caminho que nao leva a lado nenhum.
+    const existentes = rotas();
+    const partidas: string[] = [];
+    for (const f of ficheiros(SRC)) {
+      const fonte = readFileSync(f, 'utf-8');
+      const hrefs = [
+        ...[...fonte.matchAll(/href="(\/[^"]*)"/g)].map((m) => ({ h: m[1], dinamica: false })),
+        // `/produto/${slug}`: so se conhece o prefixo, e falta um segmento.
+        ...[...fonte.matchAll(/href=\{`(\/[^`$]*)(\$?)/g)].map((m) => ({
+          h: m[1],
+          // So e segmento se o `${` vier logo a seguir a uma barra; em
+          // `/loja?categoria=${x}` o valor esta na query, nao no caminho.
+          dinamica: m[2] === '$' && m[1].endsWith('/'),
+        })),
+      ];
+      for (const { h, dinamica } of hrefs) {
+        const caminho = h.split(/[?#]/)[0].replace(/(.)\/$/, '$1');
+        // A raiz e ''; um prefixo dinamico ganha um segmento qualquer.
+        const alvo = caminho === '/' ? '' : dinamica ? `${caminho.replace(/\/$/, '')}/x` : caminho;
+        if (!existentes.some((r) => r.test(alvo))) {
+          partidas.push(`${relative(process.cwd(), f)}: ${h}`);
+        }
+      }
+    }
+    expect(partidas, 'ligações para rotas que não existem').toEqual([]);
+  });
+});
