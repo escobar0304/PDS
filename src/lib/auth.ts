@@ -25,14 +25,35 @@ const LIMITE_ENTRADA_CONTA = { max: 5, janelaMs: 15 * 60 * 1000 };
 const HASH_INEXISTENTE =
   '$argon2id$v=19$m=65536,t=3,p=4$c2FsdGVkc2FsdGVkc2FsdA$8pTfL9VYfvGZ3LrXKkLvVYQqf1ZPZ0rB3xQwLxX7tKo';
 
+/**
+ * O Google so e um provedor quando esta mesmo configurado.
+ *
+ * `src/lib/env.ts` classifica GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET como
+ * **opcionais** — activam uma funcionalidade, nao sao obrigatorias. Mas o
+ * provedor era registado na mesma, com um `!` a afirmar que existem. Sem
+ * elas, o NextAuth ficava com um provedor de `clientId: undefined` e quem
+ * carregasse em "Continuar com Google" aterrava num fluxo OAuth partido.
+ *
+ * E o mesmo erro do rodape que ligava para paginas inexistentes: oferecer um
+ * caminho que nao leva a lado nenhum. A interface le esta lista pelo
+ * `getProviders()`, por isso o botao desaparece sozinho — sem uma segunda
+ * variavel de ambiente a repetir o que esta aqui e a poder discordar.
+ */
+export const googleConfigurado = Boolean(
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
+);
+
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(clientPromise),
   providers: [
-    // Google Provider
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(googleConfigurado
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+          }),
+        ]
+      : []),
     
     // Email/Password Provider
     CredentialsProvider({
