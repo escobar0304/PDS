@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { botaoClasses } from '@/components/ui/Button';
 import { ArrowLeft, Check, Minus, Plus, ShoppingBag, Trash } from '@phosphor-icons/react';
+import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 
 export default function Carrinho() {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -188,18 +189,15 @@ export default function Carrinho() {
 
                 {/* Informações extras */}
                 <div className="mt-6 pt-6 border-t space-y-3">
-                  <div className="flex items-start gap-2 text-sm text-ink-muted">
-                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
-                    <span>Pagamento seguro</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-ink-muted">
-                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
-                    <span>Envio em 2-3 dias úteis</span>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-ink-muted">
-                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
-                    <span>14 dias para devolução</span>
-                  </div>
+                  {/* Texto em `src/lib/afirmacoes.ts`, sem promessas de prazo nem de pagamento. */}
+                  {[INFORMACAO_COMPRA.envios, INFORMACAO_COMPRA.livreResolucao].map((i) => (
+                    <div key={i.titulo} className="flex items-start gap-2 text-sm text-ink-muted">
+                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
+                      <span>
+                        <span className="font-medium text-ink">{i.titulo}:</span> {i.detalhe}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

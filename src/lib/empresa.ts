@@ -40,11 +40,32 @@ export interface Empresa {
   /** Telefone de contacto efetivo. */
   telefone: string | PorPreencher;
   /**
-   * Entidade de resolucao alternativa de litigios a que aderiu.
+   * Horario de atendimento, em texto corrido.
    *
-   * Informar qual e obrigatorio (Lei 144/2015, art. 18). Para uma morada no
-   * Porto o candidato natural e o CICAP, mas a adesao tem de ser confirmada e
-   * e uma decisao do negocio, nao uma suposicao do codigo.
+   * Nao e obrigatorio, por isso enquanto for `null` nao se mostra — em vez de
+   * "por preencher". Ate aqui estava escrito a mao em duas paginas, "Segunda a
+   * sexta, das 10h as 19h. Sabado, das 10h as 14h.", sem ninguem o ter
+   * confirmado.
+   */
+  horario: string | PorPreencher;
+  /**
+   * Entidade de resolucao alternativa de litigios **competente**.
+   *
+   * Informar qual e obrigatorio (Lei 144/2015, art. 18) — e e obrigatorio
+   * tambem para quem nao aderiu a nenhuma: a lei pede a entidade competente,
+   * nao uma adesao. Por isso o sitio diz "competente" e nunca "aderimos".
+   *
+   * O CICAP foi escolhido pelo negocio em 23/09/2026. A competencia dele e
+   * territorial: os 16 municipios da Area Metropolitana do Porto (Arouca,
+   * Espinho, Gondomar, Maia, Matosinhos, Oliveira de Azemeis, Porto, Povoa de
+   * Varzim, Santa Maria da Feira, Santo Tirso, Sao Joao da Madeira, Trofa,
+   * Vale de Cambra, Valongo, Vila do Conde e Vila Nova de Gaia). **Quando a
+   * morada for preenchida, confirmar que fica num deles.** Se nao ficar, esta
+   * entidade deixa de ser a competente.
+   *
+   * Os litigios de consumo ate 5000 € estao sujeitos a arbitragem necessaria
+   * se o consumidor a escolher (Lei 63/2019): nesse caso a empresa nao pode
+   * recusar, aderindo ou nao.
    *
    * Nota: a plataforma europeia de resolucao de litigios em linha foi
    * descontinuada em julho de 2025. Nao acrescentar ligacao para ela.
@@ -63,7 +84,11 @@ export const EMPRESA: Empresa = {
   },
   email: null,
   telefone: null,
-  entidadeRal: null,
+  horario: null,
+  entidadeRal: {
+    nome: 'CICAP – Centro de Informação de Consumo e Arbitragem do Porto',
+    sitio: 'https://cicap.pt',
+  },
 };
 
 /** Campos sem os quais o site nao pode ir para o ar indexado. */

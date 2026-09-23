@@ -5,9 +5,10 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
 import ContactForm from '@/components/contactForm';
-import { Clock, Diamond, Envelope, Leaf, MagnifyingGlass, MapPin, Phone } from '@phosphor-icons/react';
+import { Clock, Diamond, Envelope, MagnifyingGlass, MapPin, Phone, Sparkle } from '@phosphor-icons/react';
 import MapaLocalizacao from '@/components/mapaLocalizacao';
 import { EMPRESA, moradaFormatada } from '@/lib/empresa';
+import { AVISO_TRADICAO } from '@/lib/afirmacoes';
 
 /** Incorporacao do mapa. So e pedida a Google depois de a pessoa carregar. */
 const MAPA_EMBED =
@@ -22,9 +23,9 @@ export default function SobreNos() {
         {/* Hero Section */}
         <Hero
           title="Sobre Nós"
-          subtitle="Conheça nossa história e paixão por cristais"
+          subtitle="Conheça a nossa história e o gosto por cristais"
           imageSrc="/images/sobre-nos-hero.png"
-          imageAlt="Nossa história"
+          imageAlt="Pedras roxas, cinzentas e brancas dispostas em círculos sobre madeira"
           height="medium"
           showCta={false}
         />
@@ -38,20 +39,23 @@ export default function SobreNos() {
                   Nossa História
                 </h2>
                 <div className="space-y-4 text-base md:text-lg text-ink leading-relaxed">
+                  {/*
+                    Texto geral (F9). O anterior afirmava "ha mais de uma decada" e
+                    "cristais autenticos" sem ninguem o ter confirmado. A historia a
+                    serio vem do negocio, quando a quiser contar.
+                  */}
                   <p>
-                    Pétalas de Sonho nasceu da paixão por pedras preciosas e cristais, 
-                    combinada com um profundo respeito pela espiritualidade e energia 
-                    que cada peça carrega consigo.
+                    Pétalas de Sonho nasceu do gosto por cristais e pedras, e pelas
+                    tradições que os acompanham em tantas culturas.
                   </p>
                   <p>
-                    Há mais de uma década, iniciamos esta jornada com o objetivo de 
-                    trazer ao público português uma seleção cuidada de cristais autênticos, 
-                    cada um escolhido pela sua qualidade, beleza e propriedades energéticas únicas.
+                    Reunimos aqui peças escolhidas pela cor, pela forma e pela beleza,
+                    para quem as quer ter por perto — como objeto, como presente ou como
+                    parte de um ritual pessoal.
                   </p>
                   <p>
-                    Acreditamos que cada pedra tem uma história para contar e uma energia 
-                    para partilhar. O nosso compromisso é ajudá-lo a encontrar a peça 
-                    perfeita para a sua jornada espiritual.
+                    Acreditamos que cada pedra tem a sua história. Se quiser saber mais
+                    sobre alguma peça, escreva-nos.
                   </p>
                 </div>
               </div>
@@ -59,7 +63,7 @@ export default function SobreNos() {
                 <div className="relative h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden shadow-medium">
                   <Image
                     src="/images/nossa-historia.png"
-                    alt="Nossa história"
+                    alt="Pedra roxa lapidada sobre uma almofada, à luz do fim de tarde"
                     fill
                     sizes="(min-width: 768px) 50vw, 100vw"
                     className="object-cover"
@@ -87,11 +91,10 @@ export default function SobreNos() {
               <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
                 <Diamond className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
                 <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
-                  Autenticidade
+                  Cada peça, a sua
                 </h3>
                 <p className="text-sm md:text-base text-ink-muted leading-relaxed">
-                  Todas as nossas pedras são autênticas e certificadas, 
-                  garantindo qualidade e procedência.
+                  Nenhuma pedra é igual a outra. Descrevemos cada uma como é.
                 </p>
               </div>
 
@@ -102,20 +105,19 @@ export default function SobreNos() {
                   Transparência
                 </h3>
                 <p className="text-sm md:text-base text-ink-muted leading-relaxed">
-                  Informação clara sobre cada produto, suas propriedades 
-                  e origem, sem mistérios.
+                  Informação clara sobre cada produto e os cuidados que pede,
+                  sem exageros.
                 </p>
               </div>
 
               {/* Sustentabilidade */}
               <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center sm:col-span-2 lg:col-span-1">
-                <Leaf className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
+                <Sparkle className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
                 <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
-                  Sustentabilidade
+                  Tradição, não medicina
                 </h3>
                 <p className="text-sm md:text-base text-ink-muted leading-relaxed">
-                  Comprometidos com práticas éticas e sustentáveis 
-                  na extração e comercialização.
+                  {AVISO_TRADICAO}
                 </p>
               </div>
             </div>
@@ -130,7 +132,7 @@ export default function SobreNos() {
                 Entre em Contacto
               </h2>
               <p className="text-base sm:text-lg md:text-xl text-ink-muted max-w-3xl mx-auto">
-                Estamos aqui para ajudar na sua jornada espiritual
+                Tem uma pergunta sobre uma peça? Escreva-nos.
               </p>
             </div>
 
@@ -189,14 +191,15 @@ export default function SobreNos() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
-                      <div>
-                        <p className="font-medium text-ink">Horário</p>
-                        <p className="text-sm text-ink-muted">Seg-Sex: 10h - 19h</p>
-                        <p className="text-sm text-ink-muted">Sáb: 10h - 14h</p>
+                    {EMPRESA.horario && (
+                      <div className="flex items-start gap-3">
+                        <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                        <div>
+                          <p className="font-medium text-ink">Horário</p>
+                          <p className="text-sm text-ink-muted">{EMPRESA.horario}</p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 

@@ -202,10 +202,17 @@ Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
   **Retirado em 22/09/2026.** O DL 156/2005 exige a **ligação** para a
   plataforma, em local visível — não exige página própria. A ligação no rodapé
   cumpre. Isto era trabalho inventado acima da obrigação
-- **Entidade de resolução alternativa de litígios.** É obrigatório informar o
-  consumidor de qual é a entidade competente, com nome e sítio. Sendo a morada no
-  Porto, o candidato natural é o CICAP, o Centro de Informação de Consumo e
-  Arbitragem do Porto. **A adesão tem de ser confirmada e é uma decisão tua**
+- ~~**Entidade de resolução alternativa de litígios.**~~ **Feito em
+  23/09/2026: CICAP**, por decisão do negócio. Aparece em `/contacto#litigios`
+  e no rodapé. **Escreve-se «competente», nunca «aderimos».** A Lei 144/2015
+  obriga a indicar a entidade competente mesmo a quem não aderiu a nenhuma, e
+  a adesão não está confirmada — dizer que aderimos era inventar. Nos litígios
+  até 5000 €, a arbitragem é obrigatória para a empresa se o consumidor a
+  escolher (Lei 63/2019), com ou sem adesão.
+
+  **Uma condição fica pendente da F4:** a competência do CICAP é territorial,
+  os 16 municípios da Área Metropolitana do Porto. Quando a morada chegar, tem
+  de ficar num deles — a lista está em `src/lib/empresa.ts`
 - **Atenção a um detalhe que a maioria dos templates ainda erra:** a plataforma
   europeia de resolução de litígios em linha foi descontinuada em julho de 2025.
   Não deve ser acrescentada nenhuma ligação para ela. É exatamente o tipo de link
@@ -309,6 +316,25 @@ Trabalho:
 
 ## F8. Termos e condições
 
+> **Bloqueado no negócio.** As perguntas, por ordem de peso:
+>
+> 1. **Para onde envias?** Continente, ilhas, União Europeia?
+> 2. **Com quem, e em quanto tempo** — o prazo que consegues de facto cumprir,
+>    não o que soa bem
+> 3. **Quanto custa o envio?** Fixo, por peso, grátis a partir de um valor?
+> 4. **Há loja física ou entrega em mão?** O sítio fala em «a loja» e
+>    `/sobre-nos` tem um mapa do Porto
+> 5. **Na livre resolução, quem paga a devolução?** A lei deixa-a a cargo do
+>    cliente se isso estiver escrito antes da compra; se não estiver, paga a
+>    loja
+> 6. **Há peças feitas por medida** (japamalas, anéis)? São exceção à livre
+>    resolução (DL 24/2014, art. 17.º), mas só se estiver dito
+> 7. **Preços com IVA, ou regime de isenção?** Muda o que se escreve junto de
+>    cada preço e na fatura
+>
+> A garantia legal de conformidade (3 anos, DL 84/2021) aplica-se sempre e
+> não precisa de decisão. O texto final precisa de validação jurídica.
+
 - **`/termos`**: termos de utilização do site
 - **`/envios-e-devolucoes`**: condições de envio, prazos, custos, e o direito de
   livre resolução de 14 dias do DL 24/2014
@@ -346,6 +372,39 @@ que não substitui aconselhamento médico.
 
 Trabalho: passar todas as afirmações a pente fino contigo, manter só as verdadeiras,
 e criar a página que as sustenta. Isto é trabalho de copy, não de código.
+
+> **Feito em 23/09/2026, em texto geral**, por decisão do negócio: sem
+> promessas, a melhorar quando houver informação. Está tudo em
+> `src/lib/afirmacoes.ts`, e muda-se ali. `afirmacoes.test.ts` falha se uma
+> frase retirada voltar — verificado contra o texto antigo: 13 falhas.
+>
+> **O levantamento encontrou mais do que as oito da tabela:**
+>
+> - a página inicial descrevia um **serviço de avaliação gemológica** —
+>   «gemologistas certificados», «avaliações detalhadas», «garantimos a
+>   integridade de cada avaliação». Não era uma frase, era um serviço
+> - «Pagamento Seguro — Stripe SSL certificado», sem checkout
+> - «Embalagem sustentável» e «práticas éticas e sustentáveis na extração»:
+>   alegações ambientais genéricas, o alvo da Diretiva 2024/825
+> - «Atendimento personalizado»
+> - «pedras preciosas» para quartzo e ametista, que não o são
+> - um **horário inventado** em duas páginas, «Seg-Sex 10h-19h, Sáb 10h-14h».
+>   É dado do negócio: passou a `EMPRESA.horario`, a `null`, e o bloco só
+>   aparece quando existir
+> - «Benefícios Energéticos» nas propriedades dos produtos passou a «Segundo a
+>   tradição», com o aviso de que não substitui aconselhamento médico **junto
+>   das propriedades**, não numa página à parte
+> - textos alternativos errados: um dizia «pedra em bruto sobre madeira» para
+>   uma imagem de brincos
+>
+> **Fica uma afirmação concreta: os 14 dias de livre resolução.** Não é
+> promessa do negócio, é um direito que a lei dá em qualquer venda à
+> distância (DL 24/2014, art. 10.º).
+>
+> **Uma pergunta que isto levantou:** as fotografias do sítio parecem
+> geradas, não tiradas às peças. Se forem ilustrativas, isso tem de ser dito,
+> ou substituídas por fotografias reais — mostrar como produto uma imagem que
+> não o é é outra forma da mesma prática desleal.
 
 ---
 
@@ -604,11 +663,11 @@ F1  Marca                        bloqueia F2
 F2  Sistema de design            depende de F1
 F3  Componentes                  depende de F2
 F4  Identificação do prestador   precisa dos teus dados legais
-F5  Livro de Reclamações e RAL   precisa de decisão sobre entidade RAL
+F5  Livro de Reclamações e RAL   feita (CICAP); confirmar a morada na AMP
 F6  Proteção de dados            precisa de validação jurídica
 F7  Cookies                      depende de F6
 F8  Termos                       precisa de validação jurídica
-F9  Afirmações comerciais        precisa de decisões tuas sobre o negócio
+F9  Afirmações comerciais        texto geral feito; fotografias por esclarecer
 F10 Páginas institucionais       feita; /termos e /envios bloqueados
 F11 Segurança                    independente, pode correr em paralelo
 F12 Área pessoal                 feita; favoritos e morada passam à v2

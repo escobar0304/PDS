@@ -5,15 +5,18 @@ import { useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
-import { ArrowCounterClockwise, Headphones, MagnifyingGlass, ShieldCheck, Truck } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ChatCircle, MagnifyingGlass, Truck } from '@phosphor-icons/react';
 import { fetchList } from '@/lib/api';
+import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 import { Alert, Button, EmptyState, Input, Select, SkeletonCartao } from '@/components/ui';
 
+// Texto em `src/lib/afirmacoes.ts`. Aqui prometia-se envio gratis acima de
+// 50 €, pagamento "Stripe SSL certificado" sem checkout, e atendimento
+// personalizado — nada disso decidido por ninguem.
 const GARANTIAS = [
-  { Icone: ShieldCheck, titulo: 'Pagamento Seguro', detalhe: 'Stripe SSL certificado' },
-  { Icone: Truck, titulo: 'Envio Grátis', detalhe: 'Em compras acima de 50€' },
-  { Icone: ArrowCounterClockwise, titulo: 'Devoluções', detalhe: '14 dias para devolução' },
-  { Icone: Headphones, titulo: 'Suporte', detalhe: 'Atendimento personalizado' },
+  { Icone: Truck, ...INFORMACAO_COMPRA.envios },
+  { Icone: ArrowCounterClockwise, ...INFORMACAO_COMPRA.livreResolucao },
+  { Icone: ChatCircle, ...INFORMACAO_COMPRA.duvidas },
 ];
 
 interface Product {
@@ -123,7 +126,7 @@ function LojaContent() {
               Loja
             </h1>
             <p className="text-base md:text-lg text-ink-muted">
-              Descubra nossa coleção completa de cristais e pedras preciosas
+              A coleção de cristais e pedras
             </p>
           </div>
         </section>
@@ -272,7 +275,7 @@ function LojaContent() {
         {/* Info Section */}
         <section className="py-12 md:py-16 bg-surface-raised border-t">
           <div className="container-custom">
-            <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="grid gap-8 sm:grid-cols-3">
               {GARANTIAS.map(({ Icone, titulo, detalhe }) => (
                 <li key={titulo} className="flex gap-3">
                   <Icone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-700" aria-hidden />
@@ -307,7 +310,7 @@ function LojaFallback() {
               Loja
             </h1>
             <p className="text-base md:text-lg text-ink-muted">
-              Descubra nossa coleção completa de cristais e pedras preciosas
+              A coleção de cristais e pedras
             </p>
           </div>
         </section>

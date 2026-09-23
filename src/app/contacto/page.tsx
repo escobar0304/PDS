@@ -5,6 +5,7 @@ import Footer from '@/components/footer';
 import ContactForm from '@/components/contactForm';
 import { Alert, Card, Container, PageHeader } from '@/components/ui';
 import { camposEmFalta, EMPRESA, moradaFormatada } from '@/lib/empresa';
+import { LIVRO_RECLAMACOES } from '@/lib/paginas';
 
 export const metadata: Metadata = {
   title: 'Contactos',
@@ -98,11 +99,9 @@ export default function ContactoPage() {
                     href={EMPRESA.telefone ? `tel:${EMPRESA.telefone.replace(/\s/g, '')}` : null}
                   />
                   <Contacto Icone={MapPin} rotulo="Morada" valor={moradaFormatada()} />
-                  <Contacto
-                    Icone={Clock}
-                    rotulo="Horário"
-                    valor="Segunda a sexta, das 10h às 19h. Sábado, das 10h às 14h."
-                  />
+                  {EMPRESA.horario && (
+                    <Contacto Icone={Clock} rotulo="Horário" valor={EMPRESA.horario} />
+                  )}
                 </Card>
 
                 {/*
@@ -130,6 +129,48 @@ export default function ContactoPage() {
                     </div>
                   </dl>
                 </Card>
+
+                {/*
+                  Lei 144/2015, art. 18: a entidade competente, com nome e
+                  sitio. "Competente" e nao "aderente" — a obrigacao existe
+                  com ou sem adesao, e dizer que aderimos seria inventar.
+                */}
+                {EMPRESA.entidadeRal && (
+                  <section id="litigios">
+                  <Card className="p-6 text-sm">
+                    <h2 className="mb-3 font-serif text-xl text-rose-700">
+                      Resolução de litígios
+                    </h2>
+                    <p className="mb-3 text-ink">
+                      Em caso de litígio de consumo, pode recorrer à entidade de
+                      resolução alternativa de litígios competente:{' '}
+                      <a
+                        href={EMPRESA.entidadeRal.sitio}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+                      >
+                        {EMPRESA.entidadeRal.nome}
+                      </a>
+                      .
+                    </p>
+                    <p className="text-ink-muted">
+                      Nos litígios até 5000 €, se escolher a arbitragem, ela é
+                      obrigatória para nós (Lei 63/2019). Pode também apresentar
+                      reclamação no{' '}
+                      <a
+                        href={LIVRO_RECLAMACOES.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+                      >
+                        Livro de Reclamações Eletrónico
+                      </a>
+                      .
+                    </p>
+                  </Card>
+                  </section>
+                )}
 
                 {faltam.length > 0 && (
                   <Alert tone="erro">

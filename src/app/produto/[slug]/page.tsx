@@ -8,9 +8,10 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
-import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Minus, Plus, ShareNetwork, Shield, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Minus, Plus, ShareNetwork, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
 import { botaoClasses } from '@/components/ui/Button';
 import { AnuncioEstado, Skeleton } from '@/components/ui';
+import { AVISO_TRADICAO, INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 
 interface Product {
   _id: string;
@@ -417,27 +418,23 @@ export default function ProdutoPage() {
 
               {/* Informações Adicionais */}
               <div className="border-t pt-6 space-y-3">
-                <div className="flex items-start gap-3">
-                  <Truck className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-ink">Envio Rápido</p>
-                    <p className="text-sm text-ink-muted">Entrega em 2-3 dias úteis</p>
+                {/*
+                  Texto em `src/lib/afirmacoes.ts`. Aqui prometia-se entrega em
+                  2-3 dias uteis e "certificado de autenticidade incluido", sem
+                  nenhum dos dois decidido.
+                */}
+                {[
+                  { Icone: Truck, ...INFORMACAO_COMPRA.envios },
+                  { Icone: ArrowCounterClockwise, ...INFORMACAO_COMPRA.livreResolucao },
+                ].map(({ Icone, titulo, detalhe }) => (
+                  <div key={titulo} className="flex items-start gap-3">
+                    <Icone className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" aria-hidden />
+                    <div>
+                      <p className="font-medium text-ink">{titulo}</p>
+                      <p className="text-sm text-ink-muted">{detalhe}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <ArrowCounterClockwise className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-ink">Devoluções</p>
-                    <p className="text-sm text-ink-muted">14 dias para devolução</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Shield className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-ink">Garantia de Autenticidade</p>
-                    <p className="text-sm text-ink-muted">Certificado de autenticidade incluído</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
@@ -448,7 +445,7 @@ export default function ProdutoPage() {
               {product.properties.beneficios && product.properties.beneficios.length > 0 && (
                 <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft">
                   <h3 className="text-2xl font-serif text-rose-700 mb-4">
-                    Benefícios Energéticos
+                    Segundo a tradição
                   </h3>
                   <ul className="space-y-2">
                     {product.properties.beneficios.map((beneficio, index) => (
@@ -458,6 +455,14 @@ export default function ProdutoPage() {
                       </li>
                     ))}
                   </ul>
+                  {/*
+                    Junto das propriedades, e nao numa pagina a parte: um aviso
+                    que ninguem le nao tira uma alegacao de saude do terreno da
+                    publicidade enganosa.
+                  */}
+                  <p className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">
+                    {AVISO_TRADICAO}
+                  </p>
                 </div>
               )}
 
