@@ -133,3 +133,27 @@ a partir do defeito — removida a região, o teste fica vermelho.
 
 Corrigiu-se também o `Spinner`, que tinha `aria-label` **e** um `sr-only` com
 o mesmo texto: alguns leitores liam «A carregar, A carregar».
+
+## 2.4.2, o título que não dizia nada
+
+**Oito páginas tinham o mesmo `<title>`:** «Pétalas de Sonho» no início, na
+loja, no catálogo, em sobre nós, em cada produto, no carrinho, na área pessoal
+e na entrada. Num separador, no histórico ou num leitor de ecrã — que anuncia o
+título ao abrir a página — não se distinguiam. O 2.4.2 Page Titled, nível A,
+pede um título que diga de que página se trata.
+
+Deu-se por isto a preparar os endereços canónicos (F15), não pela auditoria:
+**o `axe` não o apanha.** A regra `document-title` verifica que o título existe
+e não está vazio, e existia. É o terceiro caso deste projeto em que uma
+ferramenta verde convivia com um critério falhado, depois do 4.1.3 e do
+`tsc` que não via as assinaturas das rotas.
+
+A causa era estrutural: essas páginas são componentes de cliente e não podem
+declarar metadados. Cada uma ganhou um `layout.tsx` que só serve para isso; a
+página inicial deixou de ser `'use client'`, porque não usava nada do cliente.
+O produto tem o nome da peça, lido no servidor — e, sem base de dados, fica
+«Produto» ao fim de dois segundos em vez de segurar a página.
+
+A guarda está em `e2e/acessibilidade.spec.ts`: falha se duas páginas tiverem o
+mesmo título. Verificada retirando dois dos `layout.tsx`: falhou a apontar
+exatamente essas duas.

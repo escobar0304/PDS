@@ -14,12 +14,34 @@ type Registo = { contagem: number; reinicia: number };
 
 const baldes = new Map<string, Registo>();
 
-/** Limpeza preguicosa: so corre quando ha muitas chaves acumuladas. */
+/**
+ * O que aqui fica sao dados pessoais: enderecos IP e, nalguns limites, o
+ * email da tentativa. A politica de privacidade diz quanto tempo ficam, e
+ * isso tem de ser verdade.
+ *
+ * A limpeza so corria com mais de 5000 chaves. Num sitio com este trafego
+ * nunca la chegava, e um IP podia ficar em memoria ate o servidor reiniciar —
+ * nao "uma hora". Passa a correr tambem por tempo, no maximo de minuto a
+ * minuto, a boleia dos pedidos que chegam.
+ */
+const INTERVALO_LIMPEZA_MS = 60_000;
+let ultimaLimpeza = 0;
+
 function limpar(agora: number) {
-  if (baldes.size < 5000) return;
+  if (baldes.size < 5000 && agora - ultimaLimpeza < INTERVALO_LIMPEZA_MS) return;
+  ultimaLimpeza = agora;
   for (const [chave, r] of baldes) {
     if (r.reinicia <= agora) baldes.delete(chave);
   }
+}
+
+// E sem pedidos, tambem: um temporizador que nao segura o processo aberto.
+const temporizador = setInterval(() => limpar(Date.now()), INTERVALO_LIMPEZA_MS);
+temporizador.unref?.();
+
+/** Quantas chaves estao guardadas. So para os testes. */
+export function chavesGuardadas(): number {
+  return baldes.size;
 }
 
 export interface Limite {
@@ -64,6 +86,7 @@ export function consumir(chave: string, limite: Limite, agora = Date.now()): Res
 /** Apaga tudo. Existe para os testes poderem partir de um estado limpo. */
 export function reiniciarLimites() {
   baldes.clear();
+  ultimaLimpeza = 0;
 }
 
 /**

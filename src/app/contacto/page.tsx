@@ -8,6 +8,7 @@ import { camposEmFalta, EMPRESA, moradaFormatada } from '@/lib/empresa';
 import { LIVRO_RECLAMACOES } from '@/lib/paginas';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/contacto' },
   title: 'Contactos',
   description: 'Como falar connosco, e quem somos para efeitos legais.',
 };

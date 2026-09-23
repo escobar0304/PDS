@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import { verify as argon2Verify } from 'argon2';
 import { consumir } from '@/lib/limites';
 import { esquemaCredenciais } from '@/lib/validacao';
+import { SessaoRevogada, verificarSessao } from '@/lib/sessao';
 
 /** Mensagem unica para credenciais erradas, seja qual for a metade que falhou. */
 const CREDENCIAIS_INVALIDAS = 'Email ou password incorretos';
@@ -129,6 +130,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
+          versaoSessao: user.versaoSessao ?? 0,
         };
       }
     })
@@ -136,29 +138,43 @@ export const authOptions: NextAuthOptions = {
   
   callbacks: {
     async jwt({ token, user, account, trigger }) {
+      if (user) {
+        token.role = user.role || 'USER';
+        token.userId = user.id;
+        token.versao = user.versaoSessao ?? 0;
+
+        // Na Google, `user.id` e o identificador da Google, nao o nosso.
+        if (account?.provider === 'google') {
+          await connectDB();
+          const dbUser = await User.findOne({ email: user.email?.toLowerCase() });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.userId = dbUser._id.toString();
+            token.versao = dbUser.versaoSessao ?? 0;
+          }
+        }
+        return token;
+      }
+
+      // Todas as outras vezes: a conta ainda aceita esta sessao? Ver
+      // `lib/sessao.ts`. Lancar e o que o NextAuth entende como "acabou":
+      // limpa o cookie e devolve uma sessao vazia, no browser e no servidor.
+      const verificacao = await verificarSessao(token.userId, token.versao);
+      if (verificacao.estado === 'revogada') throw new SessaoRevogada();
+      if (verificacao.estado === 'valida') token.role = verificacao.role;
+
       // Depois de a pessoa mudar o nome, a interface chama `update()`. O que
       // vem nesse pedido e do cliente e nao se usa: le-se o nome da base de
       // dados. Aceitar o que o cliente manda deixava-o escrever na propria
       // sessao o que quisesse — incluindo, noutro campo, o `role`.
-      if (trigger === 'update' && token.userId) {
-        await connectDB();
-        const atual = await User.findById(token.userId).select('name').lean();
-        if (atual) token.name = atual.name;
-        return token;
-      }
-
-      if (user) {
-        token.role = user.role || 'USER';
-        token.userId = user.id;
-      }
-
-      // Atualizar token se login via Google
-      if (account?.provider === 'google' && user) {
-        await connectDB();
-        const dbUser = await User.findOne({ email: user.email?.toLowerCase() });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.userId = dbUser._id.toString();
+      if (trigger === 'update' && verificacao.estado === 'valida') {
+        try {
+          await connectDB();
+          const atual = await User.findById(token.userId).select('name').lean();
+          if (atual) token.name = atual.name;
+        } catch {
+          // Sem base de dados fica o nome que o token ja tinha. Rebentar aqui
+          // terminava a sessao por uma falha que nao e de seguranca.
         }
       }
 

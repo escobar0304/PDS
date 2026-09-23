@@ -36,3 +36,20 @@ async function connectDB(): Promise<typeof mongoose> {
 }
 
 export default connectDB;
+
+/**
+ * Uma consulta que desiste ao fim de `ms`.
+ *
+ * O Mongoose espera 30 s por uma ligacao antes de desistir. Numa rota de API
+ * isso e so lento; num titulo de pagina ou no mapa do sitio, segura tudo o
+ * resto. Para o que e acessorio, mais vale desistir cedo e seguir sem.
+ */
+export function comPrazo<T>(consulta: () => Promise<T>, ms = 2000): Promise<T> {
+  let temporizador: ReturnType<typeof setTimeout> | undefined;
+  const prazo = new Promise<never>((_, rejeitar) => {
+    temporizador = setTimeout(() => rejeitar(new Error('base de dados lenta')), ms);
+  });
+  return Promise.race([connectDB().then(consulta), prazo]).finally(() =>
+    clearTimeout(temporizador),
+  );
+}

@@ -7,6 +7,7 @@ import { Container, EmptyState, PageHeader } from '@/components/ui';
 import { botaoClasses } from '@/components/ui/Button';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/faq' },
   title: 'Perguntas frequentes',
   description: 'Respostas às perguntas que nos fazem mais vezes.',
 };

@@ -233,9 +233,14 @@ Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
 > é responder a quem escreve. Uma caixa a pedir autorização criaria um
 > fundamento falso. O que a lei pede é informação, e é isso que está.
 >
-> Por fazer: os direitos operacionais na área pessoal (exportar e apagar), o
-> registo de atividades de tratamento do art. 30.º, e os dados do prestador,
-> que continuam do lado do negócio.
+> ~~Por fazer: os direitos operacionais na área pessoal (exportar e apagar), o
+> registo de atividades de tratamento do art. 30.º~~ — feitos, na F12 e em
+> `docs/REGISTO-TRATAMENTOS.md`. Escrever o registo a partir do código
+> encontrou dois tratamentos que a política não declarava: **os endereços IP
+> que o limitador de pedidos guarda**, e os códigos de uso único. E um prazo
+> que o código não cumpria: a limpeza dos IP só corria com mais de 5000
+> entradas. Os três corrigidos. Ficam os dados do prestador e os
+> subcontratantes, do lado do negócio.
 
 
 **Base:** RGPD (Regulamento (UE) 2016/679) e Lei 58/2019.
@@ -261,7 +266,7 @@ Trabalho:
   separado e nunca agregado à criação de conta
 - **Direitos do titular, operacionais.** Na área pessoal: exportar os meus dados e
   apagar a conta. Um formulário de pedido não chega quando a funcionalidade é trivial
-- **Registo de atividades de tratamento** (art. 30º). Documento interno, fica no repo
+- ~~**Registo de atividades de tratamento** (art. 30º)~~ — `docs/REGISTO-TRATAMENTOS.md`
 - **Política de conservação** com prazos concretos por tipo de dado
 
 ## F7. Cookies e armazenamento local
@@ -555,11 +560,23 @@ O que passou para a frente:
 
 O que fica nesta fase, porque depende do logótipo (F1) e da copy (F9):
 
-- `sitemap.ts`
+- ~~`sitemap.ts`~~ — feito em 23/09/2026. O `robots.ts` já o anunciava e
+  ele não existia. Só lista o que é público e existe; as rotas privadas saem
+  da mesma lista que o `robots.ts` bloqueia (`src/lib/site.ts`)
 - Open Graph com imagem por página
-- JSON-LD: `Organization`, `LocalBusiness`, `BreadcrumbList` e, mais tarde, `Product`
-- Canónicos e `lang` correto
-- Revisão dos títulos e descrições de todas as páginas
+- JSON-LD: `Organization`, `LocalBusiness`, `BreadcrumbList` e, mais tarde,
+  `Product`. **Bloqueado na F4**: `Organization` sem nome, morada nem
+  contactos é um bloco vazio, e inventá-los é o que o `empresa.ts` impede
+- ~~Canónicos~~ — feito. O `lang` já estava certo (`pt-PT`)
+- ~~Revisão dos títulos~~ — feito, e era mais do que SEO: **oito páginas
+  tinham o mesmo título**, o que falha o 2.4.2 da WCAG, nível A. Ver
+  `docs/ACESSIBILIDADE.md`
+
+**Fica por confirmar o domínio.** `https://petalasdesonho.pt` é o valor por
+omissão desde o início do projeto e ninguém confirmou que é o do negócio. Os
+canónicos e o mapa do sítio dizem aos motores de busca qual é o endereço
+verdadeiro de cada página: com o domínio errado, dizem-lhes o de outra
+pessoa. Em produção, `NEXT_PUBLIC_SITE_URL` tem de estar definido.
 
 ---
 

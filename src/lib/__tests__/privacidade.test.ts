@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -12,6 +12,17 @@ import { describe, expect, it } from 'vitest';
 
 const raiz = join(__dirname, '..', '..', '..');
 const ler = (p: string) => readFileSync(join(raiz, p), 'utf8');
+
+/** Todo o codigo de producao sob `dir`, sem os testes. */
+function lerTudo(dir: string): string {
+  const juntar = (d: string): string[] =>
+    readdirSync(d).flatMap((n) => {
+      const c = join(d, n);
+      if (statSync(c).isDirectory()) return n === '__tests__' ? [] : juntar(c);
+      return /\.tsx?$/.test(n) ? [readFileSync(c, 'utf8')] : [];
+    });
+  return juntar(join(raiz, dir)).join('\n');
+}
 
 /**
  * Campos do `userSchema` que a pagina /privacidade ja cobre.
@@ -32,6 +43,8 @@ const CAMPOS_CONHECIDOS = [
   'country',
   'role',
   'emailVerified',
+  // Contador que termina as sessoes da conta; declarado na linha da sessao.
+  'versaoSessao',
 ];
 
 function camposDoUserSchema(): string[] {
@@ -60,6 +73,28 @@ describe('a política de privacidade acompanha o código', () => {
     // A pagina diz que a mensagem "nao fica guardada em base de dados". Se
     // isso mudar, a frase passa a ser falsa.
     expect(rota).not.toMatch(/\bContact\b|\.create\(|\.save\(|insertOne/);
+  });
+
+  it('se o sítio guarda endereços IP, a política diz que guarda', () => {
+    // O limitador de pedidos guarda-os em oito rotas, e a politica nao o
+    // dizia. Se `identificar()` for usado, tem de haver a linha.
+    const usaIp = ler('src/lib/limites.ts').includes('export function identificar');
+    const pagina = ler('src/app/privacidade/page.tsx');
+    if (usaIp) expect(pagina).toMatch(/Endereço IP/);
+    // E o prazo que la esta tem de ser o maior que o codigo usa.
+    expect(pagina).toMatch(/no máximo uma hora depois da última tentativa/);
+  });
+
+  it('o prazo declarado para os IP cobre a maior janela que o código usa', () => {
+    // `15 * 60 * 1000`, `60_000`: produtos de inteiros, lidos sem avaliar codigo.
+    const janelas = [...lerTudo('src').matchAll(/janelaMs: ([\d_ *]+)[,}]/g)].map((m) =>
+      m[1]
+        .split('*')
+        .map((n) => Number(n.trim().replace(/_/g, '')))
+        .reduce((a, b) => a * b, 1),
+    );
+    expect(janelas.length).toBeGreaterThan(5);
+    expect(Math.max(...janelas)).toBeLessThanOrEqual(60 * 60 * 1000);
   });
 
   it('a palavra-passe nunca é guardada em claro', () => {

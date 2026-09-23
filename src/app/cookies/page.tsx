@@ -6,6 +6,7 @@ import InterruptorMapa from '@/components/interruptorMapa';
 import { Alert, Card, Container, PageHeader } from '@/components/ui';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/cookies' },
   title: 'Cookies e armazenamento local',
   description:
     'O que a Pétalas de Sonho guarda no seu equipamento, para que serve e durante quanto tempo.',

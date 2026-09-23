@@ -361,17 +361,54 @@ Guardas em `e2e/seguranca.spec.ts`: o cabeçalho de produção não tem
 `'unsafe-eval'`, e nenhuma página viola a própria CSP. A segunda foi
 verificada retirando o `'unsafe-inline'`, que o Next precisa — falhou em `/`.
 
+## Sessões que acabam quando devem
+
+As sessões são JWT, com 30 dias. Não há sessão do lado do servidor para
+apagar, e por isso **apagar a conta ou repor a palavra-passe não terminava
+sessão nenhuma**: quem tivesse o cookie continuava a apresentá-lo durante um
+mês. Estava registado como dívida desde a F11, e a F12 deu-lhe mais uma razão.
+
+Cada conta tem agora uma `versaoSessao`, e o token leva a versão com que a
+pessoa entrou. Em cada verificação de sessão, o callback `jwt` pergunta à
+base de dados (`src/lib/sessao.ts`):
+
+- **conta apagada, ou versão diferente** → o callback lança, e o NextAuth
+  limpa o cookie e devolve uma sessão vazia, no browser e no servidor. Foi
+  lido no código do `next-auth` que é assim que ele trata uma exceção ali, não
+  suposto;
+- **repor a palavra-passe incrementa a versão**: termina as sessões em todos
+  os dispositivos. Quem repõe a palavra-passe pode estar a fazê-lo
+  precisamente porque alguém entrou por ela;
+- **o papel passa a vir da base de dados.** Antes ficava no token desde a
+  entrada: quem perdesse o papel de administrador continuava administrador
+  até o token expirar.
+
+**Com a base de dados em baixo, a sessão continua.** Não se sabe, e isso não
+é o mesmo que revogada: tudo o que tem dados falha na mesma, por isso manter
+a sessão não abre nada, e revogá-la expulsava toda a gente por uma falha que
+não é de segurança. Há um teste para isto, e foi verificado que falha se a
+regra for invertida.
+
+Os tokens emitidos antes desta alteração não têm versão, e valem 0 — não se
+expulsa ninguém no dia da publicação.
+
+**O custo:** uma consulta por `_id` à base de dados em cada verificação de
+sessão. É uma procura pela chave primária, e o sítio não tem o tráfego em que
+isso se note. Se algum dia tiver, a resposta é guardar o resultado uns
+segundos, sabendo que esse é o tempo que uma sessão revogada ainda dura.
+
+Testes de integração contra o Mongo do CI, chamando a rota de reposição a
+sério e não uma simulação dela: sessão válida continua, token antigo sem
+versão continua, apagar a conta termina, repor a palavra-passe termina e a
+entrada seguinte fica, e o papel vem da base de dados.
+
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
   em `localStorage`; a regra está no `CLAUDE.md`
 - **Rotas de administração** que virão da `redesign-geral` — passam todas por
   `exigirAdmin()`
-- **Invalidar sessões ao repor a palavra-passe.** Com sessões em JWT não há
-  sessão do lado do servidor para apagar: quem já tivesse entrado continua
-  entrado até o token expirar. Resolver isto exige guardar um marcador de
-  invalidação por utilizador e verificá-lo em cada pedido. Fica registado como
-  dívida conhecida, não como esquecimento
+- ~~**Invalidar sessões ao repor a palavra-passe.**~~ Feito, ver abaixo
 - ~~**Migrar para o Next 16**~~ — feito em 23/09/2026, ver abaixo
 - **Correr `npm audit --omit=dev` antes de cada versão.** Passou toda a F11
   sem ser corrido, e a pior superfície do projeto estava aí
