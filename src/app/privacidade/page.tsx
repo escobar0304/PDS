@@ -27,7 +27,7 @@ const TRATAMENTOS = [
   },
   {
     finalidade: 'Mantê-lo autenticado enquanto navega',
-    dados: 'Identificador de sessão',
+    dados: 'Identificador de sessão, e um contador na conta que permite terminá-la em todos os dispositivos',
     base: 'Execução de um contrato consigo',
     prazo: 'Até terminar sessão ou a sessão expirar',
   },

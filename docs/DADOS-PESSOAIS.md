@@ -94,14 +94,12 @@ Para essas, escreve-se o próprio email. Não prova posse de um segredo — prov
 intenção, que é o que esta confirmação existe para garantir: que ninguém apaga
 a conta por engano.
 
-### O que isto não resolve
+### ~~O que isto não resolve~~ Resolvido
 
-A sessão é um JWT e **continua válida até expirar, mesmo sem conta por trás**.
-A interface termina a sessão logo a seguir a apagar, o que cobre o caso normal;
-quem guarde o token continua a poder apresentá-lo. As rotas respondem 404
-quando a conta não existe, por isso não há acesso a dados — mas a dívida é a
-mesma que já estava registada em `docs/SEGURANCA.md` para a reposição de
-palavra-passe, e agora tem mais uma razão para ser paga.
+~~A sessão é um JWT e continua válida até expirar, mesmo sem conta por trás.~~
+**Desde 23/09/2026, apagar a conta termina todas as sessões dela**, em todos os
+dispositivos, e não só a do separador onde se apagou. Ver «Sessões que acabam
+quando devem» em `docs/SEGURANCA.md`.
 
 ## Aviso, não caixa de consentimento
 

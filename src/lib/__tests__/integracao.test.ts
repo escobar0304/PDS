@@ -473,6 +473,77 @@ executar('contra MongoDB', () => {
       expect(await verify(u!.password!, 'umapassword')).toBe(true);
     });
   });
+  describe('as sessões acabam quando devem', () => {
+    // O token de uma sessao, tal como o callback `jwt` o recebe em cada pedido.
+    const verificar = async (token: Record<string, unknown>) => {
+      const { authOptions } = await import('../auth');
+      return authOptions.callbacks!.jwt!({ token } as never);
+    };
+
+    it('uma sessão de uma conta que existe continua', async () => {
+      const u = await User.create({ name: 'Marta', email: 'sessao-ok@exemplo.pt' });
+      const t = await verificar({ userId: u._id.toString(), role: 'USER', versao: 0 });
+      expect(t.userId).toBe(u._id.toString());
+    });
+
+    it('um token de antes de haver versão continua a valer', async () => {
+      // Quem entrou antes desta alteracao nao tem `versao` no token. Expulsar
+      // toda a gente no dia da publicacao nao era o objetivo.
+      const u = await User.create({ name: 'Marta', email: 'sessao-antiga@exemplo.pt' });
+      await expect(verificar({ userId: u._id.toString(), role: 'USER' })).resolves.toBeTruthy();
+    });
+
+    it('apagar a conta termina a sessão', async () => {
+      const u = await User.create({ name: 'Marta', email: 'sessao-apagada@exemplo.pt' });
+      const token = { userId: u._id.toString(), role: 'USER', versao: 0 };
+
+      await apagarConta(u._id.toString());
+
+      // Ate aqui o token valia mais 30 dias, sem conta por tras.
+      await expect(verificar(token)).rejects.toThrow('Sessão revogada');
+    });
+
+    it('repor a palavra-passe termina as sessões abertas, em todos os dispositivos', async () => {
+      const u = await User.create({
+        name: 'Marta',
+        email: 'sessao-reposta@exemplo.pt',
+        password: await hash('aVelha', { type: 2 }),
+      });
+      const sessaoAntiga = { userId: u._id.toString(), role: 'USER', versao: 0 };
+      const segredo = gerarToken();
+      await Token.create({
+        resumo: resumir(segredo),
+        userId: u._id,
+        finalidade: 'repor-password',
+        expiraEm: expiraEm('repor-password'),
+      });
+
+      // A rota a serio, nao uma simulacao do que ela faz.
+      const { POST } = await import('../../app/api/auth/nova-password/route');
+      const r = await POST(
+        new Request('http://localhost/api/auth/nova-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: segredo, password: 'umaPasswordNova1' }),
+        }),
+      );
+      expect(r.status).toBe(200);
+
+      const depois = await User.findById(u._id);
+      expect(depois!.versaoSessao).toBe(1);
+      await expect(verificar(sessaoAntiga)).rejects.toThrow('Sessão revogada');
+      // Quem entra de novo recebe a versao nova e fica.
+      await expect(verificar({ ...sessaoAntiga, versao: 1 })).resolves.toBeTruthy();
+    });
+
+    it('o papel vem da base de dados, não do token', async () => {
+      // Sem isto, quem perdesse o papel de administrador continuava
+      // administrador ate o token expirar.
+      const u = await User.create({ name: 'Ex-admin', email: 'papel@exemplo.pt', role: 'USER' });
+      const t = await verificar({ userId: u._id.toString(), role: 'ADMIN', versao: 0 });
+      expect(t.role).toBe('USER');
+    });
+  });
 });
 
 describe('a própria suite de integração', () => {

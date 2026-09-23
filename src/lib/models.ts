@@ -50,6 +50,8 @@ export interface IUser extends Document {
   country: string;
   role: 'USER' | 'ADMIN';
   emailVerified: boolean;
+  /** Muda quando todas as sessoes da conta devem acabar. Ver `lib/sessao.ts`. */
+  versaoSessao: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -240,6 +242,10 @@ const userSchema = new Schema<IUser>(
     emailVerified: {
       type: Boolean,
       default: false,
+    },
+    versaoSessao: {
+      type: Number,
+      default: 0,
     },
   },
   {

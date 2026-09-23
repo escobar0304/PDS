@@ -70,6 +70,11 @@ export async function POST(request: Request) {
     // tambem confirma o endereco. Marcar aqui evita obrigar a duas
     // verificacoes seguidas por email.
     utilizador.emailVerified = true;
+
+    // Termina todas as sessoes abertas da conta, em todos os dispositivos.
+    // Quem repoe a palavra-passe pode estar a faze-lo precisamente porque
+    // alguem entrou por ela — deixar essa sessao viva anulava a reposicao.
+    utilizador.versaoSessao = (utilizador.versaoSessao ?? 0) + 1;
     await utilizador.save();
 
     // Uso unico: apaga-se, nao se marca como usado. O que nao existe nao pode

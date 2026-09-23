@@ -32,6 +32,8 @@ const CAMPOS_CONHECIDOS = [
   'country',
   'role',
   'emailVerified',
+  // Contador que termina as sessoes da conta; declarado na linha da sessao.
+  'versaoSessao',
 ];
 
 function camposDoUserSchema(): string[] {

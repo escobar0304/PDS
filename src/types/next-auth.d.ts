@@ -19,6 +19,7 @@ declare module 'next-auth' {
     name?: string | null;
     image?: string | null;
     role: string;
+    versaoSessao?: number;
   }
 }
 
@@ -26,5 +27,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     userId: string;
     role: string;
+    /** A `versaoSessao` da conta quando a pessoa entrou. */
+    versao?: number;
   }
 }
