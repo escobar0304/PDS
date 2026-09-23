@@ -24,9 +24,21 @@ import { expiraEm, gerarToken, resumir } from '../tokens';
 const URI = process.env.MONGODB_URI;
 const executar = URI ? describe : describe.skip;
 
+/**
+ * Prova de que a suite correu mesmo.
+ *
+ * Um `describe.skip` nao falha: o CI fica verde na mesma. Se `MONGODB_URI`
+ * deixasse de chegar ao processo — um erro de nome, um job mal configurado —
+ * estes testes desapareciam em silencio e continuariamos a dizer que o codigo
+ * esta verificado contra uma base de dados. O teste no fim do ficheiro apanha
+ * exactamente isso.
+ */
+let ligou = false;
+
 executar('contra MongoDB', () => {
   beforeAll(async () => {
     await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    ligou = true;
   }, 30_000);
 
   afterAll(async () => {
@@ -260,5 +272,20 @@ executar('contra MongoDB', () => {
       expect(registo, 'o índice do Mongo ainda não o apagou').not.toBeNull();
       expect(registo!.expiraEm.getTime()).toBeLessThanOrEqual(Date.now());
     });
+  });
+});
+
+describe('a própria suite de integração', () => {
+  it('não passa despercebida quando devia ter corrido', () => {
+    // Fora do bloco condicional de propósito: este corre sempre.
+    if (!URI) {
+      expect(ligou, 'sem MONGODB_URI, é suposto não ligar').toBe(false);
+      return;
+    }
+
+    expect(
+      ligou,
+      'MONGODB_URI existe mas a suite não chegou a ligar-se: verde a mentir',
+    ).toBe(true);
   });
 });

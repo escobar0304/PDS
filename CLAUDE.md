@@ -23,7 +23,13 @@ logótipo (não era nenhuma fonte conhecida). Assume menos, verifica mais.
 
 **Não inventes dados do negócio.** Nomes, NIF, moradas, contactos, afirmações
 comerciais, prazos de entrega — nada disso se adivinha. Campo por preencher é
-`null` e o site mostra que falta. Ver `src/lib/empresa.ts`.
+`null` e o site mostra que falta. Ver `src/lib/empresa.ts`; há um teste que
+falha se um contacto for escrito à mão em qualquer `.tsx`.
+
+**Uma página só entra no rodapé quando existir.** `src/lib/paginas.ts` é a
+fonte única, e o `robots.ts` bloqueia a indexação enquanto faltar uma
+obrigatória. Não criar páginas a dizer "em preparação": uma página legal a
+fingir é pior do que nenhuma.
 
 ## Fluxo de trabalho
 

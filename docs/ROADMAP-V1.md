@@ -351,6 +351,32 @@ e criar a página que as sustenta. Isto é trabalho de copy, não de código.
 
 ## F10. Páginas institucionais
 
+> **Feita em 23/09/2026.**
+>
+> O rodapé ligava para quatro páginas que não existiam: **quatro 404 em todas
+> as páginas do sítio**. Havia três saídas e a escolhida foi a terceira —
+> deixar os 404, criar páginas a dizer "em preparação", ou **o rodapé só
+> mostrar o que existe**. Uma página legal a fingir é pior do que nenhuma:
+> quem a encontre pode pensar que já tem valor.
+>
+> `src/lib/paginas.ts` é agora a fonte única. O rodapé lê dela, e o `robots.ts`
+> passou a exigir também que as páginas obrigatórias existam — já exigia a
+> variável de ambiente e a identificação preenchida; são três condições.
+>
+> Feito: `/contacto` autónomo, com a identificação do prestador exigida pelo
+> art. 10.º do DL 7/2004. `/faq` com lista vazia, de propósito — um FAQ
+> inventado compromete o negócio com condições que ninguém decidiu. 404 e 500
+> reescritas **com cabeçalho e rodapé**: estavam sem, e uma página de erro é o
+> momento em que a navegação faz mais falta, não menos. `global-error.tsx`
+> acrescentado para erros no próprio layout.
+>
+> Também: o rodapé e o `/sobre-nos` tinham `+351 xxx xxx xxx` e
+> `info@petalasdesonho.pt` escritos à mão. Passam a ler de `EMPRESA`, e há um
+> teste que falha se um contacto voltar a ser escrito à mão em qualquer `.tsx`.
+>
+> Por fazer, e bloqueado no negócio: `/termos` e `/envios`.
+
+
 - **`/contacto` autónomo.** Hoje o formulário vive dentro de `/sobre-nos` e o link
   do footer aponta para uma página que não existe
 - **`/faq`**, ligada do footer e hoje inexistente
@@ -563,7 +589,7 @@ F6  Proteção de dados            precisa de validação jurídica
 F7  Cookies                      depende de F6
 F8  Termos                       precisa de validação jurídica
 F9  Afirmações comerciais        precisa de decisões tuas sobre o negócio
-F10 Páginas institucionais       depende de F3
+F10 Páginas institucionais       feita; /termos e /envios bloqueados
 F11 Segurança                    independente, pode correr em paralelo
 F12 Área pessoal                 depende de F3 e F6
 F13 Acessibilidade               feita

@@ -7,6 +7,7 @@ import Hero from '@/components/Hero';
 import ContactForm from '@/components/contactForm';
 import { Clock, Diamond, Envelope, Leaf, MagnifyingGlass, MapPin, Phone } from '@phosphor-icons/react';
 import MapaLocalizacao from '@/components/mapaLocalizacao';
+import { EMPRESA, moradaFormatada } from '@/lib/empresa';
 
 /** Incorporacao do mapa. So e pedida a Google depois de a pessoa carregar. */
 const MAPA_EMBED =
@@ -151,25 +152,41 @@ export default function SobreNos() {
                       <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Morada</p>
-                        <p className="text-sm text-ink-muted">Porto, Portugal</p>
+                        <p className={moradaFormatada() ? 'text-sm text-ink-muted' : 'text-sm text-danger-700'}>
+                          {moradaFormatada() ?? 'por preencher'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <Envelope className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Email</p>
-                        <a href="mailto:info@petalasdesonho.pt" className="inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700">
-                          info@petalasdesonho.pt
-                        </a>
+                        {EMPRESA.email ? (
+                          <a
+                            href={`mailto:${EMPRESA.email}`}
+                            className="inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700"
+                          >
+                            {EMPRESA.email}
+                          </a>
+                        ) : (
+                          <p className="py-1 text-sm text-danger-700">por preencher</p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <Phone className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Telefone</p>
-                        <a href="tel:+351000000000" className="inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700">
-                          +351 xxx xxx xxx
-                        </a>
+                        {EMPRESA.telefone ? (
+                          <a
+                            href={`tel:${EMPRESA.telefone.replace(/\s/g, '')}`}
+                            className="inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700"
+                          >
+                            {EMPRESA.telefone}
+                          </a>
+                        ) : (
+                          <p className="py-1 text-sm text-danger-700">por preencher</p>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-start gap-3">

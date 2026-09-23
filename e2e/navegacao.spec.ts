@@ -26,10 +26,10 @@ test('o logótipo volta ao início', async ({ page }) => {
   await expect(page).toHaveURL(/\/$/);
 });
 
-// Falha hoje: /privacidade, /termos, /envios, /faq e /contacto ainda nao
-// existem. Passa a verde quando a camada legal do roteiro (F4 a F8) aterrar.
-// Nao apagar: e este teste que impede que a divida seja esquecida.
-test.fixme('nenhuma ligação do rodapé cai num 404', async ({ page }) => {
+// Estava adiado desde a F0b, a espera de /privacidade, /termos, /envios,
+// /faq e /contacto. Passa a correr na F10: o rodape le de `src/lib/paginas.ts`
+// e so mostra o que existe, por isso nao ha como ligar para o que falta.
+test('nenhuma ligação do rodapé cai num 404', async ({ page }) => {
   await page.goto('/');
   const rodape = page.getByRole('contentinfo');
 
@@ -69,4 +69,50 @@ test('as migalhas do produto voltam atrás', async ({ page }) => {
   await page.goto('/produto/quartzo-rosa-bruto');
   await page.getByRole('link', { name: 'Loja', exact: true }).first().click();
   await expect(page).toHaveURL(/\/loja/);
+});
+
+test('a página de contactos identifica o prestador', async ({ page }) => {
+  await page.goto('/contacto');
+
+  // Art. 10.o do DL 7/2004: a identificacao tem de estar acessivel de forma
+  // permanente e direta. Enquanto os dados faltarem, a pagina diz que faltam
+  // em vez de os inventar.
+  await expect(page.getByRole('heading', { name: 'Identificação' })).toBeVisible();
+  await expect(page.getByText('Denominação')).toBeVisible();
+  await expect(page.getByText('NIF')).toBeVisible();
+
+  const porPreencher = await page.getByText('por preencher').count();
+  if (porPreencher > 0) {
+    await expect(page.getByRole('main').getByRole('alert')).toContainText('não estão completos');
+  }
+});
+
+test('o formulário de contacto vive numa página própria', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Contactos' }).click();
+
+  await expect(page).toHaveURL(/\/contacto$/);
+  await expect(page.getByLabel('Mensagem *')).toBeVisible();
+});
+
+test('as perguntas frequentes não inventam perguntas', async ({ page }) => {
+  await page.goto('/faq');
+
+  // Um FAQ inventado compromete o negocio com condicoes que ninguem decidiu.
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Perguntas');
+  await expect(page.getByRole('link', { name: 'Fazer uma pergunta' })).toBeVisible();
+});
+
+test('o rodapé não promete páginas que não existem', async ({ page }) => {
+  await page.goto('/');
+
+  const rotulos = await page
+    .getByRole('contentinfo')
+    .locator('a[href^="/"]')
+    .evaluateAll((as) => as.map((a) => a.textContent?.trim()));
+
+  // Estas duas dependem de decisões do negócio e ainda não existem. Enquanto
+  // não existirem, não podem aparecer no rodapé.
+  expect(rotulos).not.toContain('Termos e Condições');
+  expect(rotulos).not.toContain('Envios e Devoluções');
 });
