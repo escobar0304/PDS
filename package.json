@@ -19,7 +19,7 @@
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
     "argon2": "^0.45.1",
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.3",
     "mongoose": "^8.24.4",
     "next": "^15.5.26",
     "next-auth": "^4.24.15",
@@ -32,7 +32,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
-    "@types/bcryptjs": "^2.4.6",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^18",
