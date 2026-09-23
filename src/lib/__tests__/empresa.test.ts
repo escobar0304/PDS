@@ -30,3 +30,46 @@ describe('identificação do prestador', () => {
     expect(texto).not.toMatch(/xxx|000000000|exemplo\.(com|pt)|lorem/i);
   });
 });
+
+describe('nenhum dado de contacto a fingir na interface', () => {
+  it('não há telefones, emails nem moradas escritos à mão', async () => {
+    const { readdirSync, readFileSync, statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+
+    const raiz = join(__dirname, '..', '..');
+    const tsx = (dir: string): string[] =>
+      readdirSync(dir).flatMap((n) => {
+        const c = join(dir, n);
+        return statSync(c).isDirectory() ? tsx(c) : n.endsWith('.tsx') ? [c] : [];
+      });
+
+    // Tudo isto chegou a estar escrito a mao em producao. O sitio de onde
+    // estes valores saem e `EMPRESA`, e o que falta diz que falta.
+    const PROIBIDOS = [
+      /tel:\+?\d{6,}/,
+      /mailto:[\w.+-]+@[\w.-]+/,
+      /\+351[\s\d x]{6,}/,
+      /[\w.+-]+@petalasdesonho\.pt/,
+    ];
+
+    const culpados: string[] = [];
+    for (const caminho of tsx(raiz)) {
+      const fonte = readFileSync(caminho, 'utf8');
+      // Comentarios e placeholders de formulario nao sao afirmacoes.
+      const semComentarios = fonte
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*$/gm, '')
+        .replace(/placeholder="[^"]*"/g, '');
+
+      for (const padrao of PROIBIDOS) {
+        // `${EMPRESA.email}` e interpolacao, nao um valor escrito a mao.
+        const linhas = semComentarios.split('\n').filter((l) => padrao.test(l) && !l.includes('EMPRESA.'));
+        if (linhas.length) {
+          culpados.push(`${caminho.slice(raiz.length + 1)}: ${linhas[0].trim().slice(0, 60)}`);
+        }
+      }
+    }
+
+    expect(culpados, 'dado de contacto escrito à mão: use EMPRESA').toEqual([]);
+  });
+});

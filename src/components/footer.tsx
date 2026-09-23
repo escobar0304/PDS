@@ -2,19 +2,19 @@
 
 import Link from 'next/link';
 import Logotipo from '@/components/marca';
+import { LIVRO_RECLAMACOES, paginasDisponiveis } from '@/lib/paginas';
+import { EMPRESA, moradaFormatada } from '@/lib/empresa';
 import { Envelope, FacebookLogo, InstagramLogo, MapPin, Phone } from '@phosphor-icons/react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // So o que existe. Ate aqui o rodape ligava para quatro paginas que nao
+  // existiam: quatro 404 em todas as paginas do site. Ver `src/lib/paginas.ts`
+  // para as que faltam e porque.
   const legalLinks = [
-    { href: '/privacidade', label: 'Política de Privacidade' },
-    { href: '/termos', label: 'Termos e Condições' },
-    { href: '/cookies', label: 'Cookies' },
-    { href: 'https://www.livroreclamacoes.pt', label: 'Livro de Reclamações' },
-    { href: '/envios', label: 'Envios e Devoluções' },
-    { href: '/faq', label: 'Perguntas Frequentes' },
-    { href: '/contacto', label: 'Contactos' },
+    ...paginasDisponiveis().map((p) => ({ href: p.href, label: p.rotulo })),
+    { href: LIVRO_RECLAMACOES.href, label: LIVRO_RECLAMACOES.rotulo },
   ];
 
   return (
@@ -56,28 +56,42 @@ export default function Footer() {
             <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
               Contacto
             </h3>
+            {/*
+              Le de `src/lib/empresa.ts`, como a pagina de contactos. Tinha
+              aqui `+351 xxx xxx xxx` e `tel:+351000000000` escritos a mao —
+              um numero a fingir que chegou a producao. O que falta diz que
+              falta; nao se inventa.
+            */}
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm text-rose-200">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>Porto, Portugal</span>
+                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
+                <span>{moradaFormatada() ?? 'Morada por preencher'}</span>
               </li>
               <li className="flex items-start gap-2 text-sm text-rose-200">
-                <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <a
-                  href="tel:+351000000000"
-                  className="inline-block py-1 transition-smooth hover:text-surface"
-                >
-                  +351 xxx xxx xxx
-                </a>
+                <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
+                {EMPRESA.telefone ? (
+                  <a
+                    href={`tel:${EMPRESA.telefone.replace(/\s/g, '')}`}
+                    className="inline-block py-1 transition-smooth hover:text-surface"
+                  >
+                    {EMPRESA.telefone}
+                  </a>
+                ) : (
+                  <span className="py-1">Telefone por preencher</span>
+                )}
               </li>
               <li className="flex items-start gap-2 text-sm text-rose-200">
-                <Envelope className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <a
-                  href="mailto:info@petalasdesonho.pt"
-                  className="inline-block break-all py-1 transition-smooth hover:text-surface"
-                >
-                  info@petalasdesonho.pt
-                </a>
+                <Envelope className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
+                {EMPRESA.email ? (
+                  <a
+                    href={`mailto:${EMPRESA.email}`}
+                    className="inline-block break-all py-1 transition-smooth hover:text-surface"
+                  >
+                    {EMPRESA.email}
+                  </a>
+                ) : (
+                  <span className="py-1">Email por preencher</span>
+                )}
               </li>
             </ul>
           </div>
