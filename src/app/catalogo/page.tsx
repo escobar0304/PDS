@@ -30,23 +30,22 @@ export default function Catalogo() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const fetchCategories = async () => {
-    setErro(null);
-    try {
-      setCategories(await fetchList<Category>('/api/categories'));
-    } catch (error) {
-      console.error('Erro ao carregar categorias:', error);
-      setErro('Não foi possível carregar as categorias.');
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    let actual = true;
+    fetchList<Category>('/api/categories')
+      .then((lista) => actual && setCategories(lista))
+      .catch((error) => {
+        if (!actual) return;
+        console.error('Erro ao carregar categorias:', error);
+        setErro('Não foi possível carregar as categorias.');
+      })
+      .finally(() => actual && setLoading(false));
+    return () => {
+      actual = false;
+    };
+  }, [tentativa]);
 
   return (
     <>
@@ -84,7 +83,8 @@ export default function Catalogo() {
                     size="sm"
                     onClick={() => {
                       setLoading(true);
-                      fetchCategories();
+                      setErro(null);
+                      setTentativa((t) => t + 1);
                     }}
                   >
                     Tentar novamente

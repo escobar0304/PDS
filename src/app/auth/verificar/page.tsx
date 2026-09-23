@@ -15,11 +15,8 @@ function VerificarConteudo() {
   const [mensagem, setMensagem] = useState('');
 
   useEffect(() => {
-    if (!token) {
-      setEstado('falhou');
-      setMensagem('Esta página só funciona a partir da ligação que enviámos por email.');
-      return;
-    }
+    // Sem token nao ha nada a pedir; o render abaixo trata disso.
+    if (!token) return;
 
     let cancelado = false;
 
@@ -52,6 +49,19 @@ function VerificarConteudo() {
       cancelado = true;
     };
   }, [token]);
+
+  if (!token) {
+    return (
+      <AuthShell title="Não foi possível confirmar">
+        <Alert tone="erro">
+          Esta página só funciona a partir da ligação que enviámos por email.
+        </Alert>
+        <Link href="/" className={botaoClasses({ variant: 'secondary', className: 'mt-5 w-full' })}>
+          Voltar à loja
+        </Link>
+      </AuthShell>
+    );
+  }
 
   if (estado === 'a-verificar') {
     return (

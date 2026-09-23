@@ -38,6 +38,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
+      // Excepcao consciente a `set-state-in-effect`. O carrinho so pode ser
+      // lido depois de hidratar: le-lo no primeiro render dava HTML diferente
+      // no servidor e no browser. E e estado que a pessoa altera, por isso
+      // nao cabe em `useSyncExternalStore` sem reescrever o contexto todo.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setItems(parseStoredCart(localStorage.getItem(STORAGE_KEY)));
     } catch {
       // localStorage pode estar indisponivel (modo privado, cookies bloqueados)

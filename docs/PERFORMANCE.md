@@ -150,3 +150,20 @@ estava errada: criava um `<a>` normal em vez de usar uma ligação do
 `next/link`, e um `<a>` força navegação completa, onde o `loading.tsx` nunca
 entra. O número certo só apareceu depois de a sonda ser corrigida — o
 primeiro resultado teria dado a mesma conclusão pela razão errada.
+
+## O Next 16 pesa mais, e fica
+
+Medido no servidor de produção, com o JavaScript transferido até a rede
+parar (inclui o que o Next pré-carrega das ligações visíveis):
+
+| | Next 15 | Next 16, Turbopack | Next 16, webpack |
+|---|---|---|---|
+| `/`, `/loja`, `/sobre-nos` | 207 kB | 232 kB | 235 kB |
+| `/produto/…` | 220 kB | 242 kB | 248 kB |
+
+**+25 kB, ou 12%, e é do próprio Next, não do empacotador:** com `--webpack`
+fica pior. O Turbopack, que passou a ser o de omissão, é o mais leve dos dois.
+
+Fica, porque é o preço de fechar uma vulnerabilidade alta que não fechava de
+outra forma. Não é uma melhoria e não se escreve como tal. A suite de ponta a
+ponta passou de 1,4 min para 53 s, o que ajuda o trabalho mas não quem visita.

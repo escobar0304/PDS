@@ -260,8 +260,8 @@ tanto como o que ela vê.
 ### O que fecha
 
 O `next` desce de **crítica para moderada**. O que sobra — essa moderada e a
-alta do `postcss` que o next empacota (8.4.31) — só fecha no Next 16, em "Por
-fazer". ~~O `ip-address` continua pela cadeia do `@next-auth/mongodb-adapter`.~~
+alta do `postcss` que o next empacota (8.4.31) — ~~só fecha no Next 16~~.
+Fechou, ver «A migração para o Next 16». ~~O `ip-address` continua pela cadeia do `@next-auth/mongodb-adapter`.~~
 Fechado, ver acima.
 
 ## A entrada pela Google
@@ -298,6 +298,69 @@ cria a conta, a segunda não a duplica, e quem já tinha palavra-passe entra na
 mesma conta sem a perder. As duas primeiras guardas foram verificadas contra
 o defeito reposto.
 
+## A migração para o Next 16 e o ESLint 9
+
+Feita num PR próprio, depois de o `master` ter fundido tudo o resto — a razão
+por que não se fez logo a seguir ao Next 15 era não mexer no portão de
+qualidade no mesmo PR que em dois majors.
+
+**`npm audit`: 0 vulnerabilidades, em produção e em desenvolvimento.** A
+moderada do `next` e a alta do `postcss` que ele empacotava fecharam com o
+upgrade; as seis da árvore de desenvolvimento (`glob`, `minimatch`,
+`brace-expansion`, `picomatch`, `browserslist`, `postcss-selector-parser`)
+fecharam com `npm audit fix`, sem `--force` e sem nenhum major.
+
+O React **fica no 18**: o `next@16` ainda declara `^18.2.0 || ^19.0.0`.
+
+### O que o ESLint 9 encontrou
+
+O `next lint` saiu no Next 16 e o `eslint-config-next@16` só existe em *flat
+config*. O `eslint.config.mjs` é o equivalente exato do `.eslintrc.json` que
+havia — `core-web-vitals` e nada mais.
+
+Mas o `eslint-plugin-react-hooks` v7 vem com as regras do React Compiler, e
+deu **8 erros em código que já existia**. Não se desligou nenhuma. Um deles
+era um defeito real:
+
+- **Na `/loja`, respostas fora de ordem.** Escolher uma categoria e logo outra
+  lançava dois pedidos; se o primeiro respondesse em último, era ele que
+  ficava na grelha — com o botão da segunda marcado. Há um teste em
+  `e2e/loja.spec.ts` que atrasa uma das respostas; **falhou contra o código
+  antigo** e passa agora. O resultado leva a chave do pedido que o produziu, e
+  só é aceite se ainda for o actual.
+
+Afirmei um terceiro, e estava errado: que no `/produto` a quantidade escolhida
+passava para o produto relacionado seguinte. Escrevi o teste, corri-o contra o
+código antigo — **e passou**. O App Router já remonta a página quando o `slug`
+muda. A correção que eu tinha feito saiu; o teste ficou, com isto escrito.
+
+Os outros: o interruptor do mapa passou a `useSyncExternalStore`, que é o que
+o React tem para ler de um sistema externo — e passou a reagir também a
+mudanças noutro separador. A página de verificação deixou de pôr estado num
+efeito para um caso que o render resolve sozinho. **Fica uma exceção,
+escrita:** o carrinho lê o `localStorage` num efeito, porque lê-lo no primeiro
+render dava HTML diferente no servidor e no browser.
+
+### `'unsafe-eval'` estava na CSP de produção
+
+Sem razão escrita — o comentário explicava o `'unsafe-inline'` e não este. O
+Next só precisa de `eval` para o recarregamento a quente, por isso passa a
+existir só em desenvolvimento. É a diretiva que transforma uma injeção de
+texto em execução de código.
+
+**Medido antes de tirar:** servidor de produção, seis páginas, a escutar
+`securitypolicyviolation` — zero violações. Para não confiar num «zero» de
+uma sonda que podia não estar a ver nada, provocou-se uma violação de
+propósito: um `setTimeout` com texto foi recusado e o browser disse-o.
+
+(Um primeiro teste com o `addScriptTag` do Playwright deu `eval` a passar. Não
+era a CSP a falhar: o Chrome isenta scripts injetados pelo DevTools. Ficou
+aqui porque é o tipo de resultado que leva a concluir o contrário do que é.)
+
+Guardas em `e2e/seguranca.spec.ts`: o cabeçalho de produção não tem
+`'unsafe-eval'`, e nenhuma página viola a própria CSP. A segunda foi
+verificada retirando o `'unsafe-inline'`, que o Next precisa — falhou em `/`.
+
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
@@ -309,11 +372,6 @@ o defeito reposto.
   entrado até o token expirar. Resolver isto exige guardar um marcador de
   invalidação por utilizador e verificá-lo em cada pedido. Fica registado como
   dívida conhecida, não como esquecimento
-- **Migrar para o Next 16**, que fecha a moderada que resta no `next` e a alta
-  do `postcss` que ele empacota. Não se fez de seguida de propósito: o Next 16
-  exige o ESLint 9, que obriga a migrar para *flat config* **e** a substituir
-  o `next lint`, removido nessa versão. Isso é mexer na própria ferramenta do
-  portão de qualidade, e empilhá-lo em cima de dois majors na mesma sessão
-  torna impossível saber qual mudança partiu o quê
+- ~~**Migrar para o Next 16**~~ — feito em 23/09/2026, ver abaixo
 - **Correr `npm audit --omit=dev` antes de cada versão.** Passou toda a F11
   sem ser corrido, e a pior superfície do projeto estava aí

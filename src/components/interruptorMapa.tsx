@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import {
   definirMapaPermitido,
   EVENTO_PREFERENCIAS,
@@ -14,23 +14,26 @@ import {
  * visual — que e o que a lei pede e o que a maioria dos paineis de cookies
  * falha, ao esconder o "rejeitar" num canto. Comeca desligado.
  */
-export default function InterruptorMapa() {
-  const [ligado, setLigado] = useState(false);
-  const [montado, setMontado] = useState(false);
-
-  useEffect(() => {
-    const ler = () => setLigado(mapaPermitido());
-    ler();
-    setMontado(true);
-    window.addEventListener(EVENTO_PREFERENCIAS, ler);
-    return () => window.removeEventListener(EVENTO_PREFERENCIAS, ler);
-  }, []);
-
-  const alternar = () => {
-    const novo = !ligado;
-    setLigado(novo);
-    definirMapaPermitido(novo);
+function subscrever(avisar: () => void) {
+  window.addEventListener(EVENTO_PREFERENCIAS, avisar);
+  // Mudar a preferencia noutro separador tambem conta.
+  window.addEventListener('storage', avisar);
+  return () => {
+    window.removeEventListener(EVENTO_PREFERENCIAS, avisar);
+    window.removeEventListener('storage', avisar);
   };
+}
+
+const nada = () => () => {};
+
+export default function InterruptorMapa() {
+  // A preferencia vive no `localStorage`, que e um sistema externo ao React:
+  // e para isto que `useSyncExternalStore` existe. No servidor, e ate hidratar,
+  // vale "desligado" — o valor seguro — e o controlo fica inactivo.
+  const ligado = useSyncExternalStore(subscrever, mapaPermitido, () => false);
+  const montado = useSyncExternalStore(nada, () => true, () => false);
+
+  const alternar = () => definirMapaPermitido(!ligado);
 
   return (
     <div className="flex items-start justify-between gap-6 rounded-lg border border-line bg-surface-raised p-5">

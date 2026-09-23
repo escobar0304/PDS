@@ -1,6 +1,6 @@
 # Pétalas de Sonho
 
-Loja de cristais e pedras. Next.js 14 (App Router), TypeScript, Tailwind,
+Loja de cristais e pedras. Next.js 16 (App Router, Turbopack), TypeScript, Tailwind,
 MongoDB, NextAuth. Português de Portugal em tudo o que é visível.
 
 ## Como trabalhar comigo
@@ -96,3 +96,13 @@ Sem emoji na interface. Ícones são Phosphor, traço fino, definido uma vez no
 não se aplicam a tudo), e ligações em texto corrido sublinhadas em repouso: só
 a cor não distingue. `e2e/acessibilidade.spec.ts` falha se alguma destas se
 perder.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

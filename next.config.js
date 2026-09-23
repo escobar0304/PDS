@@ -14,6 +14,12 @@
  * - `script-src` leva `'unsafe-inline'` porque o Next injecta os dados de
  *   hidratacao assim. Fica registado como divida: com `middleware` e nonce
  *   por pedido, sai
+ * - `'unsafe-eval'` so em desenvolvimento. Esteve em producao sem nenhuma
+ *   razao escrita; o Next so precisa de `eval` para o recarregamento a
+ *   quente. Medido sem ele no servidor de producao: nenhuma violacao da CSP
+ *   em seis paginas, e a suite de ponta a ponta verde. E a directiva que
+ *   transforma uma injeccao de texto em execucao de codigo — nao se deixa
+ *   ligada por omissao
  *
  * Quando houver pagamentos, a rota de pagamento precisa de `script-src` e
  * `frame-src` para a Stripe — e so essa rota, nunca o sitio todo. Ver F7b.
@@ -24,7 +30,7 @@ const csp = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
