@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getProviders } from 'next-auth/react';
 import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
@@ -98,5 +102,57 @@ export function GoogleButton({
       </svg>
       <span>{children}</span>
     </button>
+  );
+}
+
+/**
+ * O bloco da Google, que so aparece quando a Google esta mesmo configurada.
+ *
+ * As duas paginas mostravam o botao sempre. Mas GOOGLE_CLIENT_ID e
+ * GOOGLE_CLIENT_SECRET sao **opcionais** em `src/lib/env.ts`, e sem eles o
+ * provedor ficava registado com `clientId: undefined`: quem carregasse
+ * aterrava num fluxo OAuth partido. Oferecer um caminho que nao leva a lado
+ * nenhum e o mesmo erro do rodape que ligava para paginas inexistentes.
+ *
+ * A verdade vem do `getProviders()` — a lista real do servidor — e nao de uma
+ * segunda variavel de ambiente a repetir o que o `auth.ts` ja decide, que
+ * podia discordar dele sem ninguem reparar.
+ *
+ * Enquanto nao se sabe, nao se mostra nada: um botao que aparece e desaparece
+ * e pior do que um botao que nunca apareceu. E sem a Google, o separador
+ * "Ou com email" tambem nao faz sentido — por isso vai junto.
+ */
+export function EntrarComGoogle({
+  onClick,
+  disabled,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  const [disponivel, setDisponivel] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let vivo = true;
+    getProviders()
+      .then((p) => {
+        if (vivo) setDisponivel(Boolean(p?.google));
+      })
+      .catch(() => {
+        if (vivo) setDisponivel(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  if (!disponivel) return null;
+
+  return (
+    <>
+      <GoogleButton onClick={onClick} disabled={disabled}>
+        Continuar com Google
+      </GoogleButton>
+      <Separador>Ou com email</Separador>
+    </>
   );
 }

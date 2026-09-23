@@ -5,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Envelope, Lock } from '@phosphor-icons/react';
-import AuthShell, { GoogleButton, Separador } from '@/components/ui/AuthShell';
+import AuthShell, { EntrarComGoogle } from '@/components/ui/AuthShell';
 import { Alert, Button, Input, Spinner } from '@/components/ui';
 
 function LoginContent() {
@@ -69,11 +69,7 @@ function LoginContent() {
         </p>
       }
     >
-      <GoogleButton onClick={handleGoogleSignIn} disabled={loading}>
-        Continuar com Google
-      </GoogleButton>
-
-      <Separador>Ou com email</Separador>
+      <EntrarComGoogle onClick={handleGoogleSignIn} disabled={loading} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && <Alert tone="erro">{error}</Alert>}
