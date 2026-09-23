@@ -38,8 +38,7 @@ interface Product {
 }
 
 export default function ProdutoPage() {
-  const params = useParams();
-  const slug = params.slug as string;
+  const slug = useParams().slug as string;
   const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -75,40 +74,45 @@ export default function ProdutoPage() {
   };
 
   useEffect(() => {
-    fetchProduct();
-  }, [slug]);
+    // O App Router remonta a pagina quando o slug muda (ha um teste em
+    // `e2e/loja.spec.ts` que o confirma), por isso aqui nao ha corrida como na
+    // `/loja`. A guarda fica pelo custo que tem: um pedido que responda depois
+    // de a pessoa sair nao escreve num componente que ja nao existe.
+    let actual = true;
 
-  const fetchProduct = async () => {
-    try {
-      const response = await fetch(`/api/products/${slug}`);
-      if (response.ok) {
+    const relacionados = async (produto: Product & { categoryId?: { _id?: string } }) => {
+      const categoria = produto.categoryId?._id;
+      if (!categoria) return;
+      try {
+        const r = await fetch(`/api/products?category=${encodeURIComponent(categoria)}&limit=4`);
+        if (!r.ok) return;
+        const lista: Product[] = await r.json();
+        if (actual) setRelatedProducts(lista.filter((p) => p._id !== produto._id));
+      } catch (error) {
+        console.error('Erro ao carregar produtos relacionados:', error);
+      }
+    };
+
+    (async () => {
+      try {
+        const response = await fetch(`/api/products/${encodeURIComponent(slug)}`);
+        if (!response.ok) return;
         const data = await response.json();
+        if (!actual) return;
         setProduct(data);
-        
-        // Buscar produtos relacionados da mesma categoria
-        if (data.categoryId?._id) {
-          fetchRelatedProducts(data.categoryId._id, data._id);
-        }
+        // Os relacionados nao atrasam o produto: vem depois, sem esperar.
+        void relacionados(data);
+      } catch (error) {
+        console.error('Erro ao carregar produto:', error);
+      } finally {
+        if (actual) setLoading(false);
       }
-    } catch (error) {
-      console.error('Erro ao carregar produto:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    })();
 
-  const fetchRelatedProducts = async (categoryId: string, currentProductId: string) => {
-    try {
-      const response = await fetch(`/api/products?category=${categoryId}&limit=4`);
-      if (response.ok) {
-        const data = await response.json();
-        // Filtrar o produto atual
-        setRelatedProducts(data.filter((p: Product) => p._id !== currentProductId));
-      }
-    } catch (error) {
-      console.error('Erro ao carregar produtos relacionados:', error);
-    }
-  };
+    return () => {
+      actual = false;
+    };
+  }, [slug]);
 
   const handleAddToCart = () => {
     if (!product) return;

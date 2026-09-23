@@ -116,6 +116,34 @@ test.describe('cabeçalhos', () => {
     );
   });
 
+  test('a CSP não deixa texto virar código', async ({ request }) => {
+    // `'unsafe-eval'` esteve em producao sem razao escrita. O Next so precisa
+    // dele em desenvolvimento; este servidor e o de producao.
+    const csp = (await request.get('/')).headers()['content-security-policy'];
+    expect(csp).not.toContain("'unsafe-eval'");
+  });
+
+  test('nenhuma página viola a própria CSP', async ({ page }) => {
+    // Sem isto, apertar a CSP e apostar que nada partiu. O browser dispara
+    // `securitypolicyviolation` por cada recurso ou `eval` recusado.
+    await page.addInitScript(() => {
+      (window as unknown as { __violacoes: string[] }).__violacoes = [];
+      document.addEventListener('securitypolicyviolation', (e) =>
+        (window as unknown as { __violacoes: string[] }).__violacoes.push(
+          `${e.violatedDirective} ${e.blockedURI}`,
+        ),
+      );
+    });
+
+    for (const rota of ['/', '/loja', '/catalogo', '/sobre-nos', '/auth/login', '/cookies']) {
+      await page.goto(rota, { waitUntil: 'networkidle' });
+      const violacoes = await page.evaluate(
+        () => (window as unknown as { __violacoes: string[] }).__violacoes,
+      );
+      expect(violacoes, `${rota} viola a CSP`).toEqual([]);
+    }
+  });
+
   test('não anuncia a tecnologia que corre por baixo', async ({ request }) => {
     const res = await request.get('/');
     expect(res.headers()['x-powered-by']).toBeUndefined();

@@ -44,11 +44,12 @@ sem rede de segurança técnica.
 diferentes e ninguém deu por isso. Enquanto não houver nada a verificar cada PR,
 volta a acontecer.
 
-- **CI no GitHub Actions**, a correr em cada pull request: `tsc --noEmit`, `next lint`,
+- **CI no GitHub Actions**, a correr em cada pull request: `tsc --noEmit`, `eslint`,
   `next build`. Sem isto, todo o resto deste roteiro assenta em areia
 - **Alinhar o ESLint.** O repo tem `eslint.config.mjs` (flat config) e
   `eslint-config-next@14`, que espera `.eslintrc`. O `next lint` pede configuração
-  interativa. Escolher um dos dois formatos
+  interativa. Escolher um dos dois formatos. **Resolvido em 23/09/2026 com o
+  Next 16:** flat config, ESLint 9, `eslint .` no lugar do `next lint`
 - **Validar as variáveis de ambiente ao arranque**, com Zod. Hoje `lib/mongodb.ts`
   rebenta a meio do build com uma mensagem críptica se faltar `MONGODB_URI`.
   Falhar cedo e com nome

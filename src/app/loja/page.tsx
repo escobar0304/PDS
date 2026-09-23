@@ -37,54 +37,74 @@ interface Category {
 
 function LojaContent() {
   const searchParams = useSearchParams();
-  const [products, setProducts] = useState<Product[]>([]);
+  const categoriaDoEndereco = searchParams.get('categoria') ?? '';
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>(categoriaDoEndereco);
   const [sortBy, setSortBy] = useState<string>('featured');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [erro, setErro] = useState<string | null>(null);
+
+  // Se o endereco mudar com a pagina aberta (um link do cabecalho para outra
+  // categoria), a escolha acompanha-o. Ajusta-se durante a renderizacao, e nao
+  // num efeito, para nao haver um render intermedio com a categoria antiga.
+  const [enderecoVisto, setEnderecoVisto] = useState(categoriaDoEndereco);
+  if (categoriaDoEndereco !== enderecoVisto) {
+    setEnderecoVisto(categoriaDoEndereco);
+    setSelectedCategory(categoriaDoEndereco);
+  }
+
+  /**
+   * O resultado leva a chave do pedido que o produziu.
+   *
+   * Havia uma corrida: escolher uma categoria e logo outra lancava dois
+   * pedidos, e se o primeiro respondesse em ultimo era ele que ficava na
+   * grelha — com o botao da segunda marcado. `e2e/loja.spec.ts` reproduzia-o.
+   * Agora uma resposta so e aceite se o pedido ainda for o actual, e "a
+   * carregar" e simplesmente "o resultado que temos nao e desta chave".
+   */
+  const [tentativa, setTentativa] = useState(0);
+  const chave = `${selectedCategory}|${sortBy}|${tentativa}`;
+  const [resultado, setResultado] = useState<{
+    chave: string;
+    products: Product[];
+    erro: string | null;
+  } | null>(null);
+  const loading = resultado?.chave !== chave;
+  const products = loading ? [] : resultado.products;
+  const erro = loading ? null : resultado.erro;
 
   useEffect(() => {
-    fetchCategories();
-    const categoryParam = searchParams.get('categoria');
-    if (categoryParam) {
-      setSelectedCategory(categoryParam);
-    }
-  }, [searchParams]);
+    let actual = true;
+    fetchList<Category>('/api/categories')
+      .then((lista) => actual && setCategories(lista))
+      .catch((error) => {
+        // Sem categorias a loja continua utilizavel, so perde os filtros.
+        console.error('Erro ao carregar categorias:', error);
+      });
+    return () => {
+      actual = false;
+    };
+  }, []);
 
   useEffect(() => {
-    fetchProducts();
-  }, [selectedCategory, sortBy]);
+    let actual = true;
+    const params = new URLSearchParams();
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (sortBy) params.set('sort', sortBy);
 
-  const fetchCategories = async () => {
-    try {
-      setCategories(await fetchList<Category>('/api/categories'));
-    } catch (error) {
-      // Sem categorias a loja continua utilizavel, so perde os filtros.
-      console.error('Erro ao carregar categorias:', error);
-      setCategories([]);
-    }
-  };
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    setErro(null);
-    try {
-      const params = new URLSearchParams();
-      if (selectedCategory) params.set('category', selectedCategory);
-      if (sortBy) params.set('sort', sortBy);
-
-      setProducts(await fetchList<Product>(`/api/products?${params}`));
-    } catch (error) {
-      console.error('Erro ao carregar produtos:', error);
-      // Um erro de servidor nao pode ser mostrado como catalogo vazio.
-      setErro('Não foi possível carregar os produtos.');
-      setProducts([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchList<Product>(`/api/products?${params}`)
+      .then((lista) => {
+        if (actual) setResultado({ chave, products: lista, erro: null });
+      })
+      .catch((error) => {
+        if (!actual) return;
+        console.error('Erro ao carregar produtos:', error);
+        // Um erro de servidor nao pode ser mostrado como catalogo vazio.
+        setResultado({ chave, products: [], erro: 'Não foi possível carregar os produtos.' });
+      });
+    return () => {
+      actual = false;
+    };
+  }, [chave, selectedCategory, sortBy]);
 
   const filteredProducts = products.filter(product => {
     if (!searchQuery) return true;
@@ -204,7 +224,7 @@ function LojaContent() {
                   <Alert
                     tone="erro"
                     action={
-                      <Button variant="secondary" size="sm" onClick={fetchProducts}>
+                      <Button variant="secondary" size="sm" onClick={() => setTentativa((t) => t + 1)}>
                         Tentar novamente
                       </Button>
                     }
