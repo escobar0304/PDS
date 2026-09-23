@@ -233,9 +233,14 @@ Hoje o footer tem `+351 xxx xxx xxx` e `tel:+351000000000` em produção.
 > é responder a quem escreve. Uma caixa a pedir autorização criaria um
 > fundamento falso. O que a lei pede é informação, e é isso que está.
 >
-> Por fazer: os direitos operacionais na área pessoal (exportar e apagar), o
-> registo de atividades de tratamento do art. 30.º, e os dados do prestador,
-> que continuam do lado do negócio.
+> ~~Por fazer: os direitos operacionais na área pessoal (exportar e apagar), o
+> registo de atividades de tratamento do art. 30.º~~ — feitos, na F12 e em
+> `docs/REGISTO-TRATAMENTOS.md`. Escrever o registo a partir do código
+> encontrou dois tratamentos que a política não declarava: **os endereços IP
+> que o limitador de pedidos guarda**, e os códigos de uso único. E um prazo
+> que o código não cumpria: a limpeza dos IP só corria com mais de 5000
+> entradas. Os três corrigidos. Ficam os dados do prestador e os
+> subcontratantes, do lado do negócio.
 
 
 **Base:** RGPD (Regulamento (UE) 2016/679) e Lei 58/2019.
@@ -261,7 +266,7 @@ Trabalho:
   separado e nunca agregado à criação de conta
 - **Direitos do titular, operacionais.** Na área pessoal: exportar os meus dados e
   apagar a conta. Um formulário de pedido não chega quando a funcionalidade é trivial
-- **Registo de atividades de tratamento** (art. 30º). Documento interno, fica no repo
+- ~~**Registo de atividades de tratamento** (art. 30º)~~ — `docs/REGISTO-TRATAMENTOS.md`
 - **Política de conservação** com prazos concretos por tipo de dado
 
 ## F7. Cookies e armazenamento local

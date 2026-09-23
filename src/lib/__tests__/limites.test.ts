@@ -61,3 +61,21 @@ describe('identificação de quem faz o pedido', () => {
     expect(identificar(comCabecalhos({}))).toBe('desconhecido');
   });
 });
+
+describe('o que o limitador guarda não fica para sempre', () => {
+  it('uma entrada expirada sai na limpeza seguinte, mesmo com poucas guardadas', async () => {
+    // Guarda enderecos IP e emails. A limpeza so corria com mais de 5000
+    // chaves, e num sitio pequeno isso e nunca: a politica de privacidade
+    // diria "uma hora" e seria mentira.
+    const { chavesGuardadas, consumir, reiniciarLimites } = await import('../limites');
+    reiniciarLimites();
+    const agora = 1_000_000;
+
+    consumir('teste:ip:203.0.113.7', { max: 5, janelaMs: 60 * 60 * 1000 }, agora);
+    expect(chavesGuardadas()).toBe(1);
+
+    // Hora e um minuto depois, outro pedido qualquer faz a limpeza.
+    consumir('teste:ip:198.51.100.1', { max: 5, janelaMs: 1000 }, agora + 61 * 60 * 1000);
+    expect(chavesGuardadas()).toBe(1);
+  });
+});

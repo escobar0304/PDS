@@ -22,7 +22,8 @@ export const metadata: Metadata = {
 const TRATAMENTOS = [
   {
     finalidade: 'Criar e manter a sua conta',
-    dados: 'Nome, email e palavra-passe (guardada cifrada, nunca em claro)',
+    dados:
+      'Nome, email e palavra-passe (guardada cifrada, nunca em claro). Se entrar com a Google, o nome e o email que a Google nos dá, e não há palavra-passe',
     base: 'Execução de um contrato consigo (art. 6.º, n.º 1, al. b) do RGPD)',
     prazo: 'Enquanto mantiver a conta. Apaga-se quando a apagar.',
   },
@@ -31,6 +32,23 @@ const TRATAMENTOS = [
     dados: 'Identificador de sessão, e um contador na conta que permite terminá-la em todos os dispositivos',
     base: 'Execução de um contrato consigo',
     prazo: 'Até terminar sessão ou a sessão expirar',
+  },
+  {
+    finalidade: 'Confirmar o seu email e repor a palavra-passe',
+    dados:
+      'Um código de uso único ligado à conta. Guardamos só um resumo dele, e não o código',
+    base: 'Execução de um contrato consigo',
+    prazo:
+      'Apaga-se quando é usado ou quando expira: 24 horas para confirmar o email, 1 hora para repor a palavra-passe',
+  },
+  {
+    finalidade:
+      'Proteger o sítio contra abuso: tentativas repetidas de entrar, registar, repor a palavra-passe ou escrever-nos',
+    dados:
+      'Endereço IP e, nalgumas destas ações, o email usado na tentativa, com o número de tentativas',
+    base: 'O nosso interesse legítimo na segurança do serviço (art. 6.º, n.º 1, al. f) do RGPD)',
+    prazo:
+      'Só na memória do servidor, nunca em base de dados, e no máximo uma hora depois da última tentativa',
   },
   {
     finalidade: 'Responder-lhe quando nos escreve pelo formulário',

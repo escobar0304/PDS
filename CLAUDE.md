@@ -64,6 +64,7 @@ código.
 | `COMPONENTES.md` | a biblioteca de UI |
 | `COOKIES.md` | o que o site guarda, medido |
 | `DADOS-PESSOAIS.md` | proteção de dados |
+| `REGISTO-TRATAMENTOS.md` | o registo do art. 30.º do RGPD, derivado do código |
 | `SEGURANCA.md` | o que foi corrigido, e os testes que o mantêm corrigido |
 | `PERFORMANCE.md` | o que foi medido, e o que a medição desmentiu |
 | `ACESSIBILIDADE.md` | a auditoria, e porque o critério é 24×24 e não 44×44 |
