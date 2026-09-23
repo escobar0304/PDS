@@ -39,6 +39,12 @@ quando o PR fecha. Nunca empurrar para `master` diretamente.
 Antes de qualquer PR: `npm run typecheck`, `npm run lint`, `npm test`,
 `npm run build` e `npx playwright test`. Todos verdes, sem exceção.
 
+**As dependências contam como código.** `npm audit --omit=dev` faz parte da
+revisão, não é opcional: quando foi corrido pela primeira vez trouxe duas
+críticas e quatro altas em produção, mais do que tudo o que a F11 encontrou no
+código escrito aqui. O que fica por corrigir fica explicado em
+`docs/SEGURANCA.md`, com a razão — nunca em silêncio.
+
 **Os testes de integração não correm aqui.** `src/lib/__tests__/integracao.test.ts`
 precisa de `MONGODB_URI` e é ignorado sem ela — o binário do MongoDB não é
 descarregável deste ambiente. Correm no CI, em contentor. Uma alteração que lhes

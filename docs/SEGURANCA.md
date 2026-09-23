@@ -184,6 +184,49 @@ a mesma rota.
 Os testes que esgotam limites ficam agora no fim do ficheiro, com a razão
 escrita. É o tipo de coisa que volta se não ficar registada.
 
+## As dependências, que nunca tínhamos olhado
+
+Toda a F11 olhou para o código que escrevemos. `npm audit --omit=dev` nunca
+tinha sido corrido: **9 vulnerabilidades em dependências de produção, 2
+críticas e 4 altas.** A pior superfície deste projeto não era código nosso.
+
+| | Antes | Depois | Porque importava |
+|---|---|---|---|
+| `next-auth` | 4.24.5 | 4.24.15 | **Crítica.** Entrega de email ao destinatário errado; o normalizador validava o endereço antes da normalização Unicode |
+| `nodemailer` | 6.10.1 | 10.0.10 | **Alta.** Email para domínio não pretendido, injeção de comandos SMTP por CRLF, e `disableFileAccess` contornável. A rota de contacto usa isto |
+| `mongoose` | 8.18.3 | 8.24.1 | **Alta.** Sanitização imprópria de `$nor` no `sanitizeFilter`, e poluição de protótipo no casting de updates |
+| `stripe` | 15.12.0 | 22.6.2 | Moderada, via `qs` |
+| `next` | 14.2.33 | 14.2.35 | **Crítica.** Negação de serviço com Server Components |
+
+Ficaram **4 → 3**, e nenhuma se fecha sem uma decisão maior:
+
+**`next` continua crítica.** O 14.2.35 fecha as duas falhas com correção na
+linha 14.2, mas a linha deixou de receber retroportações: mais de vinte
+avisos só se fecham em `15.5.24+`. Isso é uma migração de major com mudanças
+de API — `params` passa a assíncrono, entre outras — e é trabalho próprio,
+com o seu PR. Não se despacha de passagem.
+
+**`postcss` alta** vem empacotado dentro do `next`. Sai quando o `next` sair.
+As falhas são a analisar CSS de origem não confiável; nós não analisamos CSS
+de terceiros.
+
+**`ip-address` alta** entra por `@next-auth/mongodb-adapter` → `mongodb@5` →
+`socks`. O adapter já está na última versão e o seu *peer* prende o `mongodb`
+ao `^5`; sair daqui implica o `@auth/mongodb-adapter` v3, que é para
+next-auth v5. As falhas são no *parsing* de endereços SOCKS, que nunca
+exercitamos — o Mongo liga diretamente.
+
+### O `overrides` no `package.json`
+
+O `next-auth@4.24.15` declara `nodemailer@^7.0.7` como *peerOptional*, o que
+bloqueava o `npm install` com o `nodemailer@10`. O `overrides` não é um
+atalho para calar o npm: o `next-auth` deste projeto usa **só** os provedores
+Google e Credentials — não há `EmailProvider` — por isso nunca toca no
+nodemailer. O *peer* é irrelevante aqui, e o `overrides` diz exatamente isso.
+
+Se algum dia se acrescentar o `EmailProvider`, esta entrada tem de ser
+reavaliada.
+
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
@@ -195,3 +238,9 @@ escrita. É o tipo de coisa que volta se não ficar registada.
   entrado até o token expirar. Resolver isto exige guardar um marcador de
   invalidação por utilizador e verificá-lo em cada pedido. Fica registado como
   dívida conhecida, não como esquecimento
+- **Migrar para o Next 15.** A linha 14.2 deixou de receber retroportações de
+  segurança e mais de vinte avisos só fecham em `15.5.24+`, um deles crítico.
+  É uma migração de major com mudanças de API (`params` assíncrono, entre
+  outras) e precisa do seu próprio PR, com a suite a validar cada passo
+- **Correr `npm audit --omit=dev` antes de cada versão.** Passou toda a F11
+  sem ser corrido, e a pior superfície do projeto estava aí
