@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Logotipo from '@/components/marca';
 import { LIVRO_RECLAMACOES, paginasDisponiveis } from '@/lib/paginas';
 import { EMPRESA, moradaFormatada } from '@/lib/empresa';
+import { DESCRICAO_SITIO } from '@/lib/afirmacoes';
 import { Envelope, FacebookLogo, InstagramLogo, MapPin, Phone } from '@phosphor-icons/react';
 
 export default function Footer() {
@@ -15,6 +16,11 @@ export default function Footer() {
   const legalLinks = [
     ...paginasDisponiveis().map((p) => ({ href: p.href, label: p.rotulo })),
     { href: LIVRO_RECLAMACOES.href, label: LIVRO_RECLAMACOES.rotulo },
+    // Lei 144/2015, art. 18: a entidade de resolucao alternativa de litigios
+    // tem de estar acessivel. Vai para a explicacao em /contacto, e nao
+    // diretamente para o sitio da entidade, porque o nome sozinho nao diz a
+    // ninguem para que serve.
+    ...(EMPRESA.entidadeRal ? [{ href: '/contacto#litigios', label: 'Resolução de litígios' }] : []),
   ];
 
   return (
@@ -26,7 +32,7 @@ export default function Footer() {
           <div>
             <Logotipo className="mb-5 text-[26px] text-rose-200" />
             <p className="text-sm text-rose-200 leading-relaxed">
-              A sua jornada espiritual começa aqui. Descubra pedras preciosas e cristais autênticos.
+              {DESCRICAO_SITIO}
             </p>
           </div>
 

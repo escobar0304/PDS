@@ -42,8 +42,8 @@ export const PAGINAS: PaginaInstitucional[] = [
     existe: false,
     obrigatoria: true,
     porQueFalta:
-      'Precisa de decisões do negócio: condições de venda, prazos, garantias, ' +
-      'e a entidade de resolução alternativa de litígios (Lei 144/2015).',
+      'Precisa de decisões do negócio: condições de venda, preços e IVA, ' +
+      'e se as fotografias são das peças à venda ou ilustrativas.',
   },
   {
     href: '/envios',

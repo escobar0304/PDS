@@ -3,18 +3,21 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Diamond, Gift, Sparkle, SquaresFour, Truck } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ChatCircle, SquaresFour, Truck } from '@phosphor-icons/react';
 import { Alert, AnuncioEstado, botaoClasses, Button, EmptyState, Skeleton } from '@/components/ui';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
 import { fetchList } from '@/lib/api';
+import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 
+// Texto em `src/lib/afirmacoes.ts`. Aqui dizia-se "100% autenticos",
+// "embalagem sustentavel", "entrega em 2-3 dias uteis" e "limpeza energetica
+// antes do envio" — nada disso confirmado pelo negocio.
 const CARACTERISTICAS = [
-  { Icone: Diamond, titulo: 'Autênticos', detalhe: 'Todos os cristais são 100% autênticos' },
-  { Icone: Gift, titulo: 'Embalagem', detalhe: 'Embalagem cuidada e sustentável' },
-  { Icone: Truck, titulo: 'Envio Rápido', detalhe: 'Entrega em 2-3 dias úteis' },
-  { Icone: Sparkle, titulo: 'Energia', detalhe: 'Limpeza energética antes do envio' },
+  { Icone: Truck, ...INFORMACAO_COMPRA.envios },
+  { Icone: ArrowCounterClockwise, ...INFORMACAO_COMPRA.livreResolucao },
+  { Icone: ChatCircle, ...INFORMACAO_COMPRA.duvidas },
 ];
 
 interface Category {
@@ -55,7 +58,7 @@ export default function Catalogo() {
         {/* Hero Section */}
         <Hero
           title="Catálogo"
-          subtitle="Explore nossas categorias de cristais e pedras preciosas"
+          subtitle="As famílias de cristais e pedras"
           imageSrc="/images/hero-catalogo.png"
           imageAlt="Catálogo de produtos"
           height="medium"
@@ -177,9 +180,8 @@ export default function Catalogo() {
                 Encontre o Cristal Perfeito
               </h2>
               <p className="text-base md:text-lg text-ink-muted leading-relaxed mb-8">
-                Cada categoria foi cuidadosamente selecionada para oferecer uma ampla variedade 
-                de cristais e pedras preciosas. Explore nossas coleções e descubra peças únicas 
-                que ressoam com a sua energia e intenções.
+                Cada família reúne pedras parecidas na composição, mas nenhuma peça é
+                igual a outra. Explore as coleções e escolha com tempo.
               </p>
               <Link href="/loja" className={botaoClasses()}>
                 Ver Todos os Produtos
@@ -191,7 +193,7 @@ export default function Catalogo() {
         {/* Características */}
         <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
           <div className="container-custom">
-            <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <ul className="grid gap-8 sm:grid-cols-3">
               {CARACTERISTICAS.map(({ Icone, titulo, detalhe }) => (
                 <li key={titulo} className="flex gap-3">
                   <Icone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-700" aria-hidden />

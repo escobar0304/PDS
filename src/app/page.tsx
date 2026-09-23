@@ -5,35 +5,35 @@ import Link from 'next/link';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { botaoClasses } from '@/components/ui/Button';
+import { AVISO_TRADICAO } from '@/lib/afirmacoes';
 
-// O texto e o mesmo de antes. A revisao das afirmacoes comerciais e a F9 do
-// roteiro e precisa de decisoes de negocio, nao de design.
+/**
+ * Texto geral, sem promessas (F9). Esta seccao descrevia um servico de
+ * avaliacao gemologica — "gemologistas certificados", "avaliacoes
+ * detalhadas", "garantimos a integridade de cada avaliacao" — que ninguem
+ * confirmou existir. Quando houver informacao do negocio, muda-se aqui.
+ */
 const PILARES = [
   {
-    titulo: 'Expertise',
+    titulo: 'Cada peça é única',
     imagem: '/images/expertise.png',
-    alt: 'Pedras preciosas a serem avaliadas',
-    texto:
-      'A nossa equipa de gemologistas certificados garante a precisão das avaliações.',
-    detalhe:
-      'Cada avaliação é cuidadosamente realizada para garantir a qualidade e autenticidade das pedras.',
+    alt: 'Mão com anéis pousada sobre pedras roxas em bruto',
+    texto: 'Nenhuma pedra é igual a outra: a cor, a forma e o brilho mudam de peça para peça.',
+    detalhe: 'Na página de cada produto encontra a descrição e os cuidados a ter.',
   },
   {
-    titulo: 'Personalização',
+    titulo: 'Escolher com tempo',
     imagem: '/images/personalizacao.png',
-    alt: 'Pedras dispostas para escolha personalizada',
-    texto: 'Avaliações personalizadas',
-    detalhe:
-      'Avaliações feitas à medida para garantir que encontra a pedra perfeita para a sua jornada espiritual.',
+    alt: 'Agregados de cristais cor-de-rosa, lilás e brancos sobre bases, numa mesa junto à janela',
+    texto: 'Explore o catálogo por família de pedra e compare antes de decidir.',
+    detalhe: 'Se tiver uma dúvida sobre alguma peça, pode escrever-nos.',
   },
   {
-    titulo: 'Confiança',
+    titulo: 'Tradição, não medicina',
     imagem: '/images/confianca.png',
-    alt: 'Pedra em bruto sobre uma superfície de madeira',
-    texto:
-      'Com transparência e profissionalismo, garantimos a integridade de cada avaliação realizada.',
-    detalhe:
-      'Sinta-se seguro ao adquirir pedras preciosas autênticas e de qualidade na nossa loja.',
+    alt: 'Brincos com pendentes de cristal roxo num expositor dourado',
+    texto: 'Os cristais acompanham muitas tradições, e é nesse campo que falamos deles.',
+    detalhe: AVISO_TRADICAO,
   },
 ];
 
@@ -66,7 +66,7 @@ export default function Home() {
                   Explore os Nossos Produtos
                 </h1>
                 <p className="mb-8 max-w-xl text-lg leading-relaxed text-rose-100 md:text-xl">
-                  Descubra pedras preciosas e cristais para a sua jornada espiritual
+                  Cristais e pedras, para ver com calma e escolher com tempo
                 </p>
                 <Link href="/loja" className={botaoClasses()}>
                   Descobrir Mais
@@ -76,15 +76,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Avaliação Especializada */}
+        {/* As peças */}
         <section className="py-20 md:py-28">
           <div className="container-custom">
             <div className="mb-14 max-w-2xl">
               <h2 className="mb-4 font-serif text-3xl leading-tight tracking-display text-ink sm:text-4xl md:text-5xl">
-                Avaliação Especializada
+                As Nossas Peças
               </h2>
               <p className="text-lg leading-relaxed text-ink-muted">
-                Conheça a qualidade e energia de cada pedra
+                Cristais e pedras, cada um com a sua cor e a sua forma
               </p>
             </div>
 
@@ -92,7 +92,7 @@ export default function Home() {
               <div className="overflow-hidden rounded-lg">
                 <Image
                   src="/images/pedras-especiais.png"
-                  alt="Conjunto de pedras preciosas"
+                  alt="Cinco pedras em bruto, roxas, brancas e cinzentas, num prato dourado"
                   width={960}
                   height={720}
                   className="h-72 w-full object-cover md:h-96"
@@ -101,12 +101,13 @@ export default function Home() {
               </div>
               <div className="space-y-5">
                 <p className="text-lg leading-relaxed text-ink">
-                  Os nossos especialistas em gemologia oferecem avaliações detalhadas
-                  para garantir a autenticidade e qualidade de cada pedra preciosa.
+                  Reunimos cristais e pedras pela cor, pela forma e pelo que representam
+                  para quem os escolhe — como objeto, como presente ou como parte de um
+                  ritual pessoal.
                 </p>
                 <p className="leading-relaxed text-ink-muted">
-                  Combinando conhecimento técnico e sensibilidade espiritual, avaliamos
-                  cada peça para que possa fazer uma escolha consciente e energética.
+                  Cada peça tem a sua página, com a descrição e os cuidados a ter. Se
+                  quiser saber mais antes de escolher, escreva-nos.
                 </p>
               </div>
             </div>
@@ -141,8 +142,7 @@ export default function Home() {
                 Pronto para Descobrir a Sua Pedra Especial?
               </h2>
               <p className="mb-9 text-lg leading-relaxed text-rose-200">
-                Explore a nossa coleção completa e encontre o cristal perfeito para sua
-                jornada.
+                Explore a coleção e encontre o cristal que procura.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link href="/loja" className={botaoClasses()}>

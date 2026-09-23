@@ -23,14 +23,14 @@ const categories = [
   {
     name: 'Cristais em Bruto',
     slug: 'cristais-em-bruto',
-    description: 'Cristais e pedras preciosas na sua forma natural e bruta, mantendo toda a energia original da terra.',
+    description: 'Cristais e pedras na sua forma natural e bruta, mantendo toda a energia original da terra.',
     image: '/images/confianca.png',
     order: 1
   },
   {
     name: 'Colares em Aço e Pedra',
     slug: 'colares-aco-pedra',
-    description: 'Colares elegantes combinando aço inoxidável com pedras preciosas, perfeitos para o dia a dia.',
+    description: 'Colares elegantes combinando aço inoxidável com pedras, perfeitos para o dia a dia.',
     image: '/images/confianca.png',
     order: 2
   },
@@ -51,14 +51,14 @@ const categories = [
   {
     name: 'Anéis em Aço e Pedra',
     slug: 'aneis-aco-pedra',
-    description: 'Anéis únicos que unem design contemporâneo com a beleza atemporal das pedras preciosas.',
+    description: 'Anéis únicos que unem design contemporâneo com a beleza atemporal das pedras.',
     image: '/images/confianca.png',
     order: 5
   },
   {
     name: 'Decoração',
     slug: 'decoracao',
-    description: 'Peças decorativas com cristais e pedras para energizar e embelezar o seu espaço.',
+    description: 'Peças decorativas com cristais e pedras para embelezar o seu espaço.',
     image: '/images/confianca.png',
     order: 6
   }

@@ -116,3 +116,23 @@ test('o rodapé não promete páginas que não existem', async ({ page }) => {
   expect(rotulos).not.toContain('Termos e Condições');
   expect(rotulos).not.toContain('Envios e Devoluções');
 });
+
+test('a entidade de resolução de litígios está acessível a partir de qualquer página', async ({ page }) => {
+  // Lei 144/2015, art. 18: nome e sitio da entidade competente, de forma
+  // facilmente acessivel. O rodape leva a explicacao, e a explicacao leva a
+  // entidade. "Competente", nunca "aderimos": a adesao nao foi confirmada.
+  await page.goto('/');
+  await page.getByRole('contentinfo').getByRole('link', { name: 'Resolução de litígios' }).click();
+  await expect(page).toHaveURL(/\/contacto#litigios$/);
+
+  const seccao = page.locator('#litigios');
+  await expect(seccao.getByRole('heading', { name: 'Resolução de litígios' })).toBeVisible();
+  await expect(seccao.getByRole('link', { name: /CICAP/ })).toHaveAttribute(
+    'href',
+    'https://cicap.pt',
+  );
+  await expect(seccao).toContainText('competente');
+  await expect(seccao).not.toContainText(/aderi/i);
+  // A plataforma europeia de litigios em linha foi descontinuada em 07/2025.
+  await expect(page.locator('a[href*="ec.europa.eu/consumers/odr"]')).toHaveCount(0);
+});
