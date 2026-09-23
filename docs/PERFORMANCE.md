@@ -84,3 +84,33 @@ Verificou-se também que o `X-Content-Type-Options: nosniff` acrescentado na
 F11 não as parte: os browsers continuam a inferir o tipo de imagens.
 
 Ambas ficam registadas como dívida cosmética, não como trabalho adiado.
+
+## O `loading.tsx` por rota: medido, e não se faz
+
+O `src/app/loading.tsx` estava marcado «Provisório. Ganha esqueletos por
+página na F10». A F10 foi entregue sem eles. Antes de os escrever, mediu-se
+se chegavam a ser vistos.
+
+**Método.** Servidor de produção, três navegações `next/link` reais a
+400 kbit/s com 800 ms de latência (throttling por CDP), e um
+`MutationObserver` a registar todas as vezes que o bloco entrasse no DOM.
+
+**Resultado: zero aparições.**
+
+Todas as páginas são `'use client'` com `fetch` dentro de um `useEffect`, e
+estão pré-renderizadas estaticamente (`○` na saída do `build`). O Next
+pré-carrega o payload quando a ligação entra no ecrã, por isso no momento do
+clique não há nada que suspenda. A espera real é a do `fetch`, que acontece
+*depois* de a página renderizar — e essa é tratada dentro de cada página.
+
+Escrever `loading.tsx` por rota seria, hoje, código morto.
+
+Não se apaga o da raiz: volta a contar no dia em que uma página passar a
+componente de servidor com dados assíncronos — que é para onde a F15 tem de
+ir, porque o JSON-LD precisa dos dados no HTML servido.
+
+**Nota de método, para não se repetir.** A primeira versão desta medição
+estava errada: criava um `<a>` normal em vez de usar uma ligação do
+`next/link`, e um `<a>` força navegação completa, onde o `loading.tsx` nunca
+entra. O número certo só apareceu depois de a sonda ser corrigida — o
+primeiro resultado teria dado a mesma conclusão pela razão errada.

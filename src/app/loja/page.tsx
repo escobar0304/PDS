@@ -182,7 +182,13 @@ function LojaContent() {
               <div className="lg:col-span-3">
                 {/* Resultados Header */}
                 <div className="flex justify-between items-center mb-6">
-                  <p className="text-sm text-ink-muted">
+                  {/*
+                    `role="status"` porque esta frase muda de "A carregar..."
+                    para "12 produtos encontrados" sem nada mais mudar na
+                    pagina para quem nao ve os esqueletos. Sem o papel, o
+                    leitor de ecra ficava calado nas duas pontas.
+                  */}
+                  <p role="status" className="text-sm text-ink-muted">
                     {loading ? (
                       'A carregar...'
                     ) : erro ? (

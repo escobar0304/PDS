@@ -55,10 +55,36 @@ export function Spinner({
   className?: string;
 }) {
   return (
-    <div role="status" aria-label={label} className={`flex justify-center py-8 ${className}`}>
-      <div className="loading" />
+    <div role="status" className={`flex justify-center py-8 ${className}`}>
+      <div className="loading" aria-hidden />
       <span className="sr-only">{label}</span>
     </div>
+  );
+}
+
+/**
+ * Anuncia uma mudanca de estado a quem usa leitor de ecra, sem ocupar ecra.
+ *
+ * Os esqueletos sao `aria-hidden` de proposito: uma grelha de rectangulos
+ * cinzentos nao tem nada para dizer. Mas isso deixava a pagina muda — quem
+ * nao ve o esqueleto nao sabia que estava a carregar, nem que tinha acabado.
+ *
+ * E o criterio 4.1.3 da WCAG 2.1, nivel AA, e o `axe` nao o apanha: nao ha
+ * como uma ferramenta adivinhar que um texto e uma mensagem de estado. Por
+ * isso o guarda esta em `src/lib/__tests__/estados.test.ts`, nao no `axe`.
+ *
+ * `role="status"` traz `aria-live="polite"` implicito: espera que a pessoa
+ * acabe o que esta a fazer em vez de a interromper a meio.
+ *
+ * Quando o texto do estado ja e visivel na pagina — como o contador de
+ * resultados da loja — nao se usa isto; poe-se `role="status"` nesse
+ * proprio elemento, senao a frase e anunciada duas vezes.
+ */
+export function AnuncioEstado({ children }: { children: React.ReactNode }) {
+  return (
+    <p role="status" className="sr-only">
+      {children}
+    </p>
   );
 }
 

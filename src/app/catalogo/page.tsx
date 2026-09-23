@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Diamond, Gift, Sparkle, SquaresFour, Truck } from '@phosphor-icons/react';
-import { Alert, botaoClasses, Button, EmptyState, Skeleton } from '@/components/ui';
+import { Alert, AnuncioEstado, botaoClasses, Button, EmptyState, Skeleton } from '@/components/ui';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/Hero';
@@ -94,6 +94,19 @@ export default function Catalogo() {
                 {erro}
               </Alert>
             )}
+
+            {/*
+              Os esqueletos sao `aria-hidden`. Sem isto a pagina nao dizia
+              nada a quem nao os ve — nem que estava a carregar, nem que
+              tinha acabado.
+            */}
+            <AnuncioEstado>
+              {loading
+                ? 'A carregar as categorias'
+                : erro
+                  ? 'Não foi possível carregar as categorias'
+                  : `${categories.length} categoria${categories.length !== 1 ? 's' : ''}`}
+            </AnuncioEstado>
 
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
