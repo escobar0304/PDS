@@ -10,6 +10,7 @@ import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Heart, Minus, Plus, ShareNetwork, Shield, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
 import { botaoClasses } from '@/components/ui/Button';
+import { AnuncioEstado, Skeleton } from '@/components/ui';
 
 interface Product {
   _id: string;
@@ -124,15 +125,21 @@ export default function ProdutoPage() {
         <Header />
         <main id="conteudo" className="min-h-screen bg-surface py-12">
           <div className="container-custom">
-            <div className="animate-pulse">
-              <div className="h-8 bg-surface-sunken rounded w-48 mb-8"></div>
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="bg-surface-sunken h-96 rounded-lg"></div>
-                <div className="space-y-4">
-                  <div className="h-8 bg-surface-sunken rounded"></div>
-                  <div className="h-4 bg-surface-sunken rounded w-3/4"></div>
-                  <div className="h-16 bg-surface-sunken rounded"></div>
-                </div>
+            {/*
+              Estes rectangulos eram `div`s com classes soltas repetidas —
+              `animate-pulse`, `bg-surface-sunken rounded` — a duplicar o que
+              o `Skeleton` ja faz. E nenhum era `aria-hidden`, por isso o
+              leitor de ecra encontrava aqui caixas vazias em vez de silencio.
+            */}
+            <AnuncioEstado>A carregar o produto</AnuncioEstado>
+
+            <Skeleton className="mb-8 h-8 w-48" />
+            <div className="grid gap-8 md:grid-cols-2">
+              <Skeleton className="h-96 rounded-lg" />
+              <div className="space-y-4">
+                <Skeleton className="h-8" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-16" />
               </div>
             </div>
           </div>

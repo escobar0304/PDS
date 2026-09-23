@@ -100,3 +100,36 @@ que é juízo humano e não regra.
 
 **Modo de contraste elevado** e `prefers-contrast`. O `prefers-reduced-motion`
 já está tratado desde a F2.
+
+## O critério que dizíamos cumprir e não cumpríamos
+
+**4.1.3 Status Messages, nível AA.** Encontrado a medir outra coisa.
+
+A `/loja`, o `/catálogo` e a página de produto trocavam esqueletos pelo
+conteúdo sem dizer nada a quem não os vê. O `Skeleton` é `aria-hidden` de
+propósito — uma grelha de retângulos cinzentos não tem nada para dizer — mas
+isso deixava a página muda nas duas pontas: nem que estava a carregar, nem
+que tinha acabado. Quem usa leitor de ecrã ficava sem saber que a página
+mudou.
+
+O `axe` estava verde. E não é falha dele: decidir que um texto é uma
+*mensagem de estado* exige perceber a intenção da página, e nenhuma
+ferramenta automática sabe isso. O axe não tem regra para o 4.1.3. Durante
+todo este tempo declarámos «sem violações WCAG 2.1 AA» apoiados numa
+ferramenta que nunca verificou este critério.
+
+É a lição que interessa guardar: **uma ferramenta verde não é a mesma coisa
+que um critério cumprido**, e vale a pena saber o que cada ferramenta *não*
+vê.
+
+A correção é `AnuncioEstado` em `src/components/ui/Feedback.tsx` — um
+`role="status"` só para leitor de ecrã — e, onde o texto de estado já é
+visível (o contador de resultados da loja), o papel nesse próprio elemento,
+para a frase não ser anunciada duas vezes.
+
+O guarda está em `src/lib/__tests__/estados.test.ts`, não no axe: qualquer
+página que use `Skeleton` sem região de estado falha a suite. Foi verificado
+a partir do defeito — removida a região, o teste fica vermelho.
+
+Corrigiu-se também o `Spinner`, que tinha `aria-label` **e** um `sr-only` com
+o mesmo texto: alguns leitores liam «A carregar, A carregar».
