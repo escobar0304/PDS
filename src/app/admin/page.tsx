@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import AdminHeader from '@/components/adminHeader';
+import { paginaDeAdmin } from '@/lib/autorizacao';
 
 export const metadata = { title: 'Admin - Pétalas de Sonho' };
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  await paginaDeAdmin();
+
   return (
     <>
       <AdminHeader />

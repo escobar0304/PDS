@@ -13,8 +13,8 @@ import { paginasDisponiveis } from '@/lib/paginas';
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://petalasdesonho.pt';
 
 /**
- * O que os motores de busca nao devem ver: contas, carrinho, API e as paginas
- * de resultado de pagamento. O `robots.ts` bloqueia-as e o `sitemap.ts` nunca
+ * O que os motores de busca nao devem ver: contas, carrinho, administracao e
+ * API. O `robots.ts` bloqueia-as e o `sitemap.ts` nunca
  * as lista — as duas listas nao podem discordar, por isso sao a mesma.
  */
 export const ROTAS_PRIVADAS = [
@@ -23,8 +23,6 @@ export const ROTAS_PRIVADAS = [
   '/area-pessoal',
   '/auth/',
   '/carrinho',
-  '/sucesso',
-  '/falha',
 ] as const;
 
 export function privada(caminho: string): boolean {

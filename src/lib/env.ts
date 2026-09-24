@@ -25,7 +25,6 @@ export const OPTIONAL_ENV = [
   'SMTP_PASS',
   'SMTP_FROM',
   'ADMIN_EMAIL',
-  'STRIPE_SECRET_KEY',
   'NEXT_PUBLIC_SITE_URL',
   'SITE_INDEXAVEL',
 ] as const;

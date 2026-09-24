@@ -59,7 +59,7 @@ export const CONDICOES = {
   /** Se se pode levantar a encomenda na loja. Nao perguntado ainda. */
   levantamentoNaLoja: null as boolean | PorPreencher,
   /**
-   * Como se paga. Nao ha checkout nesta versao: entra com a Stripe, na v2. E
+   * Como se paga. Nao ha checkout nesta versao: entra na v2 (ROADMAP-V2, E4). E
    * por isso que "pagamento seguro" nao se escreve ainda — seria afirmar a
    * seguranca de uma coisa que nao existe.
    */

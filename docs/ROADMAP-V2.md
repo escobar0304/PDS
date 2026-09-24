@@ -61,24 +61,27 @@ atualiza a política e o registo no mesmo PR, como na v1.
 
 Pode fazer-se já, e é defensável fazê-lo **antes** da v1 ir para o ar.
 
-## L1. `/sucesso` e `/falha`
+## L1. `/sucesso` e `/falha` — feito
 
 Afirmam um pagamento que não existe. Estão fora do mapa e dos motores de
 busca, mas abrem para quem escrever o endereço. Saem agora; voltam na P1, a
 ler o estado real da encomenda em vez de o supor.
 
-## L2. A dependência `stripe`
+## L2. A dependência `stripe` — feito
 
 Código de terceiros em produção que ninguém chama é superfície de ataque sem
 contrapartida, e entra no `npm audit` sem razão. Sai agora; volta na E4, se a
 Stripe for a escolha (ver E4 — não é garantido).
 
-## L3. `/admin` sem proteção
+## L3. `/admin` sem proteção — feito
 
 Hoje não expõe nada, porque não faz nada. O problema é o dia em que fizer: a
-proteção tem de estar antes da primeira linha que lê dados. `exigirAdmin` já
-existe; falta um `layout.tsx` que o use, e um teste que falhe se uma página de
-`/admin` abrir sem sessão de administrador.
+proteção tem de estar antes da primeira linha que lê dados.
+
+**Não num `layout.tsx`, como estava previsto aqui.** O guia de autenticação do
+Next 16 diz porquê: o layout não volta a correr ao navegar dentro do segmento,
+e não impede as páginas-filhas de renderizar. Cada página chama
+`paginaDeAdmin()`, e `admin.test.ts` falha se uma página nova a esquecer.
 
 ---
 
@@ -282,9 +285,9 @@ dinâmicas; **o custo mede-se antes** — é o tipo de coisa que a
 ## Agora, sem depender de ninguém
 
 ```
-L1  /sucesso e /falha saem
-L2  a dependência stripe sai
-L3  /admin protegido, com teste
+L1  /sucesso e /falha saem                feito
+L2  a dependência stripe sai              feito
+L3  /admin protegido, com teste           feito
 C1  preços em cêntimos
 E1  cálculo de total e portes no servidor
 E2  reserva de stock atómica           (verdadeira só depois do CI)

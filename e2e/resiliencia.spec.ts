@@ -14,8 +14,6 @@ const ROTAS = [
   { path: '/carrinho', h1: /Carrinho/i },
   { path: '/auth/login', h1: /Bem-vindo de volta/i },
   { path: '/auth/register', h1: /Criar Conta/i },
-  { path: '/sucesso', h1: /Pagamento concluído/i },
-  { path: '/falha', h1: /Pagamento falhou/i },
   { path: '/rota-que-nao-existe', h1: /não encontrámos/i },
 ];
 

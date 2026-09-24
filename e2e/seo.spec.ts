@@ -45,7 +45,7 @@ test('o mapa do sítio existe, e só lista o que é público e existe', async ({
 
   expect(caminhos).toContain('/');
   for (const c of caminhos) {
-    expect(c, 'privada no mapa').not.toMatch(/^\/(api|admin|area-pessoal|auth|carrinho|sucesso|falha)/);
+    expect(c, 'privada no mapa').not.toMatch(/^\/(api|admin|area-pessoal|auth|carrinho)/);
     const pagina = await request.get(c);
     expect(pagina.status(), `${c} está no mapa e não existe`).toBe(200);
   }

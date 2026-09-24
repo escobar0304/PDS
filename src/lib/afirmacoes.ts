@@ -77,7 +77,7 @@ export const RETIRADAS: { frase: RegExp; porque: string }[] = [
   { frase: /sustentáve/i, porque: 'alegação ambiental genérica (Diretiva 2024/825)' },
   {
     frase: /pagamento seguro/i,
-    // O negocio quer escreve-lo, e vai ser verdade — com a Stripe, na v2.
+    // O negocio quer escreve-lo, e vai ser verdade — com o checkout, na v2.
     // Ate la seria afirmar a seguranca de um pagamento que nao existe.
     porque: 'não há pagamento: entra quando o checkout existir',
   },

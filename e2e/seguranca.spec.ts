@@ -60,6 +60,14 @@ test.describe('controlo de acesso', () => {
     // Sem base de dados na suite, 500 e aceitavel; 401 ou 403 nao seriam.
     expect([200, 500]).toContain(res.status());
   });
+
+  for (const caminho of ['/admin', '/admin/produtos', '/admin/encomendas']) {
+    test(`${caminho} não existe para quem não é administrador`, async ({ request }) => {
+      const res = await request.get(caminho);
+      expect(res.status()).toBe(404);
+      expect(await res.text()).not.toContain('Administração');
+    });
+  }
 });
 
 test.describe('limite de pedidos', () => {

@@ -52,7 +52,7 @@ describe('páginas institucionais', () => {
     const conhecidas = new Set(PAGINAS.map((p) => p.href.slice(1)));
     const ignorar = new Set([
       'admin', 'api', 'auth', 'area-pessoal', 'carrinho', 'catalogo',
-      'loja', 'produto', 'sobre-nos', 'sucesso', 'falha',
+      'loja', 'produto', 'sobre-nos',
     ]);
 
     const orfas = readdirSync(APP, { withFileTypes: true })
