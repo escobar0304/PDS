@@ -682,6 +682,8 @@ antes do primeiro cookie, não depois do primeiro relatório.
 
 # v2.0.0 - A loja, fora do âmbito desta versão
 
+O plano está em `docs/ROADMAP-V2.md`.
+
 Fica registado para não se perder:
 
 - `/checkout` com Stripe, que hoje é um 404 no CTA principal do carrinho
