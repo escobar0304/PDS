@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Check, Ruler, ShoppingCart } from '@phosphor-icons/react';
 import { useCart } from '../contexts/CartContext';
+import { SemFotografia } from '@/components/ui';
 import { temDeEscolher } from '@/lib/catalogo';
 import { formatarPreco } from '@/lib/dinheiro';
 
@@ -53,22 +54,24 @@ export default function ProductCard({ product }: ProductCardProps) {
     setTimeout(() => setIsAdding(false), 1000);
   };
 
-  const imageUrl = !imageError && product.images && product.images.length > 0
-    ? product.images[0]
-    : 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=600&h=600&fit=crop';
+  const imagem = !imageError ? product.images?.[0] : undefined;
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface-raised transition-smooth hover:border-rose-300">
       <Link href={`/produto/${product.slug}`} className="block shrink-0">
         <div className="relative h-64 overflow-hidden bg-surface-sunken">
-          <Image
-            src={imageUrl}
-            alt={product.name}
-            fill
-            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-            onError={() => setImageError(true)}
-          />
+          {imagem ? (
+            <Image
+              src={imagem}
+              alt={product.name}
+              fill
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <SemFotografia />
+          )}
           {product.featured && (
             <div className="absolute left-3 top-3 rounded-sm bg-rose-200 px-2.5 py-1 text-xs font-medium text-rose-900">
               Destaque

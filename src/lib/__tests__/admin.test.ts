@@ -49,3 +49,17 @@ describe.each(PRIVADAS)('/$pasta', ({ pasta, guarda }) => {
     expect(cliente).toEqual([]);
   });
 });
+
+describe('promover a administrador', () => {
+  it('nenhuma página nem rota o pode fazer: só o script, no servidor', () => {
+    const todos = (dir: string): string[] =>
+      readdirSync(dir).flatMap((nome) => {
+        const c = join(dir, nome);
+        return statSync(c).isDirectory() ? todos(c) : /\.(ts|tsx)$/.test(nome) ? [c] : [];
+      });
+    const culpados = todos(APP)
+      .filter((f) => /\bmudarPapel\b/.test(readFileSync(f, 'utf8')))
+      .map((f) => relative(APP, f));
+    expect(culpados, 'mudarPapel chamado a partir da web').toEqual([]);
+  });
+});

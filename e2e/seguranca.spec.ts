@@ -45,15 +45,36 @@ test.describe('injeção NoSQL', () => {
 });
 
 test.describe('controlo de acesso', () => {
-  test('criar categorias exige sessão', async ({ request }) => {
+  test('a rota pública de categorias já não escreve', async ({ request }) => {
     // Ate a F11 esta rota escrevia na base de dados sem verificacao nenhuma.
+    // A escrita passou para /api/admin/categorias; aqui so se le.
     const res = await request.post('/api/categories', {
       data: { name: 'Intrusa', slug: 'intrusa' },
       failOnStatusCode: false,
     });
 
-    expect(res.status(), 'rota de escrita aberta a qualquer pessoa').toBe(401);
+    expect(res.status()).toBe(405);
   });
+
+  const ID = 'a'.repeat(24);
+  for (const [metodo, caminho] of [
+    ['GET', '/api/admin/produtos'],
+    ['POST', '/api/admin/produtos'],
+    ['PATCH', `/api/admin/produtos/${ID}`],
+    ['GET', `/api/admin/produtos/${ID}/stock`],
+    ['POST', `/api/admin/produtos/${ID}/stock`],
+    ['POST', '/api/admin/categorias'],
+    ['PATCH', `/api/admin/categorias/${ID}`],
+  ] as const) {
+    test(`${metodo} ${caminho} exige administrador`, async ({ request }) => {
+      const res = await request.fetch(caminho, {
+        method: metodo,
+        data: metodo === 'GET' ? undefined : { delta: -1 },
+        failOnStatusCode: false,
+      });
+      expect(res.status()).toBe(401);
+    });
+  }
 
   test('ler o catálogo continua público', async ({ request }) => {
     const res = await request.get('/api/categories');

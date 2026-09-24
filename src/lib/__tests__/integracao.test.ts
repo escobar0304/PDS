@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { Category, Contador, MovimentoStock, Order, Product, Token, User } from '../models';
 import { moverStock } from '../stock';
+import { criarProduto, editarCategoria, editarProduto, listarProdutos, movimentar, mudarPapel } from '../gestao';
 import {
   PRAZO_RESERVA_MS,
   calcularEncomenda,
@@ -758,6 +759,154 @@ executar('encomendas, contra a base de dados', () => {
     expect(e.historico).toHaveLength(2);
     // Se foi o cancelamento a ganhar, o stock voltou; se foi o pagamento, nao.
     expect(await stock(p._id)).toBe(e.status === 'CANCELLED' ? 3 : 2);
+  });
+});
+
+executar('o painel de gestão, contra a base de dados', () => {
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+  }, 30_000);
+
+  beforeEach(async () => {
+    await Promise.all([
+      Product.deleteMany({}),
+      Category.deleteMany({}),
+      MovimentoStock.deleteMany({}),
+      Order.deleteMany({}),
+    ]);
+  });
+
+  const categoria = (pecasUnicas: boolean) =>
+    Category.create({ name: pecasUnicas ? 'Drusas' : 'Anéis', slug: pecasUnicas ? 'drusas' : 'aneis', pecasUnicas });
+
+  const base = (categoryId: unknown, over: Record<string, unknown> = {}) => ({
+    name: 'Peça',
+    slug: `peca-${new mongoose.Types.ObjectId()}`,
+    priceCents: 3000,
+    weightGrams: 100,
+    categoryId: String(categoryId),
+    images: [],
+    featured: false,
+    active: true,
+    variantes: [{ stock: 1 }],
+    ...over,
+  });
+
+  it('o stock inicial entra como movimento de entrada, com autor', async () => {
+    const c = await categoria(false);
+    const r = await criarProduto(
+      base(c._id, { variantes: [{ medida: '14', stock: 2 }, { medida: '16', stock: 0 }] }),
+      'admin:x'
+    );
+    if (!r.ok) throw new Error(JSON.stringify(r));
+
+    const p = (await Product.findById(r.id).lean())!;
+    expect(p.variantes.map((v) => v.stock)).toEqual([2, 0]);
+    const movimentos = await MovimentoStock.find().lean();
+    expect(movimentos.map((m) => [m.motivo, m.delta, m.por])).toEqual([['entrada', 2, 'admin:x']]);
+  });
+
+  it('a regra da categoria vale no servidor: peça única com medidas é recusada', async () => {
+    const c = await categoria(true);
+    const r = await criarProduto(base(c._id, { variantes: [{ medida: 'M', stock: 1 }] }), 'admin:x');
+    expect(r).toEqual({ ok: false, erro: 'medidas', problemas: ['peca-unica-com-medidas'] });
+    expect(await Product.countDocuments()).toBe(0);
+  });
+
+  it('o mesmo endereço duas vezes é recusado, sem erro de servidor', async () => {
+    const c = await categoria(false);
+    const dados = base(c._id, { slug: 'repetido', variantes: [{ medida: '14', stock: 0 }] });
+    expect((await criarProduto(dados, 'admin:x')).ok).toBe(true);
+    expect(await criarProduto(dados, 'admin:x')).toEqual({ ok: false, erro: 'slug-repetido' });
+  });
+
+  it('editar muda nomes e acrescenta medidas, nunca o stock nem apaga medidas', async () => {
+    const c = await categoria(false);
+    const r = await criarProduto(base(c._id, { variantes: [{ medida: '14', stock: 3 }] }), 'admin:x');
+    if (!r.ok) throw new Error('devia ter criado');
+    const antes = (await Product.findById(r.id).lean())!;
+    const v14 = String(antes.variantes[0]._id);
+
+    expect(
+      await editarProduto(r.id, { variantes: [{ _id: v14, medida: '14 (pequeno)' }, { medida: '18' }] })
+    ).toEqual({ ok: true });
+    const depois = (await Product.findById(r.id).lean())!;
+    expect(depois.variantes.map((v) => [v.medida, v.stock])).toEqual([['14 (pequeno)', 3], ['18', 0]]);
+
+    expect(await editarProduto(r.id, { variantes: [{ medida: 'outra' }] })).toEqual({
+      ok: false,
+      erro: 'medida-removida',
+    });
+  });
+
+  it('uma peça única não passa de uma unidade pelo painel', async () => {
+    const c = await categoria(true);
+    const r = await criarProduto(base(c._id), 'admin:x');
+    if (!r.ok) throw new Error('devia ter criado');
+    const vid = String((await Product.findById(r.id).lean())!.variantes[0]._id);
+
+    expect(await movimentar(r.id, { varianteId: vid, delta: 1, motivo: 'entrada' }, 'admin:x')).toEqual({
+      ok: false,
+      erro: 'acima-do-maximo',
+    });
+    expect(await movimentar(r.id, { varianteId: vid, delta: -1, motivo: 'venda-loja' }, 'admin:x')).toEqual({
+      ok: true,
+      stock: 0,
+    });
+    expect(await movimentar(r.id, { varianteId: vid, delta: -1, motivo: 'venda-loja' }, 'admin:x')).toEqual({
+      ok: false,
+      erro: 'sem-stock',
+      disponivel: 0,
+    });
+  });
+
+  it('passar a peças únicas uma categoria com anéis é recusado, com os nomes', async () => {
+    const c = await categoria(false);
+    await criarProduto(base(c._id, { name: 'Anel', variantes: [{ medida: '14', stock: 1 }] }), 'admin:x');
+    expect(await editarCategoria(String(c._id), { pecasUnicas: true })).toEqual({
+      ok: false,
+      erro: 'produtos-incompativeis',
+      produtos: ['Anel'],
+    });
+  });
+
+  it('a listagem diz o que está reservado online, por medida', async () => {
+    const c = await categoria(false);
+    const r = await criarProduto(base(c._id, { variantes: [{ medida: '14', stock: 3 }] }), 'admin:x');
+    if (!r.ok) throw new Error('devia ter criado');
+    const vid = (await Product.findById(r.id).lean())!.variantes[0]._id;
+    await Order.create({
+      numero: '2026-999999',
+      customerName: 'M',
+      customerEmail: 'm@exemplo.pt',
+      customerPhone: '910000000',
+      deliveryType: 'SHIPPING',
+      subtotalCents: 3000,
+      totalCents: 3000,
+      status: 'PENDING',
+      items: [{ productId: r.id, varianteId: vid, name: 'Peça', priceCents: 3000, quantity: 2 }],
+    });
+
+    const [p] = await listarProdutos();
+    expect(p.variantes[0]).toMatchObject({ medida: '14', reservadoOnline: 2 });
+  });
+
+  it('promover e retirar: retirar termina as sessões da conta', async () => {
+    await User.deleteMany({ email: 'balcao@exemplo.pt' });
+    await User.create({ name: 'Balcão', email: 'balcao@exemplo.pt', password: 'x' });
+
+    expect(await mudarPapel(' Balcao@Exemplo.pt ', 'ADMIN')).toBe('mudou');
+    expect(await mudarPapel('balcao@exemplo.pt', 'ADMIN')).toBe('ja-estava');
+    expect((await User.findOne({ email: 'balcao@exemplo.pt' }).lean())!.versaoSessao).toBe(0);
+
+    expect(await mudarPapel('balcao@exemplo.pt', 'USER')).toBe('mudou');
+    const u = (await User.findOne({ email: 'balcao@exemplo.pt' }).lean())!;
+    expect(u.role).toBe('USER');
+    expect(u.versaoSessao).toBe(1);
+
+    expect(await mudarPapel('ninguem@exemplo.pt', 'ADMIN')).toBe('nao-existe');
   });
 });
 

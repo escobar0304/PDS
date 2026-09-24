@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckCircle, Info, WarningCircle } from '@phosphor-icons/react';
+import { CameraSlash, CheckCircle, Info, WarningCircle } from '@phosphor-icons/react';
 
 export type AlertTone = 'erro' | 'sucesso' | 'info';
 
@@ -127,6 +127,21 @@ export function EmptyState({
       <p className="font-serif text-xl text-ink">{title}</p>
       {description && <p className="mx-auto mt-2 max-w-sm text-ink-muted">{description}</p>}
       {action && <div className="mt-6 flex justify-center">{action}</div>}
+    </div>
+  );
+}
+
+/**
+ * No lugar da fotografia que falta. Ate 24/09/2026 era uma fotografia do
+ * Unsplash de um cristal qualquer: numa loja de pecas unicas, e mostrar como
+ * "a peca" uma pedra que nao e ela (DL 57/2008). Sem fotografia, diz-se que
+ * nao ha.
+ */
+export function SemFotografia() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-surface-sunken text-ink-muted">
+      <CameraSlash className="h-8 w-8" aria-hidden />
+      <span className="text-sm">Sem fotografia</span>
     </div>
   );
 }

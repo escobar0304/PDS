@@ -10,7 +10,7 @@ import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Minus, Plus, ShareNetwork, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
 import { botaoClasses } from '@/components/ui/Button';
-import { AnuncioEstado, Escolha, Skeleton } from '@/components/ui';
+import { AnuncioEstado, Escolha, SemFotografia, Skeleton } from '@/components/ui';
 import { temDeEscolher } from '@/lib/catalogo';
 import { AVISO_TRADICAO, INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 import { formatarPreco } from '@/lib/dinheiro';
@@ -214,7 +214,7 @@ export default function ProdutoPage() {
     );
   }
 
-  const currentImage = product.images[currentImageIndex] || 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=800&h=800&fit=crop';
+  const currentImage = product.images[currentImageIndex];
 
   return (
     <>
@@ -252,14 +252,18 @@ export default function ProdutoPage() {
             <div className="space-y-4">
               {/* Imagem Principal */}
               <div className="relative bg-surface-raised rounded-lg overflow-hidden shadow-soft aspect-square">
-                <Image
-                  src={currentImage}
-                  alt={product.name}
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover"
-                  priority
-                />
+                {currentImage ? (
+                  <Image
+                    src={currentImage}
+                    alt={product.name}
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover"
+                    priority
+                  />
+                ) : (
+                  <SemFotografia />
+                )}
                 
                 {product.featured && (
                   <div className="absolute left-4 top-4 rounded-sm bg-rose-200 px-3 py-1.5 text-sm font-medium text-rose-900">
