@@ -113,3 +113,21 @@ export const esquemaNovaPassword = z.object({
 export const esquemaVerificacao = z.object({
   token: z.string().trim().min(20).max(200),
 });
+
+/**
+ * O que o cliente pode dizer sobre uma encomenda: que produtos, e quantos.
+ * Nunca o preco — ver `lib/encomenda.ts`. `strict()` recusa um `priceCents`
+ * enviado junto, em vez de o ignorar, para quem experimente ver que nao
+ * funcionou.
+ */
+export const esquemaPedido = z
+  .array(
+    z
+      .object({
+        id: z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido'),
+        quantidade: z.number().int().min(1).max(99),
+      })
+      .strict()
+  )
+  .min(1)
+  .max(50);

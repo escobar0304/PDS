@@ -61,30 +61,33 @@ atualiza a política e o registo no mesmo PR, como na v1.
 
 Pode fazer-se já, e é defensável fazê-lo **antes** da v1 ir para o ar.
 
-## L1. `/sucesso` e `/falha`
+## L1. `/sucesso` e `/falha` — feito
 
 Afirmam um pagamento que não existe. Estão fora do mapa e dos motores de
 busca, mas abrem para quem escrever o endereço. Saem agora; voltam na P1, a
 ler o estado real da encomenda em vez de o supor.
 
-## L2. A dependência `stripe`
+## L2. A dependência `stripe` — feito
 
 Código de terceiros em produção que ninguém chama é superfície de ataque sem
 contrapartida, e entra no `npm audit` sem razão. Sai agora; volta na E4, se a
 Stripe for a escolha (ver E4 — não é garantido).
 
-## L3. `/admin` sem proteção
+## L3. `/admin` sem proteção — feito
 
 Hoje não expõe nada, porque não faz nada. O problema é o dia em que fizer: a
-proteção tem de estar antes da primeira linha que lê dados. `exigirAdmin` já
-existe; falta um `layout.tsx` que o use, e um teste que falhe se uma página de
-`/admin` abrir sem sessão de administrador.
+proteção tem de estar antes da primeira linha que lê dados.
+
+**Não num `layout.tsx`, como estava previsto aqui.** O guia de autenticação do
+Next 16 diz porquê: o layout não volta a correr ao navegar dentro do segmento,
+e não impede as páginas-filhas de renderizar. Cada página chama
+`paginaDeAdmin()`, e `admin.test.ts` falha se uma página nova a esquecer.
 
 ---
 
 # Fase 1 - Catálogo
 
-## C1. Dinheiro em cêntimos
+## C1. Dinheiro em cêntimos — feito
 
 `19.9` em vírgula flutuante não é 19,90 €: `0.1 + 0.2 !== 0.3`, e somar
 quantidades por portes arredonda mal ao terceiro produto. Todos os fornecedores
@@ -92,6 +95,13 @@ de pagamento pedem inteiros em cêntimos.
 
 **Fazer agora** é barato porque a base de dados não tem produtos. Depois da
 primeira encomenda, é uma migração com dinheiro real no meio.
+
+Feito com nomes novos (`priceCents`, `totalCents`…) e não com `price` a mudar
+de significado: um sítio esquecido mostraria 1990 € em vez de 19,90 €, e com o
+nome novo não compila. Os esquemas recusam valores que não sejam inteiros. Os
+preços passam também a escrever-se como em Portugal — `19,90 €`, e não
+`19.90€` como até aqui. Os carrinhos guardados antes da mudança descartam-se:
+convertê-los era adivinhar, e quem tinha um carrinho era quem testava.
 
 ## C2. Peças únicas ou modelos com medida
 
@@ -128,7 +138,7 @@ componentes.
 
 # Fase 2 - Encomenda
 
-## E1. Preço e portes calculados no servidor
+## E1. Preço e portes calculados no servidor — feito, sem rota
 
 O carrinho guarda o preço que o produto tinha quando lá entrou. O servidor
 **nunca** o lê: recebe identificadores e quantidades, e calcula tudo a partir
@@ -139,7 +149,20 @@ Os portes saem de `CONDICOES.tabelaPortes` e do peso de cada peça. **O cálculo
 faz-se agora**; enquanto a tabela for `null`, o checkout não abre — exatamente
 como o `robots.ts` não deixa indexar.
 
-## E2. Stock
+Está em `src/lib/encomenda.ts`, e **sem rota de API, de propósito**: uma rota
+sem ninguém que a chame é superfície de ataque sem uso. Entra com a E5. O que
+ficou decidido pelo caminho:
+
+- o peso passou a `weightGrams`, pela razão dos cêntimos — `weight: 250` não
+  dizia se eram gramas ou quilos, e os portes dependem da resposta
+- a tabela passou de texto (`"até 500 g"`, `"3,50 €"`) a números, e uma tabela
+  mal preenchida (fora de ordem, em euros) conta como em falta
+- nada é corrigido em silêncio: quantidade acima do stock, produto
+  desativado, peça sem peso, peso acima do último escalão voltam **todos**
+  como problemas, e quem pediu decide
+- o esquema do pedido **recusa** um preço enviado junto, em vez de o ignorar
+
+## E2. Stock — feito
 
 Duas pessoas a comprar a última peça ao mesmo tempo: só uma pode conseguir. A
 reserva é uma operação atómica na base de dados (`stock >= quantidade` na
@@ -148,11 +171,25 @@ reserva cujo pagamento não chega a acontecer liberta-se sozinha.
 
 Faz-se agora. **Só se sabe verdadeira no CI**, contra um MongoDB real.
 
-## E3. Estados, histórico e numeração
+**Sem transações, e porquê:** o MongoDB só as tem em *replica set*; o do CI
+não é, e o de produção está por escolher. Cada peça é uma atualização atómica
+condicional, e se uma falhar as já tiradas voltam ao stock. O custo é um
+instante em que o stock parece menor do que é; vender o que não há não
+acontece. Não há tarefa agendada no projeto: as reservas expiradas libertam-se
+no início de cada encomenda nova, que é quando o stock faz falta. Os testes de
+integração põem duas encomendas a disputar a última peça e duas limpezas a
+correr ao mesmo tempo.
+
+## E3. Estados, histórico e numeração — feito
 
 Estados com transições permitidas (não se expede uma encomenda por pagar),
 cada mudança registada com data e autor, e um número de encomenda legível que
 não seja o `_id`. Faz-se agora.
+
+As transições estão em `src/lib/transicoes.ts`. O número é `2026-000123`, de
+um contador atómico por ano — **não é o número da fatura**, que é do programa
+certificado (P2). `stripePaymentId` passou a `pagamentoId`: o fornecedor
+ainda não está escolhido.
 
 ---
 
@@ -175,6 +212,36 @@ Seja qual for, as regras já estão decididas:
   com assinatura verificada, e processar o mesmo aviso duas vezes não pode
   fazer nada duas vezes
 - nunca da página para onde a pessoa volta: essa pode ser aberta à mão
+
+### Comparação preliminar — 24/09/2026
+
+**Não confirmada na fonte.** O ambiente onde isto foi feito bloqueia os sítios
+dos três fornecedores; os valores vêm de resumos de pesquisa e têm de ser
+confirmados nos preçários antes de decidir. Ficam aqui pela ordem de grandeza.
+
+| | MB WAY | Multibanco | Cartões | Mensalidade | A notar |
+|---|---|---|---|---|---|
+| [Stripe](https://stripe.com/en-pt/pricing/local-payment-methods) | 1,5% + 0,25 € | 1,5% + 0,25 € durante um período promocional; depois, por confirmar | 1,5% + 0,25 € (europeus) | não | uma integração só para tudo; modo de testes sem NIF; página de pagamento alojada |
+| [ifthenpay](https://helpdesk.ifthenpay.com/pt-PT/support/solutions/articles/79000086484-quais-os-custos-do-servico-) | 0,7% + 0,07 € + IVA | 1,5–1,6% + 0,20 € + IVA (as fontes discordam) | por confirmar | não | português, o MB WAY mais barato |
+| [Eupago](https://www.eupago.pt/tpa) | 0,7% + 0,07 € | por confirmar | por confirmar | isenta no 1.º ano | depois do 1.º ano, por confirmar |
+| [easypay](https://www.easypay.pt/en/prices) | 1,5% + 0,25 € + IVA | igual | igual (+2% fora da SEPA) | não | **500 € + IVA de adesão se não transacionar nos primeiros 6 meses** — um risco real para uma loja que ainda não abriu |
+
+Numa encomenda de 30 € paga por MB WAY: cerca de **0,28 €** na ifthenpay ou
+na Eupago, contra **0,70 €** na Stripe ou na easypay (antes do IVA, onde se
+aplica). A diferença é de uns 40
+cêntimos por encomenda: a 100 encomendas por mês, uns 40 € por mês.
+
+**A minha leitura, se os números se confirmarem:** Stripe para abrir. Os 40
+cêntimos compram uma integração só para os três meios, um modo de testes que
+não precisa do NIF — o que deixa fazer e testar a E4 e a E5 inteiras
+enquanto os dados do negócio não chegam — e uma página de pagamento alojada,
+onde os dados do cartão nunca passam pelo sítio. Com volume, a ifthenpay ou a
+Eupago para o MB WAY passam a compensar, e a troca é num sítio só
+(`lib/encomenda.ts` não sabe quem é o fornecedor). A easypay fica de fora pela
+cláusula dos seis meses.
+
+**Decisão tua.** Depende de quantas encomendas esperas, e se aceitas cartões
+desde o início.
 
 **O código pode fazer-se antes de haver conta real**, com o fornecedor simulado
 nos testes. A conta de testes normalmente só pede email; a conta real pede NIF
@@ -268,12 +335,22 @@ Não é uma fase no fim: cada ponto entra no PR que o torna verdadeiro.
 | Privacidade e registo: encomendas (base legal contrato e obrigação fiscal), fornecedor de pagamentos, programa de faturação, CTT | E3, E4, P2 |
 | Cookies: o script de pagamento, só na rota dele, e o teste que o garante | E4 |
 | CSP: os domínios do fornecedor de pagamento | E4 |
-| **CSP sem `'unsafe-inline'`** | antes da E4 |
+| **CSP sem `'unsafe-inline'`** | E5, **só na rota do pagamento** — medido, ver abaixo |
 
-O último é dívida da v1 e faz-se agora. Um sítio com um formulário de pagamento
-é o sítio onde um *script* injetado mais custa. Os *nonces* tornam as páginas
-dinâmicas; **o custo mede-se antes** — é o tipo de coisa que a
-`PERFORMANCE.md` já desmentiu uma vez.
+O último é dívida da v1. Um sítio com um formulário de pagamento é o sítio
+onde um *script* injetado mais custa. **Medido em 24/09/2026, e a medição
+mudou o plano** — estava "faz-se agora, no sítio todo":
+
+| | resultado |
+|---|---|
+| SRI (a alternativa experimental do Next, que mantém as páginas estáticas) | **não funciona.** Cobre os ficheiros `.js`, mas os dois *scripts* em linha que o Next escreve em cada página para a hidratação ficam bloqueados, e a página deixa de funcionar |
+| *Nonces* no sítio todo | funcionam: 122 de 123 testes verdes. Mas as 20 páginas estáticas passam a dinâmicas, o tempo até ao primeiro byte passa de **1,5–1,9 ms para 6,6–7,4 ms** (mediana de 300 pedidos, sem rede nem base de dados; p95 de 2,8 para 11,5 ms), deixam de se poder servir de uma CDN, e `/loja` volta a chegar com o conteúdo escondido à espera do JavaScript — o problema que saiu com o `loading.tsx` |
+| Superfície que os *nonces* fechariam hoje | nenhum `dangerouslySetInnerHTML`, `innerHTML` ou `eval` no código; o React escapa o texto. O `'unsafe-inline'` é uma segunda linha de defesa, não a primeira |
+
+**A proposta:** a CSP com *nonce* só na rota do pagamento, pelo mesmo princípio
+do `stripe.js` (F7b no roteiro da v1): é lá que o risco está e é lá que o
+fornecedor de pagamento carrega *scripts*. O resto do sítio fica estático.
+Faz-se com a E5, porque antes dela não há rota onde a aplicar.
 
 ---
 
@@ -282,15 +359,15 @@ dinâmicas; **o custo mede-se antes** — é o tipo de coisa que a
 ## Agora, sem depender de ninguém
 
 ```
-L1  /sucesso e /falha saem
-L2  a dependência stripe sai
-L3  /admin protegido, com teste
-C1  preços em cêntimos
-E1  cálculo de total e portes no servidor
-E2  reserva de stock atómica           (verdadeira só depois do CI)
-E3  estados, histórico, numeração
-    CSP sem 'unsafe-inline'            (medir o custo primeiro)
-    comparação de fornecedores de pagamento, para decidires a E4
+L1  /sucesso e /falha saem                feito
+L2  a dependência stripe sai              feito
+L3  /admin protegido, com teste           feito
+C1  preços em cêntimos                    feito
+E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
+E2  reserva de stock atómica              feito (verdadeira só depois do CI)
+E3  estados, histórico, numeração         feito
+    CSP sem 'unsafe-inline'               medido; passa para a E5, só no pagamento
+    comparação de fornecedores de pagamento  preliminar, na E4; falta confirmar os preçários
 ```
 
 ## Código agora, ligar depois

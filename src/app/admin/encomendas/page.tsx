@@ -1,8 +1,11 @@
 import AdminHeader from '@/components/adminHeader';
+import { paginaDeAdmin } from '@/lib/autorizacao';
 
 export const metadata = { title: 'Encomendas - Admin' };
 
-export default function AdminEncomendasPage() {
+export default async function AdminEncomendasPage() {
+  await paginaDeAdmin();
+
   return (
     <>
       <AdminHeader />

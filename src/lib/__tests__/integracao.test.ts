@@ -1,7 +1,17 @@
 import { hash, verify } from 'argon2';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Order, Token, User } from '../models';
+import { Category, Contador, Order, Product, Token, User } from '../models';
+import {
+  PRAZO_RESERVA_MS,
+  calcularEncomenda,
+  criarEncomenda,
+  libertarReservasExpiradas,
+  mudarEstado,
+  proximoNumero,
+  reservarStock,
+  type DadosCliente,
+} from '../encomenda';
 import { apagarConta, exportarDados } from '../conta';
 import { expiraEm, gerarToken, resumir } from '../tokens';
 
@@ -231,15 +241,16 @@ executar('contra MongoDB', () => {
      */
     function encomenda(userId: mongoose.Types.ObjectId, total: number) {
       return Order.create({
+        numero: `2026-${new mongoose.Types.ObjectId()}`,
         userId,
         customerName: 'Marta Ferreira',
         customerEmail: 'marta@exemplo.pt',
         customerPhone: '910000000',
         deliveryType: 'PICKUP',
-        subtotal: total,
-        total,
+        subtotalCents: total,
+        totalCents: total,
         items: [
-          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', price: total, quantity: 1 },
+          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', priceCents: total, quantity: 1 },
         ],
       });
     }
@@ -262,15 +273,15 @@ executar('contra MongoDB', () => {
       const eu = await conta('eu@exemplo.pt');
       const outro = await conta('outro@exemplo.pt');
 
-      await encomenda(eu._id, 10);
-      await encomenda(outro._id, 99);
+      await encomenda(eu._id, 1000);
+      await encomenda(outro._id, 9900);
 
       const dados = await exportarDados(eu._id.toString());
 
       // Nao procurar "99" no JSON: ids e datas sao aleatorios e contem-no por
       // acaso. Compara-se o dono e o valor.
       expect(dados!.encomendas).toHaveLength(1);
-      expect(dados!.encomendas[0].total).toBe(10);
+      expect(dados!.encomendas[0].totalCents).toBe(1000);
       expect(String(dados!.encomendas[0].userId)).toBe(eu._id.toString());
     });
 
@@ -307,7 +318,7 @@ executar('contra MongoDB', () => {
 
     it('apagar nao destroi encomendas: desliga-as da conta', async () => {
       const u = await conta('fiscal@exemplo.pt');
-      const e = await encomenda(u._id, 42);
+      const e = await encomenda(u._id, 4200);
 
       await apagarConta(u._id.toString());
 
@@ -315,7 +326,7 @@ executar('contra MongoDB', () => {
       // A conservacao fiscal dos documentos de venda sobrepoe-se ao direito ao
       // apagamento (art. 17.º, n.º 3, alinea b). A encomenda fica, sem dono.
       expect(depois).not.toBeNull();
-      expect(depois!.total).toBe(42);
+      expect(depois!.totalCents).toBe(4200);
       expect(depois!.userId).toBeUndefined();
       // E fica com o nome e o email de quem comprou: o documento fiscal
       // precisa deles. Desligar da conta nao anonimiza — este teste existe
@@ -543,6 +554,152 @@ executar('contra MongoDB', () => {
       const t = await verificar({ userId: u._id.toString(), role: 'ADMIN', versao: 0 });
       expect(t.role).toBe('USER');
     });
+  });
+});
+
+executar('encomendas, contra a base de dados', () => {
+  const TABELA = [{ ateGramas: 1000, precoCents: 450 }];
+
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+  }, 30_000);
+
+  beforeEach(async () => {
+    await Promise.all([Order.deleteMany({}), Contador.deleteMany({})]);
+  });
+
+  afterAll(async () => {
+    await Promise.all([
+      Product.deleteMany({}),
+      Category.deleteMany({}),
+      Order.deleteMany({}),
+      Contador.deleteMany({}),
+    ]);
+  });
+
+  const CLIENTE: DadosCliente = {
+    customerName: 'Marta Ferreira',
+    customerEmail: 'marta@exemplo.pt',
+    customerPhone: '910000000',
+    deliveryType: 'SHIPPING',
+    shippingAddress: 'Rua de Exemplo, 1',
+    shippingCity: 'Porto',
+    shippingPostal: '4000-001',
+  };
+
+  const stock = async (id: unknown) => (await Product.findById(id).lean())!.stock;
+
+  async function peca(over: Record<string, unknown>) {
+    const categoria =
+      (await Category.findOne({ slug: 'quartzos' })) ??
+      (await Category.create({ name: 'Quartzos', slug: 'quartzos' }));
+    return Product.create({
+      name: 'Quartzo rosa',
+      slug: `quartzo-${new mongoose.Types.ObjectId()}`,
+      priceCents: 1990,
+      stock: 3,
+      weightGrams: 200,
+      categoryId: categoria._id,
+      ...over,
+    });
+  }
+
+  it('o preço sai da base de dados', async () => {
+    const p = await peca({});
+    const r = await calcularEncomenda([{ id: p._id.toString(), quantidade: 2 }], TABELA);
+    expect(r).toMatchObject({ ok: true, subtotalCents: 3980, shippingCents: 450, totalCents: 4430 });
+  });
+
+  it('um produto desativado está indisponível, mesmo que exista', async () => {
+    const p = await peca({ active: false });
+    const r = await calcularEncomenda([{ id: p._id.toString(), quantidade: 1 }], TABELA);
+    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'indisponivel', id: p._id.toString() }] });
+  });
+
+  it('a última peça, pedida duas vezes ao mesmo tempo, vende-se uma vez', async () => {
+    const p = await peca({ stock: 1 });
+    const pedido = [{ id: p._id.toString(), quantidade: 1 }];
+
+    const [a, b] = await Promise.all([
+      criarEncomenda(pedido, CLIENTE, TABELA),
+      criarEncomenda(pedido, CLIENTE, TABELA),
+    ]);
+
+    expect([a.ok, b.ok].filter(Boolean)).toHaveLength(1);
+    expect(await stock(p._id)).toBe(0);
+    expect(await Order.countDocuments()).toBe(1);
+  });
+
+  it('se uma peça falhar, as outras voltam ao stock', async () => {
+    const a = await peca({ stock: 5 });
+    const b = await peca({ stock: 1 });
+
+    const falhadas = await reservarStock([
+      { productId: a._id.toString(), name: 'a', priceCents: 1, quantity: 2 },
+      { productId: b._id.toString(), name: 'b', priceCents: 1, quantity: 2 },
+    ]);
+
+    expect(falhadas).toEqual([b._id.toString()]);
+    expect(await stock(a._id)).toBe(5);
+    expect(await stock(b._id)).toBe(1);
+  });
+
+  it('a encomenda nasce por pagar, numerada, com o stock reservado e o histórico', async () => {
+    const p = await peca({ stock: 3 });
+    const agora = new Date('2026-09-24T10:00:00Z');
+
+    const r = await criarEncomenda([{ id: p._id.toString(), quantidade: 2 }], CLIENTE, TABELA, agora);
+
+    expect(r).toMatchObject({ ok: true, numero: '2026-000001', totalCents: 3980 + 450 });
+    const e = (await Order.findOne().lean())!;
+    expect(e.status).toBe('PENDING');
+    expect(e.reservaAte!.getTime()).toBe(agora.getTime() + PRAZO_RESERVA_MS);
+    expect(e.historico).toEqual([{ para: 'PENDING', em: agora, por: 'cliente' }]);
+    expect(await stock(p._id)).toBe(1);
+  });
+
+  it('os números nunca se repetem, mesmo pedidos ao mesmo tempo', async () => {
+    const numeros = await Promise.all(Array.from({ length: 10 }, () => proximoNumero()));
+    expect(new Set(numeros).size).toBe(10);
+  });
+
+  it('uma reserva expirada liberta-se uma vez, mesmo com duas limpezas a correr', async () => {
+    const p = await peca({ stock: 3 });
+    const antes = new Date(Date.now() - 2 * PRAZO_RESERVA_MS);
+    await criarEncomenda([{ id: p._id.toString(), quantidade: 2 }], CLIENTE, TABELA, antes);
+    expect(await stock(p._id)).toBe(1);
+
+    const [x, y] = await Promise.all([libertarReservasExpiradas(), libertarReservasExpiradas()]);
+
+    expect(x + y).toBe(1);
+    expect(await stock(p._id)).toBe(3);
+    const e = (await Order.findOne().lean())!;
+    expect(e.status).toBe('CANCELLED');
+    expect(e.historico.at(-1)).toMatchObject({ de: 'PENDING', para: 'CANCELLED', por: 'sistema' });
+  });
+
+  it('não se salta estados, e duas mudanças ao mesmo tempo não se atropelam', async () => {
+    const p = await peca({ stock: 3 });
+    const r = await criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], CLIENTE, TABELA);
+    if (!r.ok) throw new Error('a encomenda devia ter sido criada');
+
+    expect(await mudarEstado(r.id, 'SHIPPED', 'admin:x')).toEqual({
+      ok: false,
+      motivo: 'transicao-proibida',
+    });
+
+    const [pago, cancelado] = await Promise.all([
+      mudarEstado(r.id, 'PROCESSING', 'sistema'),
+      mudarEstado(r.id, 'CANCELLED', 'cliente'),
+    ]);
+    expect([pago.ok, cancelado.ok].filter(Boolean)).toHaveLength(1);
+
+    const e = (await Order.findById(r.id).lean())!;
+    expect(e.historico).toHaveLength(2);
+    // Se foi o cancelamento a ganhar, o stock voltou; se foi o pagamento, nao.
+    expect(await stock(p._id)).toBe(e.status === 'CANCELLED' ? 3 : 2);
   });
 });
 

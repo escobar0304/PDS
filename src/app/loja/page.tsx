@@ -24,7 +24,7 @@ interface Product {
   name: string;
   slug: string;
   description?: string;
-  price: number;
+  priceCents: number;
   images: string[];
   stock: number;
   categoryId: string;

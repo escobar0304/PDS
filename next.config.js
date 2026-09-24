@@ -22,7 +22,8 @@
  *   ligada por omissao
  *
  * Quando houver pagamentos, a rota de pagamento precisa de `script-src` e
- * `frame-src` para a Stripe — e so essa rota, nunca o sitio todo. Ver F7b.
+ * `frame-src` para o fornecedor de pagamento (por escolher, ROADMAP-V2 E4) — e
+ * so essa rota, nunca o sitio todo. Ver F7b.
  */
 const csp = [
   "default-src 'self'",

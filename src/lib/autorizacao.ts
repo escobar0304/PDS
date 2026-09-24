@@ -1,4 +1,5 @@
 import { getServerSession } from 'next-auth/next';
+import { notFound } from 'next/navigation';
 import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 
@@ -100,4 +101,21 @@ export async function exigirSessao(): Promise<
       role: utilizador.role ?? 'USER',
     },
   };
+}
+
+/**
+ * A mesma guarda, para as paginas de `/admin`.
+ *
+ * Chama-se em **cada pagina**, e nao num `layout.tsx`: o layout nao volta a
+ * correr quando se navega entre paginas do mesmo segmento, e nao impede as
+ * paginas-filhas de renderizar (ver o guia de autenticacao do Next 16, "Layouts
+ * and auth checks"). O `admin.test.ts` falha se uma pagina nova a esquecer.
+ *
+ * 404 e nao 403 nem redirecionamento para a entrada: a quem nao e
+ * administrador, `/admin` nao existe.
+ */
+export async function paginaDeAdmin(): Promise<Sessao> {
+  const permissao = await exigirAdmin();
+  if (!permissao.ok) notFound();
+  return permissao.sessao;
 }

@@ -1,5 +1,7 @@
 // src/lib/models.ts
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { eCentimos } from '@/lib/dinheiro';
+import { ESTADOS, type Estado } from '@/lib/transicoes';
 
 // ============================================
 // INTERFACES TYPESCRIPT
@@ -19,13 +21,15 @@ export interface IProduct extends Document {
   name: string;
   slug: string;
   description?: string;
-  price: number;
+  /** Em centimos, inteiro. Ver `lib/dinheiro.ts`. */
+  priceCents: number;
   images: string[];
   stock: number;
   categoryId: mongoose.Types.ObjectId;
   featured: boolean;
   active: boolean;
-  weight?: number;
+  /** Em gramas, inteiro. Os portes dependem dele (ver `lib/encomenda.ts`). */
+  weightGrams?: number;
   dimensions?: string;
   properties?: {
     chakra?: string;
@@ -57,6 +61,8 @@ export interface IUser extends Document {
 }
 
 export interface IOrder extends Document {
+  /** O numero que a pessoa ve (`2026-000123`). Ver `lib/transicoes.ts`. */
+  numero: string;
   userId?: mongoose.Types.ObjectId;
   customerName: string;
   customerEmail: string;
@@ -66,17 +72,23 @@ export interface IOrder extends Document {
   shippingPostal?: string;
   shippingCountry: string;
   deliveryType: 'PICKUP' | 'SHIPPING';
-  stripePaymentId?: string;
+  /** O identificador do pagamento no fornecedor, seja ele qual for (E4). */
+  pagamentoId?: string;
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
-  subtotal: number;
-  shippingCost: number;
-  total: number;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'READY_PICKUP' | 'COMPLETED' | 'CANCELLED';
+  /** Em centimos, como todos os valores da encomenda. */
+  subtotalCents: number;
+  shippingCents: number;
+  totalCents: number;
+  status: Estado;
+  /** Ate quando o stock fica reservado a espera do pagamento. */
+  reservaAte?: Date;
+  /** Cada mudanca de estado, com data e autor. Nunca se reescreve. */
+  historico: Array<{ de?: Estado; para: Estado; em: Date; por: string; nota?: string }>;
   notes?: string;
   items: Array<{
     productId: mongoose.Types.ObjectId;
     name: string;
-    price: number;
+    priceCents: number;
     quantity: number;
     image?: string;
   }>;
@@ -140,10 +152,10 @@ const productSchema = new Schema<IProduct>(
       type: String,
       trim: true,
     },
-    price: {
+    priceCents: {
       type: Number,
       required: [true, 'Preço é obrigatório'],
-      min: [0, 'Preço não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'O preço é um número inteiro de cêntimos' },
     },
     images: {
       type: [String],
@@ -167,9 +179,14 @@ const productSchema = new Schema<IProduct>(
       type: Boolean,
       default: true,
     },
-    weight: {
+    // Com a unidade no nome, pela mesma razao dos centimos: `weight: 250`
+    // podia ser gramas ou quilos, e os portes dependem da resposta.
+    weightGrams: {
       type: Number,
-      min: [0, 'Peso não pode ser negativo'],
+      validate: {
+        validator: (v: unknown) => typeof v === 'number' && Number.isSafeInteger(v) && v > 0,
+        message: 'O peso é um número inteiro de gramas, maior do que zero',
+      },
     },
     dimensions: {
       type: String,
@@ -191,7 +208,7 @@ const productSchema = new Schema<IProduct>(
 productSchema.index({ categoryId: 1 });
 productSchema.index({ featured: -1 });
 productSchema.index({ active: 1 });
-productSchema.index({ price: 1 });
+productSchema.index({ priceCents: 1 });
 
 const userSchema = new Schema<IUser>(
   {
@@ -258,6 +275,11 @@ userSchema.index({ role: 1 });
 
 const orderSchema = new Schema<IOrder>(
   {
+    numero: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -299,7 +321,7 @@ const orderSchema = new Schema<IOrder>(
       enum: ['PICKUP', 'SHIPPING'],
       required: [true, 'Tipo de entrega é obrigatório'],
     },
-    stripePaymentId: {
+    pagamentoId: {
       type: String,
     },
     paymentStatus: {
@@ -307,26 +329,39 @@ const orderSchema = new Schema<IOrder>(
       enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'],
       default: 'PENDING',
     },
-    subtotal: {
+    subtotalCents: {
       type: Number,
       required: [true, 'Subtotal é obrigatório'],
-      min: [0, 'Subtotal não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'O subtotal é um número inteiro de cêntimos' },
     },
-    shippingCost: {
+    shippingCents: {
       type: Number,
       default: 0,
-      min: [0, 'Custo de envio não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'Os portes são um número inteiro de cêntimos' },
     },
-    total: {
+    totalCents: {
       type: Number,
       required: [true, 'Total é obrigatório'],
-      min: [0, 'Total não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'O total é um número inteiro de cêntimos' },
     },
     status: {
       type: String,
-      enum: ['PENDING', 'PROCESSING', 'SHIPPED', 'READY_PICKUP', 'COMPLETED', 'CANCELLED'],
+      enum: ESTADOS,
       default: 'PENDING',
     },
+    reservaAte: {
+      type: Date,
+    },
+    historico: [
+      {
+        _id: false,
+        de: { type: String, enum: ESTADOS },
+        para: { type: String, enum: ESTADOS, required: true },
+        em: { type: Date, required: true },
+        por: { type: String, required: true },
+        nota: { type: String, trim: true },
+      },
+    ],
     notes: {
       type: String,
       trim: true,
@@ -342,10 +377,10 @@ const orderSchema = new Schema<IOrder>(
           type: String,
           required: true,
         },
-        price: {
+        priceCents: {
           type: Number,
           required: true,
-          min: 0,
+          validate: { validator: eCentimos, message: 'O preço é um número inteiro de cêntimos' },
         },
         quantity: {
           type: Number,
@@ -368,6 +403,8 @@ orderSchema.index({ userId: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ createdAt: -1 });
+// Para encontrar as reservas expiradas sem percorrer a colecao.
+orderSchema.index({ status: 1, reservaAte: 1 });
 
 // ============================================
 // EXPORTAR MODELOS
@@ -384,6 +421,24 @@ export const User: Model<IUser> =
 
 export const Order: Model<IOrder> =
   mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+
+/**
+ * Contadores com incremento atomico. Hoje so o das encomendas, um por ano:
+ * `findOneAndUpdate` com `$inc` e `upsert` nunca da o mesmo numero duas vezes,
+ * ao contrario de contar documentos e somar um.
+ */
+interface IContador {
+  _id: string;
+  valor: number;
+}
+
+const contadorSchema = new Schema<IContador>({
+  _id: { type: String, required: true },
+  valor: { type: Number, required: true, default: 0 },
+});
+
+export const Contador: Model<IContador> =
+  mongoose.models.Contador || mongoose.model<IContador>('Contador', contadorSchema);
 
 // ============================================
 // TOKENS DE USO UNICO

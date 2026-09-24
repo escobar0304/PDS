@@ -81,6 +81,18 @@ não protege a API. Quem chama a API não passa pela página.
 `src/lib/autorizacao.ts` ganha `exigirAdmin()`, com um resultado de duas saídas
 para obrigar a rota a tratar o caso negativo em vez de o poder ignorar.
 
+**O contrário também era verdade.** Até 24/09/2026, as páginas de `/admin`
+abriam para qualquer pessoa. Não expunham nada, porque não faziam nada, mas a
+guarda tem de estar lá antes da primeira linha que leia dados. Cada página
+chama `paginaDeAdmin()`, que responde 404 a quem não for administrador.
+
+Em cada página, e não num `layout.tsx`: o guia de autenticação do Next 16
+avisa que o layout não volta a correr quando se navega entre páginas do mesmo
+segmento, e que não impede as páginas-filhas de renderizar. `admin.test.ts`
+falha se uma página de `/admin` não chamar a guarda, ou se for componente de
+cliente (onde a guarda não correria no servidor). Foi verificado a falhar
+tirando a guarda de uma página.
+
 ## Cabeçalhos
 
 CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
@@ -91,6 +103,13 @@ permite a Google por causa do mapa, `img-src` permite `data:` por causa do
 ícone do `<select>`. Fica registada como dívida o `'unsafe-inline'` em
 `script-src`, que o Next exige para os dados de hidratação e que só sai com
 `middleware` e nonce por pedido.
+
+**Medido em 24/09/2026** (detalhe em `ROADMAP-V2.md`, fase 6): o SRI não o
+resolve — bloqueia os *scripts* de hidratação em linha — e os *nonces* no
+sítio todo custam as páginas estáticas, quatro vezes o tempo até ao primeiro
+byte, e reintroduzem conteúdo escondido em `/loja`. Não há hoje nenhum
+`dangerouslySetInnerHTML`, `innerHTML` ou `eval` no código. Decisão: *nonce*
+só na rota do pagamento, quando existir.
 
 `preload` fica de fora do HSTS de propósito: entrar na lista de pré-carregamento
 é difícil de reverter e decide-se com o domínio já estável.
@@ -195,7 +214,7 @@ críticas e 4 altas.** A pior superfície deste projeto não era código nosso.
 | `next-auth` | 4.24.5 | 4.24.15 | **Crítica.** Entrega de email ao destinatário errado; o normalizador validava o endereço antes da normalização Unicode |
 | `nodemailer` | 6.10.1 | 10.0.10 | **Alta.** Email para domínio não pretendido, injeção de comandos SMTP por CRLF, e `disableFileAccess` contornável. A rota de contacto usa isto |
 | `mongoose` | 8.18.3 | 8.24.1 | **Alta.** Sanitização imprópria de `$nor` no `sanitizeFilter`, e poluição de protótipo no casting de updates |
-| `stripe` | 15.12.0 | 22.6.2 | Moderada, via `qs` |
+| `stripe` | 15.12.0 | 22.6.2 | Moderada, via `qs`. **Saiu em 24/09/2026:** estava em produção sem um único `import` |
 | `next` | 14.2.33 | 14.2.35 | **Crítica.** Negação de serviço com Server Components |
 
 Ficaram **4 → 3**, e nenhuma se fecha sem uma decisão maior:
@@ -405,9 +424,11 @@ entrada seguinte fica, e o papel vem da base de dados.
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
-  em `localStorage`; a regra está no `CLAUDE.md`
-- **Rotas de administração** que virão da `redesign-geral` — passam todas por
-  `exigirAdmin()`
+  em `localStorage`. O cálculo que os ignora já existe (`src/lib/encomenda.ts`,
+  com testes, e `esquemaPedido` recusa um preço enviado junto); falta a rota
+  do checkout usá-lo, e só a ele
+- **Rotas de administração** da v2 — as de API passam por `exigirAdmin()`, as
+  páginas por `paginaDeAdmin()`
 - ~~**Invalidar sessões ao repor a palavra-passe.**~~ Feito, ver abaixo
 - ~~**Migrar para o Next 16**~~ — feito em 23/09/2026, ver abaixo
 - **Correr `npm audit --omit=dev` antes de cada versão.** Passou toda a F11
