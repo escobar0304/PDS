@@ -910,6 +910,142 @@ executar('o painel de gestão, contra a base de dados', () => {
   });
 });
 
+/**
+ * Pagamentos: os avisos da Stripe contra a base de dados, e a sessao contra o
+ * `stripe-mock`. Os avisos nao precisam de rede — a assinatura verifica-se
+ * com o segredo —, so a criacao da sessao precisa do simulador.
+ */
+executar('pagamentos, contra a base de dados', () => {
+  const TABELA = [{ ateGramas: 1000, precoCents: 450 }];
+  const SEGREDO = 'whsec_apenas_para_testes';
+
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+    process.env.STRIPE_SECRET_KEY ??= 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = SEGREDO;
+    (await import('../pagamento')).esquecerCliente();
+  }, 30_000);
+
+  beforeEach(async () => {
+    await Promise.all([
+      Product.deleteMany({}),
+      Category.deleteMany({}),
+      Order.deleteMany({}),
+      MovimentoStock.deleteMany({}),
+      Contador.deleteMany({}),
+      mongoose.connection.collection('avisopagamentos').deleteMany({}),
+    ]);
+  });
+
+  async function encomendaPorPagar(stock = 1) {
+    const c = await Category.create({ name: `C ${new mongoose.Types.ObjectId()}`, slug: `c-${new mongoose.Types.ObjectId()}` });
+    const p = await Product.create({
+      name: 'Drusa',
+      slug: `drusa-${new mongoose.Types.ObjectId()}`,
+      priceCents: 4500,
+      weightGrams: 300,
+      categoryId: c._id,
+      variantes: [{ stock }],
+    });
+    const r = await criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], {
+      customerName: 'Marta',
+      customerEmail: 'marta@exemplo.pt',
+      customerPhone: '910000000',
+      deliveryType: 'SHIPPING',
+    }, TABELA);
+    if (!r.ok) throw new Error(JSON.stringify(r));
+    return { id: r.id, total: r.totalCents, produto: p._id };
+  }
+
+  async function aviso(tipo: string, sessao: Record<string, unknown>, id = `evt_${new mongoose.Types.ObjectId()}`) {
+    const { stripe, tratarAviso } = await import('../pagamento');
+    const corpo = JSON.stringify({ id, object: 'event', type: tipo, data: { object: { object: 'checkout.session', id: 'cs_teste', currency: 'eur', ...sessao } } });
+    return tratarAviso(corpo, stripe().webhooks.generateTestHeaderString({ payload: corpo, secret: SEGREDO }));
+  }
+
+  const estado = async (id: string) => (await Order.findById(id).lean())!;
+  const stockDaPeca = async (id: unknown) => (await Product.findById(id).lean())!.variantes[0].stock;
+
+  it('pago: a encomenda avança, e o mesmo aviso duas vezes conta uma', async () => {
+    const e = await encomendaPorPagar();
+    const pago = { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total };
+
+    expect(await aviso('checkout.session.completed', pago, 'evt_um')).toBe('processado');
+    expect(await aviso('checkout.session.completed', pago, 'evt_um')).toBe('repetido');
+
+    const depois = await estado(e.id);
+    expect(depois.status).toBe('PROCESSING');
+    expect(depois.paymentStatus).toBe('PAID');
+    expect(depois.historico).toHaveLength(2);
+  });
+
+  it('um valor que não bate com o total não faz avançar nada', async () => {
+    const e = await encomendaPorPagar();
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'paid', amount_total: 1 });
+    const depois = await estado(e.id);
+    expect(depois.status).toBe('PENDING');
+    expect(depois.pagamentoDivergente).toBe(true);
+  });
+
+  it('expirou: cancela, e a peça volta ao stock', async () => {
+    const e = await encomendaPorPagar(1);
+    expect(await stockDaPeca(e.produto)).toBe(0);
+    await aviso('checkout.session.expired', { client_reference_id: e.id, payment_status: 'unpaid' });
+    expect((await estado(e.id)).status).toBe('CANCELLED');
+    expect(await stockDaPeca(e.produto)).toBe(1);
+  });
+
+  it('pago depois de cancelada: não reabre sozinha, fica marcada para reembolso', async () => {
+    const e = await encomendaPorPagar();
+    await aviso('checkout.session.expired', { client_reference_id: e.id });
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total });
+    const depois = await estado(e.id);
+    expect(depois.status).toBe('CANCELLED');
+    expect(depois.paymentStatus).toBe('PAID');
+    expect(depois.pagoDepoisDeCancelada).toBe(true);
+  });
+
+  it('um meio assíncrono: "completed" por pagar não avança; o pagamento depois, sim', async () => {
+    const e = await encomendaPorPagar();
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'unpaid', amount_total: e.total });
+    expect((await estado(e.id)).status).toBe('PENDING');
+    await aviso('checkout.session.async_payment_succeeded', { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total });
+    expect((await estado(e.id)).status).toBe('PROCESSING');
+  });
+
+  const comStripeMock = process.env.STRIPE_API_HOST ? it : it.skip;
+  comStripeMock('a sessão de pagamento abre-se, e a reserva passa a durar mais do que ela', async () => {
+    const { DURACAO_SESSAO_S, MARGEM_RESERVA_MS, iniciarPagamento } = await import('../pagamento');
+    const e = await encomendaPorPagar();
+    const agora = new Date();
+
+    const r = await iniciarPagamento(e.id, 'http://127.0.0.1:3100', agora);
+
+    expect(r.ok).toBe(true);
+    const depois = await estado(e.id);
+    expect(depois.pagamentoId).toMatch(/^cs_/);
+    const esperado = (Math.floor(agora.getTime() / 1000) + DURACAO_SESSAO_S) * 1000 + MARGEM_RESERVA_MS;
+    expect(depois.reservaAte!.getTime()).toBe(esperado);
+  });
+
+  it('uma encomenda que já não está por pagar não abre sessão', async () => {
+    const { iniciarPagamento } = await import('../pagamento');
+    const e = await encomendaPorPagar();
+    await mudarEstado(e.id, 'CANCELLED', 'cliente');
+    expect(await iniciarPagamento(e.id, 'http://x')).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+  });
+});
+
+describe('o simulador da Stripe no CI', () => {
+  it('corre onde a base de dados corre', () => {
+    // Sem isto, o teste da sessao de pagamento era saltado em silencio no CI
+    // e continuavamos a dizer que estava verificado.
+    if (process.env.CI && URI) expect(process.env.STRIPE_API_HOST, 'STRIPE_API_HOST em falta no CI').toBeTruthy();
+  });
+});
+
 describe('a própria suite de integração', () => {
   it('não passa despercebida quando devia ter corrido', () => {
     // Fora do bloco condicional de propósito: este corre sempre.

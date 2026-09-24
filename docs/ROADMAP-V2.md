@@ -264,7 +264,7 @@ ainda não está escolhido.
 
 # Fase 3 - Pagamento
 
-## E4. Fornecedor de pagamentos — decidido: Stripe, com a página alojada
+## E4. Pagamento — feito, sem rota de checkout: Stripe, com a página alojada
 
 **Decidido em 24/09/2026**, depois da comparação abaixo — que continua por
 confirmar nos preçários. Com o **Checkout alojado** da Stripe: a pessoa escolhe
@@ -284,6 +284,26 @@ stock. A reserva dura a sessão mais uma margem, e um pagamento que chegue para
 uma encomenda já cancelada não se perde: fica marcado para reembolso, ou para
 reativar se a peça ainda lá estiver. O prazo mínimo de uma sessão tem de ser
 confirmado na documentação da Stripe.
+
+**Feito em 24/09/2026** (`src/lib/pagamento.ts`, `/api/pagamentos/aviso`):
+
+- a sessão abre-se a partir da encomenda, com os preços que ela calculou, e a
+  chave de idempotência é a encomenda — pedir duas vezes dá a mesma sessão
+- a sessão dura 31 minutos (o mínimo da Stripe é 30, confirmado na
+  documentação da própria biblioteca) e a reserva dura a sessão mais 10
+- "pago" só com o aviso assinado; o mesmo aviso duas vezes conta uma
+- um valor que não bate com o total não faz avançar nada, e fica marcado
+- um pagamento que chega depois de a encomenda expirar não a reabre: fica
+  marcada para reembolso, porque a peça pode já ter sido vendida ao balcão
+- testado contra o MongoDB e contra o `stripe-mock`, o simulador oficial,
+  que corre por Docker aqui e no CI
+
+**Sem Multibanco, até decidires.** É assíncrono: a pessoa recebe uma
+referência e paga mais tarde, num multibanco. A reserva de uma peça dura 30
+minutos. Com uma peça única, ou se segura a peça dias a fio à espera de um
+pagamento que pode não vir, ou se reembolsa quem pagou depois de ela ter sido
+vendida. Cartão e MB WAY confirmam na hora. O código já trata os avisos
+assíncronos, para o Multibanco entrar sem mudar nada se decidires que entra.
 
 **Este ambiente não chega à Stripe** — o proxy bloqueia `stripe.com`. O código
 testa-se sem rede: a assinatura dos avisos com a própria biblioteca, a API

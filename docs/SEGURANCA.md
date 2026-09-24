@@ -214,7 +214,7 @@ críticas e 4 altas.** A pior superfície deste projeto não era código nosso.
 | `next-auth` | 4.24.5 | 4.24.15 | **Crítica.** Entrega de email ao destinatário errado; o normalizador validava o endereço antes da normalização Unicode |
 | `nodemailer` | 6.10.1 | 10.0.10 | **Alta.** Email para domínio não pretendido, injeção de comandos SMTP por CRLF, e `disableFileAccess` contornável. A rota de contacto usa isto |
 | `mongoose` | 8.18.3 | 8.24.1 | **Alta.** Sanitização imprópria de `$nor` no `sanitizeFilter`, e poluição de protótipo no casting de updates |
-| `stripe` | 15.12.0 | 22.6.2 | Moderada, via `qs`. **Saiu em 24/09/2026:** estava em produção sem um único `import` |
+| `stripe` | 15.12.0 | 22.6.2 | Moderada, via `qs`. **Saiu em 24/09/2026:** estava em produção sem um único `import`. **Voltou no mesmo dia, com uso:** o pagamento (E4, `src/lib/pagamento.ts`) |
 | `next` | 14.2.33 | 14.2.35 | **Crítica.** Negação de serviço com Server Components |
 
 Ficaram **4 → 3**, e nenhuma se fecha sem uma decisão maior:

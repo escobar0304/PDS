@@ -61,9 +61,16 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+      # O simulador oficial da Stripe, para a sessao de pagamento: este CI,
+      # como o ambiente de desenvolvimento, nao fala com a Stripe a serio.
+      stripe:
+        image: stripe/stripe-mock:latest
+        ports:
+          - 12111:12111
 
     env:
       MONGODB_URI: mongodb://127.0.0.1:27017
+      STRIPE_API_HOST: 127.0.0.1
 
     steps:
       - uses: actions/checkout@v7

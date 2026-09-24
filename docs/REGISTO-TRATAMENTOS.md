@@ -44,7 +44,7 @@ e à política quando for:
 | Alojamento | onde o sítio corre, e os registos do servidor | **por decidir** |
 | Base de dados | onde vivem as contas (`MONGODB_URI`) | **por decidir** — e a região decide se há transferência para fora da UE |
 | Envio de email | confirmação de conta, reposição, formulário de contacto (`SMTP_*`) | **por decidir** |
-| Pagamentos | só na v2, com o checkout | fora desta versão |
+| Pagamentos | Stripe, escolhida em 24/09/2026, com a página de pagamento alojada nela: os dados do cartão nunca passam pelo sítio | entra quando o checkout abrir; a entidade contratante e a região dos dados confirmam-se no contrato |
 
 **A Google não é subcontratante**, quando a entrada pela Google estiver ligada:
 é responsável pelo tratamento que faz do seu lado, e nós recebemos dela o nome
