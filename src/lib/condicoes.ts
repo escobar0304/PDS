@@ -11,7 +11,15 @@
  * pode ir para os motores de busca.
  */
 
+import { tabelaValida } from '@/lib/portes';
+
 type PorPreencher = null;
+
+/** Um escalao da tabela de portes. Em gramas e centimos: faz-se contas com ele. */
+export interface Escalao {
+  ateGramas: number;
+  precoCents: number;
+}
 
 export const CONDICOES = {
   /** Para onde se envia. */
@@ -34,8 +42,12 @@ export const CONDICOES = {
   prazoEntrega: null as string | PorPreencher,
   /** Os portes dependem do peso da encomenda. */
   portesPorPeso: true,
-  /** A tabela, por escaloes de peso. Falta. */
-  tabelaPortes: null as { ate: string; preco: string }[] | PorPreencher,
+  /**
+   * A tabela, por escaloes de peso. Falta. Cada escalao cobre ate
+   * `ateGramas`, inclusive, e os escaloes vao por ordem crescente — ha um
+   * teste que o verifica no dia em que for preenchida.
+   */
+  tabelaPortes: null as Escalao[] | PorPreencher,
   /**
    * Quem paga a devolucao, no direito de livre resolucao. Por lei, o cliente
    * — **se isso lhe for dito antes da compra** (DL 24/2014, art. 13.º, n.º 2).
@@ -86,6 +98,10 @@ export function condicoesEmFalta(): { campo: string; porque: string }[] {
   }
   if (CONDICOES.tabelaPortes === null) {
     faltas.push({ campo: 'tabelaPortes', porque: 'DL 24/2014 art. 4.º: custos de envio' });
+  } else if (!tabelaValida(CONDICOES.tabelaPortes)) {
+    // Preenchida mas mal: escaloes fora de ordem ou precos em euros. Uma
+    // tabela com que nao se fazem contas certas nao conta como preenchida.
+    faltas.push({ campo: 'tabelaPortes', porque: 'escalões fora de ordem ou valores que não são inteiros' });
   }
   return faltas;
 }

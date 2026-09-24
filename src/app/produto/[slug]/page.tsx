@@ -28,7 +28,7 @@ interface Product {
     slug: string;
   };
   featured: boolean;
-  weight?: number;
+  weightGrams?: number;
   dimensions?: string;
   properties?: {
     chakra?: string;

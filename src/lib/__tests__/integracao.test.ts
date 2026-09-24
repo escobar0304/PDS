@@ -1,7 +1,8 @@
 import { hash, verify } from 'argon2';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Order, Token, User } from '../models';
+import { Category, Order, Product, Token, User } from '../models';
+import { calcularEncomenda } from '../encomenda';
 import { apagarConta, exportarDados } from '../conta';
 import { expiraEm, gerarToken, resumir } from '../tokens';
 
@@ -543,6 +544,47 @@ executar('contra MongoDB', () => {
       const t = await verificar({ userId: u._id.toString(), role: 'ADMIN', versao: 0 });
       expect(t.role).toBe('USER');
     });
+  });
+});
+
+executar('o total de uma encomenda, contra a base de dados', () => {
+  const TABELA = [{ ateGramas: 1000, precoCents: 450 }];
+
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+  }, 30_000);
+
+  afterAll(async () => {
+    await Promise.all([Product.deleteMany({}), Category.deleteMany({})]);
+  });
+
+  async function peca(over: Record<string, unknown>) {
+    const categoria =
+      (await Category.findOne({ slug: 'quartzos' })) ??
+      (await Category.create({ name: 'Quartzos', slug: 'quartzos' }));
+    return Product.create({
+      name: 'Quartzo rosa',
+      slug: `quartzo-${new mongoose.Types.ObjectId()}`,
+      priceCents: 1990,
+      stock: 3,
+      weightGrams: 200,
+      categoryId: categoria._id,
+      ...over,
+    });
+  }
+
+  it('o preço sai da base de dados', async () => {
+    const p = await peca({});
+    const r = await calcularEncomenda([{ id: p._id.toString(), quantidade: 2 }], TABELA);
+    expect(r).toMatchObject({ ok: true, subtotalCents: 3980, shippingCents: 450, totalCents: 4430 });
+  });
+
+  it('um produto desativado está indisponível, mesmo que exista', async () => {
+    const p = await peca({ active: false });
+    const r = await calcularEncomenda([{ id: p._id.toString(), quantidade: 1 }], TABELA);
+    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'indisponivel', id: p._id.toString() }] });
   });
 });
 

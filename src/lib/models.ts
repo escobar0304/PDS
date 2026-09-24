@@ -27,7 +27,8 @@ export interface IProduct extends Document {
   categoryId: mongoose.Types.ObjectId;
   featured: boolean;
   active: boolean;
-  weight?: number;
+  /** Em gramas, inteiro. Os portes dependem dele (ver `lib/encomenda.ts`). */
+  weightGrams?: number;
   dimensions?: string;
   properties?: {
     chakra?: string;
@@ -170,9 +171,14 @@ const productSchema = new Schema<IProduct>(
       type: Boolean,
       default: true,
     },
-    weight: {
+    // Com a unidade no nome, pela mesma razao dos centimos: `weight: 250`
+    // podia ser gramas ou quilos, e os portes dependem da resposta.
+    weightGrams: {
       type: Number,
-      min: [0, 'Peso não pode ser negativo'],
+      validate: {
+        validator: (v: unknown) => typeof v === 'number' && Number.isSafeInteger(v) && v > 0,
+        message: 'O peso é um número inteiro de gramas, maior do que zero',
+      },
     },
     dimensions: {
       type: String,

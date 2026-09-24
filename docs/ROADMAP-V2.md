@@ -138,7 +138,7 @@ componentes.
 
 # Fase 2 - Encomenda
 
-## E1. Preço e portes calculados no servidor
+## E1. Preço e portes calculados no servidor — feito, sem rota
 
 O carrinho guarda o preço que o produto tinha quando lá entrou. O servidor
 **nunca** o lê: recebe identificadores e quantidades, e calcula tudo a partir
@@ -148,6 +148,19 @@ total que um honesto.
 Os portes saem de `CONDICOES.tabelaPortes` e do peso de cada peça. **O cálculo
 faz-se agora**; enquanto a tabela for `null`, o checkout não abre — exatamente
 como o `robots.ts` não deixa indexar.
+
+Está em `src/lib/encomenda.ts`, e **sem rota de API, de propósito**: uma rota
+sem ninguém que a chame é superfície de ataque sem uso. Entra com a E5. O que
+ficou decidido pelo caminho:
+
+- o peso passou a `weightGrams`, pela razão dos cêntimos — `weight: 250` não
+  dizia se eram gramas ou quilos, e os portes dependem da resposta
+- a tabela passou de texto (`"até 500 g"`, `"3,50 €"`) a números, e uma tabela
+  mal preenchida (fora de ordem, em euros) conta como em falta
+- nada é corrigido em silêncio: quantidade acima do stock, produto
+  desativado, peça sem peso, peso acima do último escalão voltam **todos**
+  como problemas, e quem pediu decide
+- o esquema do pedido **recusa** um preço enviado junto, em vez de o ignorar
 
 ## E2. Stock
 
@@ -296,7 +309,7 @@ L1  /sucesso e /falha saem                feito
 L2  a dependência stripe sai              feito
 L3  /admin protegido, com teste           feito
 C1  preços em cêntimos                    feito
-E1  cálculo de total e portes no servidor
+E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
 E2  reserva de stock atómica           (verdadeira só depois do CI)
 E3  estados, histórico, numeração
     CSP sem 'unsafe-inline'            (medir o custo primeiro)

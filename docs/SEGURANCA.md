@@ -417,7 +417,9 @@ entrada seguinte fica, e o papel vem da base de dados.
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
-  em `localStorage`; a regra está no `CLAUDE.md`
+  em `localStorage`. O cálculo que os ignora já existe (`src/lib/encomenda.ts`,
+  com testes, e `esquemaPedido` recusa um preço enviado junto); falta a rota
+  do checkout usá-lo, e só a ele
 - **Rotas de administração** da v2 — as de API passam por `exigirAdmin()`, as
   páginas por `paginaDeAdmin()`
 - ~~**Invalidar sessões ao repor a palavra-passe.**~~ Feito, ver abaixo

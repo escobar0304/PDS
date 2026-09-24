@@ -4,7 +4,9 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Alert, Container, PageHeader } from '@/components/ui';
 import { CONDICOES, PRAZOS_LEGAIS, condicoesEmFalta } from '@/lib/condicoes';
+import { formatarPreco } from '@/lib/dinheiro';
 import { EMPRESA, moradaFormatada } from '@/lib/empresa';
+import { formatarPeso } from '@/lib/portes';
 import { LIVRO_RECLAMACOES } from '@/lib/paginas';
 
 export const metadata: Metadata = {
@@ -116,9 +118,9 @@ export default function EnviosPage() {
                     </thead>
                     <tbody>
                       {CONDICOES.tabelaPortes.map((e) => (
-                        <tr key={e.ate} className="border-b border-line">
-                          <td className="py-2">{e.ate}</td>
-                          <td className="py-2 tabular">{e.preco}</td>
+                        <tr key={e.ateGramas} className="border-b border-line">
+                          <td className="py-2 tabular">{formatarPeso(e.ateGramas)}</td>
+                          <td className="py-2 tabular">{formatarPreco(e.precoCents)}</td>
                         </tr>
                       ))}
                     </tbody>
