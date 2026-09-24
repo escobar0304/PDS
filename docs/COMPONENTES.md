@@ -23,6 +23,8 @@ acrescenta-se aqui.
 | `botaoClasses()` | As mesmas classes sem o elemento, para quando o alvo tem de ser um `<Link>`. Um `<button>` dentro de um `<a>` é HTML inválido |
 | `Input`, `Textarea`, `Select` | Campos com etiqueta, dica e erro. Ligam `label`/`id`, põem `aria-invalid` e `aria-describedby` sozinhos |
 | `Escolha` | Uma opção entre poucas, todas à vista: a medida de um anel. Rádios verdadeiros num `fieldset` com `legend`, por isso as setas e o leitor de ecrã funcionam sem código. Uma opção esgotada fica visível e desativada: escondê-la faria parecer que a medida não existe |
+| `Caixa` | Caixa de seleção com etiqueta e dica. A caixa tem 24×24 e a etiqueta inteira é alvo |
+| `SemFotografia` | No lugar de uma fotografia que falta. Nunca uma fotografia de banco de imagens: numa loja de peças únicas, seria mostrar outra pedra como se fosse aquela |
 | `Alert` | Mensagens de erro, sucesso e informação, com ação de recuperação opcional |
 | `Spinner`, `Skeleton`, `SkeletonCartao` | Estados de espera |
 | `EmptyState` | Estados vazios com ícone, explicação e saída |

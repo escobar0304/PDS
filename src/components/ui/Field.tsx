@@ -214,3 +214,40 @@ export function Escolha({
     </fieldset>
   );
 }
+
+/** Caixa de selecao com a etiqueta ao lado: a etiqueta inteira e o alvo. */
+export function Caixa({
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  checked: boolean;
+  onChange: (valor: boolean) => void;
+}) {
+  const id = useId();
+  return (
+    <div className="flex items-start gap-3">
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        aria-describedby={hint ? `${id}-dica` : undefined}
+        className="h-6 w-6 shrink-0 rounded border-line accent-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600/40"
+      />
+      <div>
+        <label htmlFor={id} className="text-sm font-medium text-ink">
+          {label}
+        </label>
+        {hint && (
+          <p id={`${id}-dica`} className="text-xs text-ink-muted">
+            {hint}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

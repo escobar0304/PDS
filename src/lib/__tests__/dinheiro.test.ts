@@ -59,3 +59,27 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
     ).toBeDefined();
   });
 });
+
+describe('o preço escrito num formulário', () => {
+  it('lê-se como as pessoas o escrevem', async () => {
+    const { centimosDeTexto } = await import('@/lib/dinheiro');
+    expect(centimosDeTexto('19,90')).toBe(1990);
+    expect(centimosDeTexto('19.9')).toBe(1990);
+    expect(centimosDeTexto('19')).toBe(1900);
+    expect(centimosDeTexto(' 19,90 € ')).toBe(1990);
+    // Em virgula flutuante, 0.29 * 100 da 28.999999999999996.
+    expect(centimosDeTexto('0,29')).toBe(29);
+  });
+
+  it('recusa o que não é um preço', async () => {
+    const { centimosDeTexto } = await import('@/lib/dinheiro');
+    for (const mau of ['', '-5', '1,999', '1.000,00', 'abc', '1e3']) {
+      expect(centimosDeTexto(mau), mau).toBeNull();
+    }
+  });
+
+  it('e volta ao campo como estava', async () => {
+    const { centimosDeTexto, textoDeCentimos } = await import('@/lib/dinheiro');
+    for (const c of [0, 5, 29, 1990, 123456]) expect(centimosDeTexto(textoDeCentimos(c))).toBe(c);
+  });
+});

@@ -156,7 +156,7 @@ Confirma também que a exceção à livre resolução para peças personalizadas
 (`excecaoPersonalizadas: false`) fica desligada: não há peças feitas por
 encomenda.
 
-## C3. Painel de produtos
+## C3. Painel de produtos — feito
 
 **O painel é gestão, e só isso:** produtos, medidas, stock e categorias. Criar,
 editar, desativar (nunca apagar: uma encomenda aponta para o produto), peso
@@ -171,6 +171,20 @@ testes que falham se uma rota nova as esquecer:
 - a validação no formulário é só para ajudar quem preenche; o servidor repete-a
   toda (ver fase 6)
 
+**Feito em 24/09/2026:** `/admin` (resumo), `/admin/produtos` (lista, com
+"−1 vendido na loja" em cada medida e o reservado online), `/admin/produtos/novo`,
+`/admin/produtos/[id]` (dados, movimentos e histórico) e `/admin/categorias`.
+A página `/admin/encomendas` saiu: dizia só "por construir", e volta com a P3.
+
+**O que não se viu a correr:** os formulários só aparecem com categorias e
+produtos lidos da base de dados, e o e2e corre sem ela de propósito. O que o
+e2e prova, com uma sessão assinada: um cliente autenticado leva 404 em todas
+as páginas do painel e 403 na API; um administrador abre-as, sem violações
+WCAG, e sem base de dados vê que ela falta. As operações estão provadas nos
+testes de integração. **Falta um ensaio do painel com dados reais** — ou
+um job de e2e com MongoDB no CI, ou uma passagem tua com a base de dados
+ligada.
+
 **Quem é administrador** não se decide na web. Não há página nem rota que
 promova uma conta: faz-se com um *script* corrido no servidor
 (`npm run admin:promover`). Uma rota que o fizesse seria a rota mais
@@ -180,7 +194,7 @@ interessante do sítio para quem o quisesse atacar.
 esse sítio é um subcontratante (ver "Alojamento" em
 `REGISTO-TRATAMENTOS.md`), por decidir.
 
-## C4. Painel de categorias
+## C4. Painel de categorias — feito, com a C3
 
 Hoje só há a rota da API. Pequeno, e depende da C3 só para reaproveitar os
 componentes.
@@ -513,7 +527,7 @@ v1.0.0 publicada
   │
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
   ├─ S1 C2                      feito
-  ├─ C3 ── C4                   a seguir: painel de gestão
+  ├─ C3 C4                      feito; falta o ensaio com dados reais
   ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
   ├─ P1 ── P3 ── P4             depois da E5
   ├─ P2                         contabilista

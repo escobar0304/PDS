@@ -82,7 +82,7 @@ test.describe('controlo de acesso', () => {
     expect([200, 500]).toContain(res.status());
   });
 
-  for (const caminho of ['/admin', '/admin/produtos', '/admin/encomendas']) {
+  for (const caminho of ['/admin', '/admin/produtos', '/admin/produtos/novo', '/admin/categorias']) {
     test(`${caminho} não existe para quem não é administrador`, async ({ request }) => {
       const res = await request.get(caminho);
       expect(res.status()).toBe(404);
