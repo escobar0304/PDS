@@ -103,7 +103,7 @@ preços passam também a escrever-se como em Portugal — `19,90 €`, e não
 `19.90€` como até aqui. Os carrinhos guardados antes da mudança descartam-se:
 convertê-los era adivinhar, e quem tinha um carrinho era quem testava.
 
-## C2. Peças únicas e modelos com medida — decidido: as duas, pela categoria
+## C2. Peças únicas e modelos com medida — feito
 
 **Decidido em 24/09/2026:** é a categoria que diz. Cristais em bruto são peças
 únicas; anéis, por exemplo, têm medidas.
@@ -115,11 +115,18 @@ convertê-los era adivinhar, e quem tinha um carrinho era quem testava.
 | fotografia | tem de ser a da própria peça | pode ser de um exemplar, dito como tal |
 | no modelo | o produto, sem medidas | o produto e as suas medidas, cada uma com stock |
 
-A categoria ganha `pecasUnicas`, e o produto herda a regra dela. O preço fica no
+**Todo o produto tem medidas; uma peça única tem uma só, sem nome.** Uniforme
+de propósito: a reserva, os movimentos e o carrinho seguem sempre o mesmo
+caminho, em vez de dois com um `if` em cada sítio. A categoria ganha
+`pecasUnicas`, e as regras que dependem dela (uma medida, stock 0 ou 1) estão
+em `src/lib/catalogo.ts` — o esquema do Mongoose não vê a categoria do
+produto, por isso não podiam viver lá. Na loja, um anel escolhe-se na página
+dele, e o botão de pôr no carrinho fica desativado até haver medida: o
+servidor também não escolhe por ninguém (`medida-por-escolher`). O preço fica no
 produto, igual para todas as medidas — **se alguma medida tiver de custar
 diferente, diz**, e passa para a medida.
 
-## O stock é um só, e é o da loja física
+## O stock é um só, e é o da loja física — feito no servidor; o painel falta
 
 **Decidido em 24/09/2026:** não há encomendas a fornecedores nem peças feitas
 por encomenda — tudo o que se vende está na loja. Isto tem duas consequências:
@@ -132,6 +139,13 @@ por encomenda — tudo o que se vende está na loja. Isto tem duas consequência
    "o stock passa a ser 3" escrito por cima apagava em silêncio uma reserva
    online que estivesse a decorrer no mesmo segundo; um `−1` não apaga nada.
    É a mesma atualização condicional da E2: o stock nunca fica negativo.
+   Está em `src/lib/stock.ts`, e a reserva online passa por lá também: cada
+   venda ao balcão, entrada ou reserva fica em `MovimentoStock`.
+
+   **Uma armadilha evitada, com teste:** com as medidas numa lista, a
+   condição tem de ser `$elemMatch`. Duas condições soltas —
+   `'variantes._id': X` e `'variantes.stock' >= 1` — são satisfeitas por
+   medidas *diferentes*, e o `$` tirava stock à medida esgotada.
 
 E uma terceira, para quem está ao balcão: o painel mostra o que está
 **reservado online** à espera de pagamento. A peça continua na prateleira
@@ -452,8 +466,8 @@ E3  estados, histórico, numeração         feito
 Desbloqueado pelas decisões de 24/09/2026, pela ordem em que se faz:
 
 ```
-S1  limite de pedidos em todas as rotas, e os testes que o exigem
-C2  categorias com peças únicas ou com medidas; stock por movimentos
+S1  limite de pedidos em todas as rotas, e os testes que o exigem   feito (#37)
+C2  categorias com peças únicas ou com medidas; stock por movimentos   feito
 C3  painel: produtos, medidas, stock, categorias (API, depois páginas)
     promoção a administrador por script, nunca pela web
 E4  Stripe: sessão de pagamento, aviso assinado e idempotente
@@ -498,8 +512,8 @@ E5  checkout sem conta, fechado enquanto faltarem condições
 v1.0.0 publicada
   │
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
-  ├─ S1                         a decorrer
-  ├─ C2 ── C3 ── C4             decidido; faz-se a seguir
+  ├─ S1 C2                      feito
+  ├─ C3 ── C4                   a seguir: painel de gestão
   ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
   ├─ P1 ── P3 ── P4             depois da E5
   ├─ P2                         contabilista

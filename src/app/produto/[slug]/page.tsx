@@ -10,7 +10,8 @@ import ProductCard from '@/components/productCard';
 import { useCart } from '@/contexts/CartContext';
 import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Minus, Plus, ShareNetwork, ShoppingCart, Sparkle, Truck } from '@phosphor-icons/react';
 import { botaoClasses } from '@/components/ui/Button';
-import { AnuncioEstado, Skeleton } from '@/components/ui';
+import { AnuncioEstado, Escolha, Skeleton } from '@/components/ui';
+import { temDeEscolher } from '@/lib/catalogo';
 import { AVISO_TRADICAO, INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 import { formatarPreco } from '@/lib/dinheiro';
 
@@ -21,7 +22,9 @@ interface Product {
   description?: string;
   priceCents: number;
   images: string[];
+  /** O total das medidas, somado pela API (`paraPublico`). */
   stock: number;
+  variantes: { _id: string; medida?: string; stock: number }[];
   categoryId: {
     _id: string;
     name: string;
@@ -48,6 +51,7 @@ export default function ProdutoPage() {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [medidaId, setMedidaId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [partilha, setPartilha] = useState('');
 
@@ -116,18 +120,30 @@ export default function ProdutoPage() {
     };
   }, [slug]);
 
+  // Numa peca unica nao ha escolha: e a unica medida. Num anel, e a que a
+  // pessoa escolheu, e nenhuma ate escolher — o servidor tambem nao escolhe.
+  const escolher = product ? temDeEscolher(product.variantes) : false;
+  const medida = product
+    ? escolher
+      ? product.variantes.find((v) => v._id === medidaId)
+      : product.variantes[0]
+    : undefined;
+  const stockDisponivel = medida?.stock ?? 0;
+
   const handleAddToCart = () => {
-    if (!product) return;
+    if (!product || !medida) return;
     
     setIsAdding(true);
     
     addItem({
       _id: product._id,
+      varianteId: medida._id,
+      ...(medida.medida ? { medida: medida.medida } : {}),
       name: product.name,
       slug: product.slug,
       priceCents: product.priceCents,
       image: product.images[0] || '',
-      stock: product.stock,
+      stock: medida.stock,
     }, quantity);
 
     setTimeout(() => setIsAdding(false), 1000);
@@ -360,6 +376,23 @@ export default function ProdutoPage() {
 
               {/* Quantidade e Add to Cart */}
               <div className="space-y-4 mb-6">
+                {escolher && (
+                  <Escolha
+                    legenda="Medida"
+                    nome="medida"
+                    valor={medidaId}
+                    onChange={(v) => {
+                      setMedidaId(v);
+                      setQuantity(1);
+                    }}
+                    opcoes={product.variantes.map((v) => ({
+                      valor: v._id,
+                      etiqueta: v.medida ?? '',
+                      indisponivel: v.stock === 0,
+                    }))}
+                  />
+                )}
+
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-medium text-ink">Quantidade:</span>
                   <div className="flex items-center gap-2 border-2 border-line rounded-lg">
@@ -374,8 +407,8 @@ export default function ProdutoPage() {
                       {quantity}
                     </span>
                     <button
-                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                      disabled={quantity >= product.stock}
+                      onClick={() => setQuantity(Math.min(stockDisponivel, quantity + 1))}
+                      disabled={!medida || quantity >= stockDisponivel}
                       className="p-3 hover:bg-surface-sunken transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Aumentar quantidade"
                     >
@@ -387,7 +420,7 @@ export default function ProdutoPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={handleAddToCart}
-                    disabled={product.stock === 0 || isAdding}
+                    disabled={!medida || stockDisponivel === 0 || isAdding}
                     className={botaoClasses({ className: 'flex-1' })}
                   >
                     {isAdding ? (
@@ -398,7 +431,7 @@ export default function ProdutoPage() {
                     ) : (
                       <>
                         <ShoppingCart className="w-5 h-5" />
-                        <span>Adicionar ao Carrinho</span>
+                        <span>{escolher && !medida ? 'Escolha a medida' : 'Adicionar ao Carrinho'}</span>
                       </>
                     )}
                   </button>

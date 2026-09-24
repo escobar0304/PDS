@@ -3,6 +3,7 @@ import connectDB from '@/lib/db';
 import { CONDICOES, type Escalao } from '@/lib/condicoes';
 import { Contador, Order, Product } from '@/lib/models';
 import { portesPara } from '@/lib/portes';
+import { moverStock, stockDe } from '@/lib/stock';
 import { formatarNumero, podePassar, type Autor, type Estado } from '@/lib/transicoes';
 
 /**
@@ -22,6 +23,12 @@ import { formatarNumero, podePassar, type Autor, type Estado } from '@/lib/trans
 
 export interface LinhaPedida {
   id: string;
+  /**
+   * A medida escolhida. Pode faltar quando o produto so tem uma — uma peca
+   * unica nao se escolhe. Quando tem varias, falta-la e um problema, nunca uma
+   * escolha feita pelo servidor.
+   */
+  varianteId?: string;
   quantidade: number;
 }
 
@@ -30,21 +37,25 @@ export interface ProdutoParaPreco {
   id: string;
   name: string;
   priceCents: number;
-  stock: number;
   weightGrams?: number;
+  variantes: { id: string; medida?: string; stock: number }[];
 }
 
 export interface LinhaCalculada {
   productId: string;
+  varianteId: string;
+  medida?: string;
   name: string;
   priceCents: number;
   quantity: number;
 }
 
 export type Problema =
-  /** Nao existe, ou foi desativado. */
-  | { tipo: 'indisponivel'; id: string }
-  | { tipo: 'stock'; id: string; disponivel: number }
+  /** O produto nao existe ou foi desativado, ou a medida ja nao existe. */
+  | { tipo: 'indisponivel'; id: string; varianteId?: string }
+  /** O produto tem varias medidas e o pedido nao disse qual. */
+  | { tipo: 'medida-por-escolher'; id: string }
+  | { tipo: 'stock'; id: string; varianteId: string; disponivel: number }
   /** Sem peso nao ha portes: e dado em falta do lado do negocio, nao do cliente. */
   | { tipo: 'sem-peso'; id: string }
   | { tipo: 'acima-do-ultimo-escalao'; gramas: number }
@@ -61,15 +72,6 @@ export type Calculo =
     }
   | { ok: false; problemas: Problema[] };
 
-/** O mesmo produto em duas linhas conta como uma, com as quantidades somadas. */
-function juntar(pedido: readonly LinhaPedida[]): LinhaPedida[] {
-  const porId = new Map<string, number>();
-  for (const { id, quantidade } of pedido) {
-    porId.set(id, (porId.get(id) ?? 0) + quantidade);
-  }
-  return [...porId].map(([id, quantidade]) => ({ id, quantidade }));
-}
-
 /**
  * O calculo, sem base de dados. `produtos` sao os que estao ativos; o que o
  * pedido traga e nao esteja aqui, esta indisponivel.
@@ -84,27 +86,53 @@ export function calcular(
 ): Calculo {
   const porId = new Map(produtos.map((p) => [p.id, p]));
   const problemas: Problema[] = [];
-  const linhas: LinhaCalculada[] = [];
-  let pesoGramas = 0;
-  let pesoCompleto = true;
 
-  for (const { id, quantidade } of juntar(pedido)) {
+  // Primeiro resolve cada linha para uma medida concreta; so depois junta.
+  // A mesma medida em duas linhas conta como uma, com as quantidades somadas
+  // — senao 3 + 3 de uma medida com stock 5 passava linha a linha.
+  const porMedida = new Map<string, { produto: ProdutoParaPreco; varianteId: string; quantidade: number }>();
+  for (const { id, varianteId, quantidade } of pedido) {
     const produto = porId.get(id);
     if (!produto) {
       problemas.push({ tipo: 'indisponivel', id });
       continue;
     }
-    if (quantidade > produto.stock) {
-      problemas.push({ tipo: 'stock', id, disponivel: produto.stock });
+    let vid = varianteId;
+    if (vid === undefined) {
+      if (produto.variantes.length !== 1) {
+        problemas.push({ tipo: 'medida-por-escolher', id });
+        continue;
+      }
+      vid = produto.variantes[0].id;
+    }
+    if (!produto.variantes.some((v) => v.id === vid)) {
+      problemas.push({ tipo: 'indisponivel', id, varianteId: vid });
+      continue;
+    }
+    const chave = `${id}:${vid}`;
+    const antes = porMedida.get(chave);
+    porMedida.set(chave, { produto, varianteId: vid, quantidade: (antes?.quantidade ?? 0) + quantidade });
+  }
+
+  const linhas: LinhaCalculada[] = [];
+  const semPeso = new Set<string>();
+  let pesoGramas = 0;
+
+  for (const { produto, varianteId, quantidade } of porMedida.values()) {
+    const variante = produto.variantes.find((v) => v.id === varianteId)!;
+    if (quantidade > variante.stock) {
+      problemas.push({ tipo: 'stock', id: produto.id, varianteId, disponivel: variante.stock });
     }
     if (produto.weightGrams === undefined) {
-      problemas.push({ tipo: 'sem-peso', id });
-      pesoCompleto = false;
+      if (!semPeso.has(produto.id)) problemas.push({ tipo: 'sem-peso', id: produto.id });
+      semPeso.add(produto.id);
     } else {
       pesoGramas += produto.weightGrams * quantidade;
     }
     linhas.push({
-      productId: id,
+      productId: produto.id,
+      varianteId,
+      ...(variante.medida ? { medida: variante.medida } : {}),
       name: produto.name,
       priceCents: produto.priceCents,
       quantity: quantidade,
@@ -114,7 +142,7 @@ export function calcular(
   let shippingCents: number | null = null;
   if (tabela === null) {
     problemas.push({ tipo: 'sem-tabela' });
-  } else if (pesoCompleto) {
+  } else if (semPeso.size === 0 && linhas.length > 0) {
     shippingCents = portesPara(pesoGramas, tabela);
     if (shippingCents === null) problemas.push({ tipo: 'acima-do-ultimo-escalao', gramas: pesoGramas });
   }
@@ -151,7 +179,7 @@ export async function calcularEncomenda(
 
   await connectDB();
   const docs = await Product.find({ _id: { $in: ids }, active: true })
-    .select('name priceCents stock weightGrams')
+    .select('name priceCents variantes weightGrams')
     .lean();
 
   return calcular(
@@ -160,8 +188,12 @@ export async function calcularEncomenda(
       id: String(d._id),
       name: d.name,
       priceCents: d.priceCents,
-      stock: d.stock,
       weightGrams: d.weightGrams,
+      variantes: d.variantes.map((v) => ({
+        id: String(v._id),
+        medida: v.medida || undefined,
+        stock: v.stock,
+      })),
     })),
     tabela
   );
@@ -175,47 +207,62 @@ export async function calcularEncomenda(
 export const PRAZO_RESERVA_MS = 30 * 60 * 1000;
 
 /**
- * Tira as quantidades ao stock, peca a peca, ou nenhuma.
+ * Tira as quantidades ao stock, medida a medida, ou nenhuma.
  *
- * Cada peca e uma atualizacao atomica com a condicao na propria consulta
- * (`stock >= quantidade`): duas pessoas a comprar a ultima peca ao mesmo
- * tempo, so uma atualizacao encontra o documento. Nao ha "ler, verificar,
- * escrever", que e onde as duas passavam.
+ * Cada medida e um movimento atomico (`lib/stock.ts`), com a condicao na
+ * propria consulta: duas pessoas a comprar a ultima peca ao mesmo tempo, so
+ * uma atualizacao encontra o documento. Nao ha "ler, verificar, escrever",
+ * que e onde as duas passavam.
  *
  * Sem transacao, de proposito: o MongoDB so as tem em replica set, o do CI
- * nao e, e o de producao esta por escolher. Se uma peca falhar, as que ja
+ * nao e, e o de producao esta por escolher. Se uma medida falhar, as que ja
  * foram tiradas voltam ao stock. Entre uma coisa e outra ha um instante em
  * que o stock parece menor do que e — no pior caso, alguem ve "esgotado"
  * durante milissegundos. O contrario, vender o que nao ha, nao acontece.
  *
- * Devolve os ids que falharam; vazio quer dizer que ficou tudo reservado.
+ * Devolve a linha que falhou, ou `null` se ficou tudo reservado.
  */
-export async function reservarStock(linhas: readonly LinhaCalculada[]): Promise<string[]> {
-  await connectDB();
+export async function reservarStock(
+  linhas: readonly LinhaCalculada[],
+  encomendaId: string
+): Promise<LinhaCalculada | null> {
   const tiradas: LinhaCalculada[] = [];
 
   for (const linha of linhas) {
-    const r = await Product.updateOne(
-      { _id: linha.productId, active: true, stock: { $gte: linha.quantity } },
-      { $inc: { stock: -linha.quantity } }
-    );
-    if (r.modifiedCount !== 1) {
-      await devolverStock(tiradas);
-      return [linha.productId];
+    const ok = await moverStock({
+      productId: linha.productId,
+      varianteId: linha.varianteId,
+      delta: -linha.quantity,
+      motivo: 'reserva-online',
+      por: 'cliente',
+      encomendaId,
+      soAtivo: true,
+    });
+    if (!ok) {
+      await devolverStock(tiradas, encomendaId);
+      return linha;
     }
     tiradas.push(linha);
   }
 
-  return [];
+  return null;
 }
 
 /** Devolve as quantidades ao stock. So se chama com o que foi mesmo tirado. */
 export async function devolverStock(
-  linhas: readonly { productId: unknown; quantity: number }[]
+  linhas: readonly { productId: unknown; varianteId: unknown; quantity: number }[],
+  encomendaId: string
 ): Promise<void> {
-  await Promise.all(
-    linhas.map((l) => Product.updateOne({ _id: l.productId }, { $inc: { stock: l.quantity } }))
-  );
+  for (const l of linhas) {
+    await moverStock({
+      productId: String(l.productId),
+      varianteId: String(l.varianteId),
+      delta: l.quantity,
+      motivo: 'reserva-libertada',
+      por: 'sistema',
+      encomendaId,
+    });
+  }
 }
 
 // ============================================
@@ -273,16 +320,23 @@ export async function criarEncomenda(
   const calculo = await calcularEncomenda(pedido, tabela);
   if (!calculo.ok) return calculo;
 
-  const falhadas = await reservarStock(calculo.linhas);
-  if (falhadas.length > 0) {
-    // Entre calcular e reservar, alguem levou a peca.
-    const id = falhadas[0];
-    const disponivel = (await Product.findById(id).select('stock').lean())?.stock ?? 0;
-    return { ok: false, problemas: [{ tipo: 'stock', id, disponivel }] };
+  // O id da encomenda existe antes dela, para os movimentos de stock o
+  // poderem registar.
+  const encomendaId = new mongoose.Types.ObjectId();
+
+  const falhou = await reservarStock(calculo.linhas, encomendaId.toString());
+  if (falhou) {
+    // Entre calcular e reservar, alguem levou a peca — online ou ao balcao.
+    const disponivel = await stockDe(falhou.productId, falhou.varianteId);
+    return {
+      ok: false,
+      problemas: [{ tipo: 'stock', id: falhou.productId, varianteId: falhou.varianteId, disponivel }],
+    };
   }
 
   try {
     const encomenda = await Order.create({
+      _id: encomendaId,
       numero: await proximoNumero(agora),
       ...cliente,
       items: calculo.linhas,
@@ -300,7 +354,7 @@ export async function criarEncomenda(
       totalCents: encomenda.totalCents,
     };
   } catch (erro) {
-    await devolverStock(calculo.linhas);
+    await devolverStock(calculo.linhas, encomendaId.toString());
     throw erro;
   }
 }
@@ -341,7 +395,7 @@ export async function mudarEstado(
   );
   if (r.modifiedCount !== 1) return { ok: false, motivo: 'conflito' };
 
-  if (para === 'CANCELLED') await devolverStock(atual.items);
+  if (para === 'CANCELLED') await devolverStock(atual.items, id);
   return { ok: true };
 }
 

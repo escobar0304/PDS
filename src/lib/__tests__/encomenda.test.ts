@@ -12,14 +12,30 @@ const TABELA: Escalao[] = [
   { ateGramas: 2000, precoCents: 600 },
 ];
 
+const V_A = 'a1'.repeat(12);
+const V_B = 'b1'.repeat(12);
+
+/** Uma peca unica: uma medida so, sem nome. */
 const produto = (over: Partial<ProdutoParaPreco> = {}): ProdutoParaPreco => ({
   id: ID_A,
   name: 'Quartzo rosa',
   priceCents: 1990,
-  stock: 5,
   weightGrams: 200,
+  variantes: [{ id: V_A, stock: 5 }],
   ...over,
 });
+
+/** Um anel, em duas medidas. */
+const ANEL: ProdutoParaPreco = {
+  id: ID_B,
+  name: 'Anel de ametista',
+  priceCents: 3500,
+  weightGrams: 10,
+  variantes: [
+    { id: 'c1'.repeat(12), medida: '14', stock: 0 },
+    { id: 'c2'.repeat(12), medida: '16', stock: 2 },
+  ],
+};
 
 describe('portes', () => {
   it('cada escalão cobre até ao seu limite, inclusive', () => {
@@ -60,49 +76,79 @@ describe('portes', () => {
 describe('o total de uma encomenda', () => {
   it('soma preços, peso e portes a partir dos produtos, não do pedido', () => {
     const r = calcular(
-      [{ id: ID_A, quantidade: 2 }, { id: ID_B, quantidade: 1 }],
-      [produto(), produto({ id: ID_B, name: 'Ametista', priceCents: 4250, weightGrams: 300 })],
+      [{ id: ID_A, quantidade: 2 }, { id: ID_B, varianteId: 'c2'.repeat(12), quantidade: 1 }],
+      [produto(), ANEL],
       TABELA
     );
     expect(r).toEqual({
       ok: true,
       linhas: [
-        { productId: ID_A, name: 'Quartzo rosa', priceCents: 1990, quantity: 2 },
-        { productId: ID_B, name: 'Ametista', priceCents: 4250, quantity: 1 },
+        { productId: ID_A, varianteId: V_A, name: 'Quartzo rosa', priceCents: 1990, quantity: 2 },
+        {
+          productId: ID_B,
+          varianteId: 'c2'.repeat(12),
+          medida: '16',
+          name: 'Anel de ametista',
+          priceCents: 3500,
+          quantity: 1,
+        },
       ],
-      pesoGramas: 700,
-      subtotalCents: 8230,
-      shippingCents: 600,
-      totalCents: 8830,
+      pesoGramas: 410,
+      subtotalCents: 7480,
+      shippingCents: 350,
+      totalCents: 7830,
     });
   });
 
-  it('o mesmo produto em duas linhas conta uma vez, com as quantidades somadas', () => {
-    // Senao, 3 + 3 de um produto com stock 5 passava linha a linha.
+  it('uma peça única não precisa de medida; um anel precisa, e o servidor não a escolhe', () => {
+    const r = calcular([{ id: ID_B, quantidade: 1 }], [ANEL], TABELA);
+    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'medida-por-escolher', id: ID_B }] });
+  });
+
+  it('o stock conta por medida', () => {
+    // A medida 14 esta esgotada, mesmo com a 16 em stock.
+    const r = calcular([{ id: ID_B, varianteId: 'c1'.repeat(12), quantidade: 1 }], [ANEL], TABELA);
+    expect(r).toEqual({
+      ok: false,
+      problemas: [{ tipo: 'stock', id: ID_B, varianteId: 'c1'.repeat(12), disponivel: 0 }],
+    });
+  });
+
+  it('uma medida que não é deste produto está indisponível', () => {
+    const r = calcular([{ id: ID_B, varianteId: V_B, quantidade: 1 }], [ANEL], TABELA);
+    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'indisponivel', id: ID_B, varianteId: V_B }] });
+  });
+
+  it('a mesma medida em duas linhas conta uma vez, com as quantidades somadas', () => {
+    // Senao, 3 + 3 de uma medida com stock 5 passava linha a linha — e a peca
+    // unica sem medida no pedido e a mesma que a pedida pela medida.
     const r = calcular(
-      [{ id: ID_A, quantidade: 3 }, { id: ID_A, quantidade: 3 }],
+      [{ id: ID_A, quantidade: 3 }, { id: ID_A, varianteId: V_A, quantidade: 3 }],
       [produto()],
       TABELA
     );
-    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'stock', id: ID_A, disponivel: 5 }] });
+    expect(r).toEqual({
+      ok: false,
+      problemas: [{ tipo: 'stock', id: ID_A, varianteId: V_A, disponivel: 5 }],
+    });
   });
 
   it('não corrige o pedido em silêncio: devolve todos os problemas', () => {
     const r = calcular(
       [
         { id: ID_A, quantidade: 9 },
-        { id: ID_B, quantidade: 1 },
-        { id: 'c'.repeat(24), quantidade: 1 },
+        { id: 'd'.repeat(24), quantidade: 1 },
+        { id: 'e'.repeat(24), quantidade: 1 },
       ],
-      [produto(), produto({ id: ID_B, weightGrams: undefined })],
+      [produto(), produto({ id: 'd'.repeat(24), weightGrams: undefined })],
       TABELA
     );
     expect(r).toEqual({
       ok: false,
       problemas: [
-        { tipo: 'stock', id: ID_A, disponivel: 5 },
-        { tipo: 'sem-peso', id: ID_B },
-        { tipo: 'indisponivel', id: 'c'.repeat(24) },
+        { tipo: 'indisponivel', id: 'e'.repeat(24) },
+        { tipo: 'stock', id: ID_A, varianteId: V_A, disponivel: 5 },
+        { tipo: 'sem-peso', id: 'd'.repeat(24) },
       ],
     });
   });

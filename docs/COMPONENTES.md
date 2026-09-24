@@ -22,6 +22,7 @@ acrescenta-se aqui.
 | `Button` | Botões. Variantes `primary`, `secondary`, `ghost`, `danger`; tamanhos `sm`, `md`, `lg`; `loading` marca `aria-busy` e desativa |
 | `botaoClasses()` | As mesmas classes sem o elemento, para quando o alvo tem de ser um `<Link>`. Um `<button>` dentro de um `<a>` é HTML inválido |
 | `Input`, `Textarea`, `Select` | Campos com etiqueta, dica e erro. Ligam `label`/`id`, põem `aria-invalid` e `aria-describedby` sozinhos |
+| `Escolha` | Uma opção entre poucas, todas à vista: a medida de um anel. Rádios verdadeiros num `fieldset` com `legend`, por isso as setas e o leitor de ecrã funcionam sem código. Uma opção esgotada fica visível e desativada: escondê-la faria parecer que a medida não existe |
 | `Alert` | Mensagens de erro, sucesso e informação, com ação de recuperação opcional |
 | `Spinner`, `Skeleton`, `SkeletonCartao` | Estados de espera |
 | `EmptyState` | Estados vazios com ícone, explicação e saída |

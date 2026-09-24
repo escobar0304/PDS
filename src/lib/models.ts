@@ -13,8 +13,29 @@ export interface ICategory extends Document {
   description?: string;
   image?: string;
   order: number;
+  /**
+   * Se as pecas desta categoria sao unicas (cada uma e *aquela* pedra, com a
+   * sua fotografia, stock 0 ou 1) ou modelos com medidas (um anel, em varios
+   * tamanhos). Decidido pelo negocio: e a categoria que diz. As regras estao
+   * em `lib/catalogo.ts`.
+   */
+  pecasUnicas: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/**
+ * Uma medida de um produto, com o seu stock.
+ *
+ * **Todo o produto tem pelo menos uma.** Uma peca unica tem uma so, sem nome
+ * (`medida` vazia) e stock 0 ou 1. Uniforme de proposito: a reserva, os
+ * movimentos e o carrinho seguem sempre pelo mesmo caminho, em vez de dois
+ * com um `if` em cada sitio.
+ */
+export interface IVariante {
+  _id: mongoose.Types.ObjectId;
+  medida?: string;
+  stock: number;
 }
 
 export interface IProduct extends Document {
@@ -24,7 +45,8 @@ export interface IProduct extends Document {
   /** Em centimos, inteiro. Ver `lib/dinheiro.ts`. */
   priceCents: number;
   images: string[];
-  stock: number;
+  /** O stock vive aqui, por medida. Nao ha stock no produto. */
+  variantes: IVariante[];
   categoryId: mongoose.Types.ObjectId;
   featured: boolean;
   active: boolean;
@@ -87,6 +109,9 @@ export interface IOrder extends Document {
   notes?: string;
   items: Array<{
     productId: mongoose.Types.ObjectId;
+    varianteId: mongoose.Types.ObjectId;
+    /** Copiada no momento da compra, como o nome e o preco. */
+    medida?: string;
     name: string;
     priceCents: number;
     quantity: number;
@@ -126,6 +151,10 @@ const categorySchema = new Schema<ICategory>(
       type: Number,
       default: 0,
     },
+    pecasUnicas: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -161,10 +190,24 @@ const productSchema = new Schema<IProduct>(
       type: [String],
       default: [],
     },
-    stock: {
-      type: Number,
-      default: 0,
-      min: [0, 'Stock não pode ser negativo'],
+    variantes: {
+      type: [
+        {
+          medida: { type: String, trim: true },
+          stock: {
+            type: Number,
+            default: 0,
+            validate: {
+              validator: (v: unknown) => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0,
+              message: 'O stock é um número inteiro, nunca negativo',
+            },
+          },
+        },
+      ],
+      validate: {
+        validator: (v: unknown[]) => Array.isArray(v) && v.length > 0,
+        message: 'Um produto tem pelo menos uma medida',
+      },
     },
     categoryId: {
       type: Schema.Types.ObjectId,
@@ -373,6 +416,13 @@ const orderSchema = new Schema<IOrder>(
           ref: 'Product',
           required: true,
         },
+        varianteId: {
+          type: Schema.Types.ObjectId,
+          required: true,
+        },
+        medida: {
+          type: String,
+        },
         name: {
           type: String,
           required: true,
@@ -421,6 +471,60 @@ export const User: Model<IUser> =
 
 export const Order: Model<IOrder> =
   mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+
+/**
+ * Cada mudanca de stock, com a razao.
+ *
+ * O stock e um so, partilhado com a loja fisica, e muda-se por movimentos,
+ * nunca por valor (ver `lib/stock.ts`). Isto e o registo: quem vendeu ao
+ * balcao, que encomenda reservou, que entrada chegou. Nunca se apaga nem se
+ * edita.
+ */
+export const MOTIVOS_STOCK = [
+  'venda-loja',
+  'entrada',
+  'acerto',
+  'quebra',
+  'reserva-online',
+  'reserva-libertada',
+] as const;
+
+export type MotivoStock = (typeof MOTIVOS_STOCK)[number];
+
+export interface IMovimentoStock {
+  productId: mongoose.Types.ObjectId;
+  varianteId: mongoose.Types.ObjectId;
+  delta: number;
+  motivo: MotivoStock;
+  encomendaId?: mongoose.Types.ObjectId;
+  por: string;
+  nota?: string;
+  em: Date;
+}
+
+const movimentoSchema = new Schema<IMovimentoStock>({
+  productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+  varianteId: { type: Schema.Types.ObjectId, required: true },
+  delta: {
+    type: Number,
+    required: true,
+    validate: {
+      validator: (v: unknown) => typeof v === 'number' && Number.isSafeInteger(v) && v !== 0,
+      message: 'Um movimento é um número inteiro, diferente de zero',
+    },
+  },
+  motivo: { type: String, enum: MOTIVOS_STOCK, required: true },
+  encomendaId: { type: Schema.Types.ObjectId, ref: 'Order' },
+  por: { type: String, required: true },
+  nota: { type: String, trim: true, maxlength: 500 },
+  em: { type: Date, required: true },
+});
+
+movimentoSchema.index({ productId: 1, em: -1 });
+
+export const MovimentoStock: Model<IMovimentoStock> =
+  mongoose.models.MovimentoStock ||
+  mongoose.model<IMovimentoStock>('MovimentoStock', movimentoSchema);
 
 /**
  * Contadores com incremento atomico. Hoje so o das encomendas, um por ano:

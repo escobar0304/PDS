@@ -26,6 +26,7 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
     name: 'Quartzo rosa',
     slug: 'quartzo-rosa',
     categoryId: new mongoose.Types.ObjectId(),
+    variantes: [{ stock: 1 }],
   };
 
   it('produto', () => {
@@ -44,7 +45,7 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
         deliveryType: 'SHIPPING',
         subtotalCents: 1990,
         totalCents: 1990,
-        items: [{ productId: new mongoose.Types.ObjectId(), name: 'x', priceCents: 1990, quantity: 1 }],
+        items: [{ productId: new mongoose.Types.ObjectId(), varianteId: new mongoose.Types.ObjectId(), name: 'x', priceCents: 1990, quantity: 1 }],
         ...over,
       }).validateSync();
 
@@ -53,7 +54,7 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
     expect(encomenda({ shippingCents: 3.5 })?.errors.shippingCents).toBeDefined();
     expect(
       encomenda({
-        items: [{ productId: new mongoose.Types.ObjectId(), name: 'x', priceCents: 19.9, quantity: 1 }],
+        items: [{ productId: new mongoose.Types.ObjectId(), varianteId: new mongoose.Types.ObjectId(), name: 'x', priceCents: 19.9, quantity: 1 }],
       })?.errors['items.0.priceCents']
     ).toBeDefined();
   });

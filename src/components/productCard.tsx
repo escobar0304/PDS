@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, ShoppingCart } from '@phosphor-icons/react';
+import { Check, Ruler, ShoppingCart } from '@phosphor-icons/react';
 import { useCart } from '../contexts/CartContext';
+import { temDeEscolher } from '@/lib/catalogo';
 import { formatarPreco } from '@/lib/dinheiro';
 
 interface Product {
@@ -14,7 +15,9 @@ interface Product {
   description?: string;
   priceCents: number;
   images: string[];
+  /** O total das medidas, somado pela API (`paraPublico`). */
   stock: number;
+  variantes: { _id: string; medida?: string; stock: number }[];
   featured: boolean;
 }
 
@@ -26,18 +29,23 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
+  // Um anel escolhe-se pela medida, na pagina dele; uma peca unica
+  // adiciona-se daqui.
+  const escolher = temDeEscolher(product.variantes);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsAdding(true);
 
+    const [unica] = product.variantes;
     const cartItem = {
       _id: product._id,
+      varianteId: unica._id,
       name: product.name,
       slug: product.slug,
       priceCents: product.priceCents,
       image: product.images[0] || '',
-      stock: product.stock,
+      stock: unica.stock,
     };
 
     addItem(cartItem, 1);
@@ -101,24 +109,34 @@ export default function ProductCard({ product }: ProductCardProps) {
             </p>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={product.stock === 0 || isAdding}
-            className={`rounded p-3 transition-smooth ${
-              product.stock === 0
-                ? 'cursor-not-allowed bg-line text-ink-muted'
-                : isAdding
-                ? 'bg-sage-600 text-surface'
-                : 'bg-rose-700 text-surface hover:bg-rose-600'
-            }`}
-            aria-label="Adicionar ao carrinho"
-          >
-            {isAdding ? (
-              <Check className="h-5 w-5" aria-hidden />
-            ) : (
-              <ShoppingCart className="h-5 w-5" aria-hidden />
-            )}
-          </button>
+          {escolher && product.stock > 0 ? (
+            <Link
+              href={`/produto/${product.slug}`}
+              className="rounded bg-rose-700 p-3 text-surface transition-smooth hover:bg-rose-600"
+              aria-label={`Escolher a medida de ${product.name}`}
+            >
+              <Ruler className="h-5 w-5" aria-hidden />
+            </Link>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={product.stock === 0 || isAdding}
+              className={`rounded p-3 transition-smooth ${
+                product.stock === 0
+                  ? 'cursor-not-allowed bg-line text-ink-muted'
+                  : isAdding
+                  ? 'bg-sage-600 text-surface'
+                  : 'bg-rose-700 text-surface hover:bg-rose-600'
+              }`}
+              aria-label="Adicionar ao carrinho"
+            >
+              {isAdding ? (
+                <Check className="h-5 w-5" aria-hidden />
+              ) : (
+                <ShoppingCart className="h-5 w-5" aria-hidden />
+              )}
+            </button>
+          )}
         </div>
       </div>
     </article>

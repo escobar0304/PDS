@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { mockApi } from './fixtures/api';
+import { ANEL, PRODUTOS, mockApi } from './fixtures/api';
 
 /**
  * Acessibilidade verificada contra a pagina a correr, nao contra o codigo.
@@ -42,6 +42,31 @@ for (const rota of ROTAS) {
     ).toEqual([]);
   });
 }
+
+test('a escolha da medida não tem violações, e faz-se só com o teclado', async ({ page }) => {
+  await mockApi(page, { produtos: [...PRODUTOS, ANEL] });
+  await page.goto('/produto/anel-de-ametista');
+  await page.waitForTimeout(400);
+
+  const r = await new AxeBuilder({ page }).withTags(NORMAS).analyze();
+  expect(r.violations.map((v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)).toEqual([]);
+
+  // Radios verdadeiros: o foco entra na opcao disponivel, o espaco escolhe.
+  // A medida esgotada salta-se sozinha, porque esta desativada.
+  await page.getByRole('radio', { name: '16' }).focus();
+  await page.keyboard.press('Space');
+  await expect(page.getByRole('radio', { name: '16' })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true })).toBeEnabled();
+
+  // E cada opcao tem pelo menos 24x24 (2.5.8): o alvo e a etiqueta.
+  const caixas = await page.locator('fieldset label').evaluateAll((els) =>
+    els.map((e) => e.getBoundingClientRect()).map((c) => [c.width, c.height])
+  );
+  for (const [w, h] of caixas) {
+    expect(w).toBeGreaterThanOrEqual(24);
+    expect(h).toBeGreaterThanOrEqual(24);
+  }
+});
 
 test('a ligação de salto é o primeiro foco e leva mesmo ao conteúdo', async ({ page }) => {
   await page.goto('/');

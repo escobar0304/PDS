@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { mockApi } from './fixtures/api';
+import { ANEL, PRODUTOS, mockApi } from './fixtures/api';
 
 test.beforeEach(async ({ page }) => {
   await mockApi(page);
@@ -113,4 +113,32 @@ test('o ícone do cabeçalho abre o painel do carrinho sem sair da página', asy
 
   await expect(painel).toBeVisible();
   await expect(page).toHaveURL(/\/loja/);
+});
+
+test('um anel escolhe-se pela medida, e a medida esgotada não se escolhe', async ({ page }) => {
+  await mockApi(page, { produtos: [...PRODUTOS, ANEL] });
+  await page.goto('/produto/anel-de-ametista');
+
+  // Sem medida escolhida nao ha nada para adicionar: o servidor tambem nao
+  // escolhe por ninguem.
+  const adicionar = page.getByRole('button', { name: 'Escolha a medida' });
+  await expect(adicionar).toBeDisabled();
+
+  const medidas = page.getByRole('group', { name: 'Medida' });
+  await expect(medidas.getByRole('radio', { name: /14/ })).toBeDisabled();
+  await medidas.getByRole('radio', { name: '16' }).check({ force: true });
+
+  await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
+  await expect(contador(page)).toHaveText('1');
+
+  await page.goto('/carrinho');
+  await expect(page.getByText('Medida 16')).toBeVisible();
+});
+
+test('na loja, um anel leva à escolha da medida em vez de ir para o carrinho', async ({ page }) => {
+  await mockApi(page, { produtos: [...PRODUTOS, ANEL] });
+  await page.goto('/loja');
+
+  await page.getByRole('link', { name: 'Escolher a medida de Anel de Ametista' }).click();
+  await expect(page).toHaveURL(/\/produto\/anel-de-ametista$/);
 });

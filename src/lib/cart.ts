@@ -7,16 +7,29 @@ import { eCentimos } from '@/lib/dinheiro';
 
 export interface CartItem {
   _id: string;
+  /**
+   * A medida. Uma linha do carrinho e um produto **numa medida**: o anel 14 e
+   * o anel 16 sao duas linhas. Numa peca unica, e a unica medida que ela tem.
+   */
+  varianteId: string;
+  /** So para mostrar; vazia numa peca unica. */
+  medida?: string;
   name: string;
   slug: string;
   /** Em centimos. So para mostrar: o servidor nunca o le (ROADMAP-V2, E1). */
   priceCents: number;
   image: string;
   quantity: number;
+  /** O stock desta medida quando entrou. O servidor volta a verificar. */
   stock: number;
 }
 
 export type CartProduct = Omit<CartItem, 'quantity'>;
+
+/** O que identifica uma linha: o produto e a medida. */
+export function chaveDe(item: Pick<CartItem, '_id' | 'varianteId'>): string {
+  return `${item._id}:${item.varianteId}`;
+}
 
 /** Mantem a quantidade entre 1 e o stock disponivel. */
 export function clampQuantity(quantity: number, stock: number): number {
@@ -31,34 +44,29 @@ export function addItem(
 ): CartItem[] {
   if (product.stock <= 0) return items;
 
-  const existing = items.find((item) => item._id === product._id);
+  const chave = chaveDe(product);
+  const existing = items.find((item) => chaveDe(item) === chave);
 
   if (!existing) {
     return [...items, { ...product, quantity: clampQuantity(quantity, product.stock) }];
   }
 
   return items.map((item) =>
-    item._id === product._id
+    chaveDe(item) === chave
       ? { ...item, quantity: clampQuantity(item.quantity + quantity, item.stock) }
       : item
   );
 }
 
-export function removeItem(items: CartItem[], productId: string): CartItem[] {
-  return items.filter((item) => item._id !== productId);
+export function removeItem(items: CartItem[], chave: string): CartItem[] {
+  return items.filter((item) => chaveDe(item) !== chave);
 }
 
-export function setQuantity(
-  items: CartItem[],
-  productId: string,
-  quantity: number
-): CartItem[] {
-  if (quantity <= 0) return removeItem(items, productId);
+export function setQuantity(items: CartItem[], chave: string, quantity: number): CartItem[] {
+  if (quantity <= 0) return removeItem(items, chave);
 
   return items.map((item) =>
-    item._id === productId
-      ? { ...item, quantity: clampQuantity(quantity, item.stock) }
-      : item
+    chaveDe(item) === chave ? { ...item, quantity: clampQuantity(quantity, item.stock) } : item
   );
 }
 
@@ -80,6 +88,7 @@ export function parseStoredCart(raw: string | null): CartItem[] {
       (item): item is CartItem =>
         !!item &&
         typeof item._id === 'string' &&
+        typeof item.varianteId === 'string' &&
         typeof item.name === 'string' &&
         typeof item.slug === 'string' &&
         eCentimos(item.priceCents) &&

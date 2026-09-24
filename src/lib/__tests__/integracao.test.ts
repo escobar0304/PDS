@@ -1,7 +1,8 @@
 import { hash, verify } from 'argon2';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { Category, Contador, Order, Product, Token, User } from '../models';
+import { Category, Contador, MovimentoStock, Order, Product, Token, User } from '../models';
+import { moverStock } from '../stock';
 import {
   PRAZO_RESERVA_MS,
   calcularEncomenda,
@@ -250,7 +251,7 @@ executar('contra MongoDB', () => {
         subtotalCents: total,
         totalCents: total,
         items: [
-          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', priceCents: total, quantity: 1 },
+          { productId: new mongoose.Types.ObjectId(), varianteId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', priceCents: total, quantity: 1 },
         ],
       });
     }
@@ -567,7 +568,7 @@ executar('encomendas, contra a base de dados', () => {
   }, 30_000);
 
   beforeEach(async () => {
-    await Promise.all([Order.deleteMany({}), Contador.deleteMany({})]);
+    await Promise.all([Order.deleteMany({}), Contador.deleteMany({}), MovimentoStock.deleteMany({})]);
   });
 
   afterAll(async () => {
@@ -576,6 +577,7 @@ executar('encomendas, contra a base de dados', () => {
       Category.deleteMany({}),
       Order.deleteMany({}),
       Contador.deleteMany({}),
+      MovimentoStock.deleteMany({}),
     ]);
   });
 
@@ -589,9 +591,10 @@ executar('encomendas, contra a base de dados', () => {
     shippingPostal: '4000-001',
   };
 
-  const stock = async (id: unknown) => (await Product.findById(id).lean())!.stock;
+  /** O stock da primeira medida — a unica, numa peca unica. */
+  const stock = async (id: unknown, i = 0) => (await Product.findById(id).lean())!.variantes[i].stock;
 
-  async function peca(over: Record<string, unknown>) {
+  async function peca({ stock: s = 3, ...over }: Record<string, unknown> & { stock?: number }) {
     const categoria =
       (await Category.findOne({ slug: 'quartzos' })) ??
       (await Category.create({ name: 'Quartzos', slug: 'quartzos' }));
@@ -599,12 +602,14 @@ executar('encomendas, contra a base de dados', () => {
       name: 'Quartzo rosa',
       slug: `quartzo-${new mongoose.Types.ObjectId()}`,
       priceCents: 1990,
-      stock: 3,
+      variantes: [{ stock: s }],
       weightGrams: 200,
       categoryId: categoria._id,
       ...over,
     });
   }
+
+  const vid = (p: { variantes: { _id: unknown }[] }, i = 0) => String(p.variantes[i]._id);
 
   it('o preço sai da base de dados', async () => {
     const p = await peca({});
@@ -636,14 +641,61 @@ executar('encomendas, contra a base de dados', () => {
     const a = await peca({ stock: 5 });
     const b = await peca({ stock: 1 });
 
-    const falhadas = await reservarStock([
-      { productId: a._id.toString(), name: 'a', priceCents: 1, quantity: 2 },
-      { productId: b._id.toString(), name: 'b', priceCents: 1, quantity: 2 },
-    ]);
+    const linhaB = { productId: b._id.toString(), varianteId: vid(b), name: 'b', priceCents: 1, quantity: 2 };
+    const falhou = await reservarStock(
+      [{ productId: a._id.toString(), varianteId: vid(a), name: 'a', priceCents: 1, quantity: 2 }, linhaB],
+      new mongoose.Types.ObjectId().toString()
+    );
 
-    expect(falhadas).toEqual([b._id.toString()]);
+    expect(falhou).toEqual(linhaB);
     expect(await stock(a._id)).toBe(5);
     expect(await stock(b._id)).toBe(1);
+  });
+
+  it('o stock de uma medida não se tira de outra (a armadilha do $elemMatch)', async () => {
+    // Medida 14 esgotada, 16 com stock. Com duas condicoes soltas em vez do
+    // $elemMatch, a consulta encontrava o produto (a 14 existe, a 16 tem
+    // stock) e o $ posicional tirava da 14, que ficava em -1.
+    const anel = await peca({ variantes: [{ medida: '14', stock: 0 }, { medida: '16', stock: 5 }] });
+
+    const ok = await moverStock({
+      productId: anel._id.toString(),
+      varianteId: vid(anel, 0),
+      delta: -1,
+      motivo: 'venda-loja',
+      por: 'admin:x',
+    });
+
+    expect(ok).toBe(false);
+    expect(await stock(anel._id, 0)).toBe(0);
+    expect(await stock(anel._id, 1)).toBe(5);
+  });
+
+  it('a venda ao balcão e a reserva online da última peça: só uma leva', async () => {
+    const p = await peca({ stock: 1 });
+
+    const [online, balcao] = await Promise.all([
+      criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], CLIENTE, TABELA),
+      moverStock({ productId: p._id.toString(), varianteId: vid(p), delta: -1, motivo: 'venda-loja', por: 'admin:x' }),
+    ]);
+
+    expect([online.ok, balcao].filter(Boolean)).toHaveLength(1);
+    expect(await stock(p._id)).toBe(0);
+    expect(await MovimentoStock.countDocuments()).toBe(1);
+  });
+
+  it('uma peça única não passa de uma unidade, e cada movimento fica registado', async () => {
+    const p = await peca({ stock: 1 });
+    const entrada = { productId: p._id.toString(), varianteId: vid(p), motivo: 'entrada' as const, por: 'admin:x', maximo: 1 };
+
+    expect(await moverStock({ ...entrada, delta: 1 })).toBe(false);
+    expect(await moverStock({ ...entrada, delta: -1, motivo: 'venda-loja' })).toBe(true);
+    expect(await moverStock({ ...entrada, delta: 1 })).toBe(true);
+
+    expect(await stock(p._id)).toBe(1);
+    // Por _id e nao por data: dois movimentos no mesmo milissegundo empatavam.
+    const movimentos = await MovimentoStock.find().sort({ _id: 1 }).lean();
+    expect(movimentos.map((m) => [m.motivo, m.delta])).toEqual([['venda-loja', -1], ['entrada', 1]]);
   });
 
   it('a encomenda nasce por pagar, numerada, com o stock reservado e o histórico', async () => {
@@ -658,6 +710,11 @@ executar('encomendas, contra a base de dados', () => {
     expect(e.reservaAte!.getTime()).toBe(agora.getTime() + PRAZO_RESERVA_MS);
     expect(e.historico).toEqual([{ para: 'PENDING', em: agora, por: 'cliente' }]);
     expect(await stock(p._id)).toBe(1);
+    // A reserva e um movimento como os do balcao, com a encomenda.
+    const m = (await MovimentoStock.findOne().lean())!;
+    expect(m).toMatchObject({ motivo: 'reserva-online', delta: -2 });
+    expect(String(m.encomendaId)).toBe(String(e._id));
+    expect(e.items[0].varianteId).toBeDefined();
   });
 
   it('os números nunca se repetem, mesmo pedidos ao mesmo tempo', async () => {
@@ -678,6 +735,7 @@ executar('encomendas, contra a base de dados', () => {
     const e = (await Order.findOne().lean())!;
     expect(e.status).toBe('CANCELLED');
     expect(e.historico.at(-1)).toMatchObject({ de: 'PENDING', para: 'CANCELLED', por: 'sistema' });
+    expect(await MovimentoStock.countDocuments({ motivo: 'reserva-libertada' })).toBe(1);
   });
 
   it('não se salta estados, e duas mudanças ao mesmo tempo não se atropelam', async () => {

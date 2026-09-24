@@ -27,6 +27,7 @@ interface Product {
   priceCents: number;
   images: string[];
   stock: number;
+  variantes: { _id: string; medida?: string; stock: number }[];
   categoryId: string;
   featured: boolean;
   active: boolean;

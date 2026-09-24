@@ -15,6 +15,7 @@ export const PRODUTOS = [
     priceCents: 2400,
     images: [],
     stock: 3,
+    variantes: [{ _id: 'v-p1', stock: 3 }],
     categoryId: { _id: 'c1', name: 'Quartzos', slug: 'quartzos' },
     featured: true,
     active: true,
@@ -27,6 +28,7 @@ export const PRODUTOS = [
     priceCents: 4250,
     images: [],
     stock: 10,
+    variantes: [{ _id: 'v-p2', stock: 10 }],
     categoryId: { _id: 'c2', name: 'Ametistas', slug: 'ametistas' },
     featured: false,
     active: true,
@@ -39,11 +41,31 @@ export const PRODUTOS = [
     priceCents: 1800,
     images: [],
     stock: 0,
+    variantes: [{ _id: 'v-p3', stock: 0 }],
     categoryId: { _id: 'c1', name: 'Quartzos', slug: 'quartzos' },
     featured: false,
     active: true,
   },
 ];
+
+/** Um modelo com medidas: o 14 esgotado, o 16 com duas. Nao esta em
+ * `PRODUTOS` para nao mudar as contagens dos outros testes. */
+export const ANEL = {
+  _id: 'p4',
+  name: 'Anel de Ametista',
+  slug: 'anel-de-ametista',
+  description: 'Anel em aço com ametista.',
+  priceCents: 3500,
+  images: [],
+  stock: 2,
+  variantes: [
+    { _id: 'v-14', medida: '14', stock: 0 },
+    { _id: 'v-16', medida: '16', stock: 2 },
+  ],
+  categoryId: { _id: 'c2', name: 'Ametistas', slug: 'ametistas' },
+  featured: false,
+  active: true,
+};
 
 type Cenario = {
   produtos?: unknown[];

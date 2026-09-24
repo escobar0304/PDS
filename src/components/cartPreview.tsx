@@ -7,6 +7,7 @@ import { botaoClasses } from '@/components/ui/Button';
 import { Minus, Plus, ShoppingBag, Trash, X } from '@phosphor-icons/react';
 import { useEffect, useRef } from 'react';
 import { formatarPreco } from '@/lib/dinheiro';
+import { chaveDe } from '@/lib/cart';
 
 export default function CartPreview() {
   const { items, total, isOpen, closeCart, updateQuantity, removeItem } = useCart();
@@ -105,7 +106,7 @@ export default function CartPreview() {
             <div className="space-y-4">
               {items.map((item) => (
                 <div
-                  key={item._id}
+                  key={chaveDe(item)}
                   className="flex gap-3 p-3 bg-surface rounded-lg"
                 >
                   {/* Imagem */}
@@ -132,6 +133,9 @@ export default function CartPreview() {
                     >
                       {item.name}
                     </Link>
+                    {item.medida && (
+                      <p className="text-xs text-ink-muted">Medida {item.medida}</p>
+                    )}
                     <p className="tabular mt-1 text-sm font-semibold text-rose-700">
                       {formatarPreco(item.priceCents)}
                     </p>
@@ -139,7 +143,7 @@ export default function CartPreview() {
                     {/* Quantidade */}
                     <div className="flex items-center gap-2 mt-2">
                       <button
-                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                        onClick={() => updateQuantity(chaveDe(item), item.quantity - 1)}
                         className="p-1 hover:bg-surface-raised rounded transition-smooth"
                         aria-label="Diminuir quantidade"
                       >
@@ -149,7 +153,7 @@ export default function CartPreview() {
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        onClick={() => updateQuantity(chaveDe(item), item.quantity + 1)}
                         disabled={item.quantity >= item.stock}
                         className="p-1 hover:bg-surface-raised rounded transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Aumentar quantidade"
@@ -157,7 +161,7 @@ export default function CartPreview() {
                         <Plus className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => removeItem(item._id)}
+                        onClick={() => removeItem(chaveDe(item))}
                         className="ml-auto p-1 hover:bg-danger-100 text-danger-700 rounded transition-smooth"
                         aria-label="Remover item"
                       >

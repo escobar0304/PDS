@@ -152,3 +152,65 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     </Envolucro>
   );
 });
+
+export interface OpcaoEscolha {
+  valor: string;
+  etiqueta: string;
+  /** Visivel mas nao escolhivel, com a razao dita ao leitor de ecra. */
+  indisponivel?: boolean;
+}
+
+/**
+ * Escolha de uma opcao entre poucas, visiveis de uma vez: a medida de um
+ * anel. Botoes de radio verdadeiros, num `fieldset` com `legend` — as setas
+ * mudam de opcao e o leitor de ecra diz "3 de 5" sem codigo nenhum. Uma opcao
+ * esgotada fica a vista e desativada: esconde-la faria parecer que a medida
+ * nao existe.
+ */
+export function Escolha({
+  legenda,
+  nome,
+  opcoes,
+  valor,
+  onChange,
+}: {
+  legenda: string;
+  nome: string;
+  opcoes: readonly OpcaoEscolha[];
+  valor: string | null;
+  onChange: (valor: string) => void;
+}) {
+  return (
+    <fieldset>
+      <legend className="mb-2 block text-sm font-medium text-ink">{legenda}</legend>
+      <div className="flex flex-wrap gap-2">
+        {opcoes.map((o) => (
+          <label
+            key={o.valor}
+            className={
+              'relative inline-flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded border px-3 text-sm transition-smooth ' +
+              'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-rose-600/40 ' +
+              (o.indisponivel
+                ? 'cursor-not-allowed border-line bg-surface-sunken text-ink-muted line-through'
+                : valor === o.valor
+                  ? 'cursor-pointer border-rose-700 bg-rose-700 text-surface'
+                  : 'cursor-pointer border-line bg-surface-raised text-ink hover:border-rose-600')
+            }
+          >
+            <input
+              type="radio"
+              name={nome}
+              value={o.valor}
+              checked={valor === o.valor}
+              disabled={o.indisponivel}
+              onChange={() => onChange(o.valor)}
+              className="sr-only"
+            />
+            {o.etiqueta}
+            {o.indisponivel && <span className="sr-only"> (esgotada)</span>}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}

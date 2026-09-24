@@ -125,6 +125,7 @@ export const esquemaPedido = z
     z
       .object({
         id: z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido'),
+        varianteId: z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido').optional(),
         quantidade: z.number().int().min(1).max(99),
       })
       .strict()
