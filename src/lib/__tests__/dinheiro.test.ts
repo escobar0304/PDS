@@ -37,6 +37,7 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
   it('encomenda, nos totais e em cada linha', () => {
     const encomenda = (over: Record<string, unknown>) =>
       new Order({
+        numero: '2026-000001',
         customerName: 'Marta Ferreira',
         customerEmail: 'marta@exemplo.pt',
         customerPhone: '910000000',

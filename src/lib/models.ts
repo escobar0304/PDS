@@ -1,6 +1,7 @@
 // src/lib/models.ts
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import { eCentimos } from '@/lib/dinheiro';
+import { ESTADOS, type Estado } from '@/lib/transicoes';
 
 // ============================================
 // INTERFACES TYPESCRIPT
@@ -60,6 +61,8 @@ export interface IUser extends Document {
 }
 
 export interface IOrder extends Document {
+  /** O numero que a pessoa ve (`2026-000123`). Ver `lib/transicoes.ts`. */
+  numero: string;
   userId?: mongoose.Types.ObjectId;
   customerName: string;
   customerEmail: string;
@@ -69,13 +72,18 @@ export interface IOrder extends Document {
   shippingPostal?: string;
   shippingCountry: string;
   deliveryType: 'PICKUP' | 'SHIPPING';
-  stripePaymentId?: string;
+  /** O identificador do pagamento no fornecedor, seja ele qual for (E4). */
+  pagamentoId?: string;
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
   /** Em centimos, como todos os valores da encomenda. */
   subtotalCents: number;
   shippingCents: number;
   totalCents: number;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'READY_PICKUP' | 'COMPLETED' | 'CANCELLED';
+  status: Estado;
+  /** Ate quando o stock fica reservado a espera do pagamento. */
+  reservaAte?: Date;
+  /** Cada mudanca de estado, com data e autor. Nunca se reescreve. */
+  historico: Array<{ de?: Estado; para: Estado; em: Date; por: string; nota?: string }>;
   notes?: string;
   items: Array<{
     productId: mongoose.Types.ObjectId;
@@ -267,6 +275,11 @@ userSchema.index({ role: 1 });
 
 const orderSchema = new Schema<IOrder>(
   {
+    numero: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -308,7 +321,7 @@ const orderSchema = new Schema<IOrder>(
       enum: ['PICKUP', 'SHIPPING'],
       required: [true, 'Tipo de entrega é obrigatório'],
     },
-    stripePaymentId: {
+    pagamentoId: {
       type: String,
     },
     paymentStatus: {
@@ -333,9 +346,22 @@ const orderSchema = new Schema<IOrder>(
     },
     status: {
       type: String,
-      enum: ['PENDING', 'PROCESSING', 'SHIPPED', 'READY_PICKUP', 'COMPLETED', 'CANCELLED'],
+      enum: ESTADOS,
       default: 'PENDING',
     },
+    reservaAte: {
+      type: Date,
+    },
+    historico: [
+      {
+        _id: false,
+        de: { type: String, enum: ESTADOS },
+        para: { type: String, enum: ESTADOS, required: true },
+        em: { type: Date, required: true },
+        por: { type: String, required: true },
+        nota: { type: String, trim: true },
+      },
+    ],
     notes: {
       type: String,
       trim: true,
@@ -377,6 +403,8 @@ orderSchema.index({ userId: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ createdAt: -1 });
+// Para encontrar as reservas expiradas sem percorrer a colecao.
+orderSchema.index({ status: 1, reservaAte: 1 });
 
 // ============================================
 // EXPORTAR MODELOS
@@ -393,6 +421,24 @@ export const User: Model<IUser> =
 
 export const Order: Model<IOrder> =
   mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+
+/**
+ * Contadores com incremento atomico. Hoje so o das encomendas, um por ano:
+ * `findOneAndUpdate` com `$inc` e `upsert` nunca da o mesmo numero duas vezes,
+ * ao contrario de contar documentos e somar um.
+ */
+interface IContador {
+  _id: string;
+  valor: number;
+}
+
+const contadorSchema = new Schema<IContador>({
+  _id: { type: String, required: true },
+  valor: { type: Number, required: true, default: 0 },
+});
+
+export const Contador: Model<IContador> =
+  mongoose.models.Contador || mongoose.model<IContador>('Contador', contadorSchema);
 
 // ============================================
 // TOKENS DE USO UNICO

@@ -162,7 +162,7 @@ ficou decidido pelo caminho:
   como problemas, e quem pediu decide
 - o esquema do pedido **recusa** um preço enviado junto, em vez de o ignorar
 
-## E2. Stock
+## E2. Stock — feito
 
 Duas pessoas a comprar a última peça ao mesmo tempo: só uma pode conseguir. A
 reserva é uma operação atómica na base de dados (`stock >= quantidade` na
@@ -171,11 +171,25 @@ reserva cujo pagamento não chega a acontecer liberta-se sozinha.
 
 Faz-se agora. **Só se sabe verdadeira no CI**, contra um MongoDB real.
 
-## E3. Estados, histórico e numeração
+**Sem transações, e porquê:** o MongoDB só as tem em *replica set*; o do CI
+não é, e o de produção está por escolher. Cada peça é uma atualização atómica
+condicional, e se uma falhar as já tiradas voltam ao stock. O custo é um
+instante em que o stock parece menor do que é; vender o que não há não
+acontece. Não há tarefa agendada no projeto: as reservas expiradas libertam-se
+no início de cada encomenda nova, que é quando o stock faz falta. Os testes de
+integração põem duas encomendas a disputar a última peça e duas limpezas a
+correr ao mesmo tempo.
+
+## E3. Estados, histórico e numeração — feito
 
 Estados com transições permitidas (não se expede uma encomenda por pagar),
 cada mudança registada com data e autor, e um número de encomenda legível que
 não seja o `_id`. Faz-se agora.
+
+As transições estão em `src/lib/transicoes.ts`. O número é `2026-000123`, de
+um contador atómico por ano — **não é o número da fatura**, que é do programa
+certificado (P2). `stripePaymentId` passou a `pagamentoId`: o fornecedor
+ainda não está escolhido.
 
 ---
 
@@ -310,8 +324,8 @@ L2  a dependência stripe sai              feito
 L3  /admin protegido, com teste           feito
 C1  preços em cêntimos                    feito
 E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
-E2  reserva de stock atómica           (verdadeira só depois do CI)
-E3  estados, histórico, numeração
+E2  reserva de stock atómica              feito (verdadeira só depois do CI)
+E3  estados, histórico, numeração         feito
     CSP sem 'unsafe-inline'            (medir o custo primeiro)
     comparação de fornecedores de pagamento, para decidires a E4
 ```
