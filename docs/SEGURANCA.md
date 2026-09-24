@@ -104,6 +104,13 @@ permite a Google por causa do mapa, `img-src` permite `data:` por causa do
 `script-src`, que o Next exige para os dados de hidratação e que só sai com
 `middleware` e nonce por pedido.
 
+**Medido em 24/09/2026** (detalhe em `ROADMAP-V2.md`, fase 6): o SRI não o
+resolve — bloqueia os *scripts* de hidratação em linha — e os *nonces* no
+sítio todo custam as páginas estáticas, quatro vezes o tempo até ao primeiro
+byte, e reintroduzem conteúdo escondido em `/loja`. Não há hoje nenhum
+`dangerouslySetInnerHTML`, `innerHTML` ou `eval` no código. Decisão: *nonce*
+só na rota do pagamento, quando existir.
+
 `preload` fica de fora do HSTS de propósito: entrar na lista de pré-carregamento
 é difícil de reverter e decide-se com o domínio já estável.
 

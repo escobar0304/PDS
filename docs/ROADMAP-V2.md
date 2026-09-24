@@ -305,12 +305,22 @@ Não é uma fase no fim: cada ponto entra no PR que o torna verdadeiro.
 | Privacidade e registo: encomendas (base legal contrato e obrigação fiscal), fornecedor de pagamentos, programa de faturação, CTT | E3, E4, P2 |
 | Cookies: o script de pagamento, só na rota dele, e o teste que o garante | E4 |
 | CSP: os domínios do fornecedor de pagamento | E4 |
-| **CSP sem `'unsafe-inline'`** | antes da E4 |
+| **CSP sem `'unsafe-inline'`** | E5, **só na rota do pagamento** — medido, ver abaixo |
 
-O último é dívida da v1 e faz-se agora. Um sítio com um formulário de pagamento
-é o sítio onde um *script* injetado mais custa. Os *nonces* tornam as páginas
-dinâmicas; **o custo mede-se antes** — é o tipo de coisa que a
-`PERFORMANCE.md` já desmentiu uma vez.
+O último é dívida da v1. Um sítio com um formulário de pagamento é o sítio
+onde um *script* injetado mais custa. **Medido em 24/09/2026, e a medição
+mudou o plano** — estava "faz-se agora, no sítio todo":
+
+| | resultado |
+|---|---|
+| SRI (a alternativa experimental do Next, que mantém as páginas estáticas) | **não funciona.** Cobre os ficheiros `.js`, mas os dois *scripts* em linha que o Next escreve em cada página para a hidratação ficam bloqueados, e a página deixa de funcionar |
+| *Nonces* no sítio todo | funcionam: 122 de 123 testes verdes. Mas as 20 páginas estáticas passam a dinâmicas, o tempo até ao primeiro byte passa de **1,5–1,9 ms para 6,6–7,4 ms** (mediana de 300 pedidos, sem rede nem base de dados; p95 de 2,8 para 11,5 ms), deixam de se poder servir de uma CDN, e `/loja` volta a chegar com o conteúdo escondido à espera do JavaScript — o problema que saiu com o `loading.tsx` |
+| Superfície que os *nonces* fechariam hoje | nenhum `dangerouslySetInnerHTML`, `innerHTML` ou `eval` no código; o React escapa o texto. O `'unsafe-inline'` é uma segunda linha de defesa, não a primeira |
+
+**A proposta:** a CSP com *nonce* só na rota do pagamento, pelo mesmo princípio
+do `stripe.js` (F7b no roteiro da v1): é lá que o risco está e é lá que o
+fornecedor de pagamento carrega *scripts*. O resto do sítio fica estático.
+Faz-se com a E5, porque antes dela não há rota onde a aplicar.
 
 ---
 
@@ -326,7 +336,7 @@ C1  preços em cêntimos                    feito
 E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
 E2  reserva de stock atómica              feito (verdadeira só depois do CI)
 E3  estados, histórico, numeração         feito
-    CSP sem 'unsafe-inline'            (medir o custo primeiro)
+    CSP sem 'unsafe-inline'               medido; passa para a E5, só no pagamento
     comparação de fornecedores de pagamento, para decidires a E4
 ```
 
