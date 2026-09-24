@@ -9,6 +9,7 @@ import { botaoClasses } from '@/components/ui/Button';
 import { ArrowLeft, Check, Minus, Plus, ShoppingBag, Trash } from '@phosphor-icons/react';
 import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 import { formatarPreco } from '@/lib/dinheiro';
+import { chaveDe } from '@/lib/cart';
 
 export default function Carrinho() {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -63,7 +64,7 @@ export default function Carrinho() {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
                 <div
-                  key={item._id}
+                  key={chaveDe(item)}
                   className="bg-surface-raised p-4 md:p-6 rounded-lg shadow-soft"
                 >
                   <div className="flex gap-4">
@@ -91,13 +92,17 @@ export default function Carrinho() {
                           {item.name}
                         </Link>
                         <button
-                          onClick={() => removeItem(item._id)}
+                          onClick={() => removeItem(chaveDe(item))}
                           className="p-2 hover:bg-danger-100 text-danger-700 rounded-lg transition-smooth flex-shrink-0"
                           aria-label="Remover item"
                         >
                           <Trash className="w-5 h-5" />
                         </button>
                       </div>
+
+                      {item.medida && (
+                        <p className="-mt-1 mb-2 text-sm text-ink-muted">Medida {item.medida}</p>
+                      )}
 
                       <p className="tabular mb-4 text-xl font-semibold text-rose-700">
                         {formatarPreco(item.priceCents)}
@@ -107,7 +112,7 @@ export default function Carrinho() {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2 border border-line rounded-lg">
                           <button
-                            onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                            onClick={() => updateQuantity(chaveDe(item), item.quantity - 1)}
                             className="p-2 hover:bg-surface-sunken transition-smooth"
                             aria-label="Diminuir quantidade"
                           >
@@ -117,7 +122,7 @@ export default function Carrinho() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                            onClick={() => updateQuantity(chaveDe(item), item.quantity + 1)}
                             disabled={item.quantity >= item.stock}
                             className="p-2 hover:bg-surface-sunken transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
                             aria-label="Aumentar quantidade"

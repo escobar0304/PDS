@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:env": "tsx scripts/check-env.ts",
+    "admin": "tsx scripts/administrador.ts",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "marca:og": "node scripts/gerar-og.mjs",

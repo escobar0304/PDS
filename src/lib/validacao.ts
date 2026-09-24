@@ -93,13 +93,6 @@ const slug = z
   .max(80)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug inválido');
 
-export const esquemaCategoria = z.object({
-  name: texto(80),
-  slug,
-  description: z.string().trim().max(500).optional().or(z.literal('')),
-  image: z.string().trim().max(500).optional().or(z.literal('')),
-  order: z.number().int().min(0).max(9999).optional(),
-});
 
 export const esquemaPedidoReposicao = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
@@ -125,9 +118,146 @@ export const esquemaPedido = z
     z
       .object({
         id: z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido'),
+        varianteId: z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido').optional(),
         quantidade: z.number().int().min(1).max(99),
       })
       .strict()
   )
   .min(1)
   .max(50);
+
+// ============================================
+// ADMINISTRACAO (ROADMAP-V2, C3)
+// ============================================
+//
+// Tudo `strict()`: um campo que o painel nao manda e recusado, e nao
+// ignorado. O `stock` nao esta em nenhum destes esquemas de proposito — muda
+// por movimentos (`esquemaMovimento`), nunca por valor.
+
+const idMongo = z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido');
+
+/**
+ * Imagens so do proprio sitio, enquanto nao houver alojamento de imagens
+ * decidido. Um URL de fora e um terceiro contactado por cada visita (ver
+ * `e2e/privacidade.spec.ts`), e o `next/image` nao o serve.
+ */
+const imagem = z
+  .string()
+  .trim()
+  .max(300)
+  .regex(/^\/images\/[a-z0-9][a-z0-9/_-]*\.(?:webp|png|jpe?g|avif)$/i, 'Imagem inválida');
+
+const propriedades = z
+  .object({
+    chakra: z.string().trim().max(80).optional(),
+    elemento: z.string().trim().max(80).optional(),
+    signo: z.string().trim().max(80).optional(),
+    beneficios: z.array(z.string().trim().min(1).max(200)).max(10).optional(),
+    cuidados: z.array(z.string().trim().min(1).max(200)).max(10).optional(),
+  })
+  .strict();
+
+const camposProduto = {
+  name: texto(120),
+  slug,
+  description: z.string().trim().max(2000).optional(),
+  priceCents: z.number().int().min(0).max(10_000_000),
+  weightGrams: z.number().int().min(1).max(100_000),
+  categoryId: idMongo,
+  images: z.array(imagem).max(12),
+  featured: z.boolean(),
+  active: z.boolean(),
+  dimensions: z.string().trim().max(120).optional(),
+  properties: propriedades.optional(),
+};
+
+/** Criar: as medidas com o stock inicial, que entra como movimento "entrada". */
+export const esquemaNovoProduto = z
+  .object({
+    ...camposProduto,
+    variantes: z
+      .array(
+        z
+          .object({
+            medida: z.string().trim().max(40).optional(),
+            stock: z.number().int().min(0).max(100_000),
+          })
+          .strict()
+      )
+      .min(1)
+      .max(40),
+  })
+  .strict();
+
+/**
+ * Editar: so o que se muda por valor. Medidas novas acrescentam-se com stock
+ * 0; as que existem podem mudar de nome, nunca desaparecer — uma encomenda
+ * aponta para elas.
+ */
+export const esquemaEdicaoProduto = z
+  .object({
+    ...camposProduto,
+    variantes: z
+      .array(
+        z
+          .object({
+            _id: idMongo.optional(),
+            medida: z.string().trim().max(40).optional(),
+          })
+          .strict()
+      )
+      .min(1)
+      .max(40),
+  })
+  .partial()
+  .strict();
+
+/** O que se pode fazer ao stock pelo painel. As reservas sao do sistema. */
+export const MOTIVOS_PAINEL = ['venda-loja', 'entrada', 'acerto', 'quebra'] as const;
+
+export const esquemaMovimento = z
+  .object({
+    varianteId: idMongo,
+    delta: z
+      .number()
+      .int()
+      .min(-100_000)
+      .max(100_000)
+      .refine((v) => v !== 0, 'Um movimento não pode ser zero'),
+    motivo: z.enum(MOTIVOS_PAINEL),
+    nota: z.string().trim().max(500).optional(),
+  })
+  .strict()
+  // Vender e partir so tiram; so a entrada so acrescenta. O acerto vai para
+  // os dois lados: e para quando a contagem na prateleira nao bate certo.
+  .refine(
+    (m) =>
+      (m.motivo !== 'venda-loja' && m.motivo !== 'quebra') || m.delta < 0,
+    'Uma venda ou uma quebra tiram stock'
+  )
+  .refine((m) => m.motivo !== 'entrada' || m.delta > 0, 'Uma entrada acrescenta stock');
+
+export const esquemaNovaCategoria = z
+  .object({
+    name: texto(80),
+    slug,
+    description: z.string().trim().max(500).optional(),
+    image: imagem.optional(),
+    order: z.number().int().min(0).max(9999).optional(),
+    // Obrigatorio, e sem valor por omissao: e uma decisao do negocio sobre a
+    // categoria, e o painel tem de a pedir.
+    pecasUnicas: z.boolean(),
+  })
+  .strict();
+
+export const esquemaEdicaoCategoria = z
+  .object({
+    name: texto(80),
+    slug,
+    description: z.string().trim().max(500).optional(),
+    image: imagem.optional(),
+    order: z.number().int().min(0).max(9999),
+    pecasUnicas: z.boolean(),
+  })
+  .partial()
+  .strict();

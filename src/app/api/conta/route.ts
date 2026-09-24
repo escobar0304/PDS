@@ -6,7 +6,7 @@ import connectDB from '@/lib/db';
 import { User } from '@/lib/models';
 import { exigirSessao } from '@/lib/autorizacao';
 import { apagarConta } from '@/lib/conta';
-import { consumir, identificar } from '@/lib/limites';
+import { LIMITES, consumir, identificar, travar } from '@/lib/limites';
 import { esquemaPerfil, lerCorpo } from '@/lib/validacao';
 
 /**
@@ -25,9 +25,12 @@ const LIMITE = { max: 5, janelaMs: 15 * 60 * 1000 };
  * obrigava a uma consulta a base de dados a cada renovacao do JWT para um
  * dado que so interessa a um separador que a maioria nunca abre.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const permissao = await exigirSessao();
   if (!permissao.ok) return permissao.resposta;
+
+  const bloqueio = travar(request, 'conta', LIMITES.conta, permissao.sessao.id);
+  if (bloqueio) return bloqueio;
 
   try {
     await connectDB();

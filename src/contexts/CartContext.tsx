@@ -21,8 +21,9 @@ interface CartContextType {
   itemCount: number;
   total: number;
   addItem: (product: CartProduct, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  /** `chave` e `chaveDe(item)`: o produto e a medida. */
+  removeItem: (chave: string) => void;
+  updateQuantity: (chave: string, quantity: number) => void;
   clearCart: () => void;
   isOpen: boolean;
   openCart: () => void;
@@ -65,12 +66,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(true);
   };
 
-  const removeItem = (productId: string) => {
-    setItems((prev) => removeItemFrom(prev, productId));
+  const removeItem = (chave: string) => {
+    setItems((prev) => removeItemFrom(prev, chave));
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
-    setItems((prev) => setQuantity(prev, productId, quantity));
+  const updateQuantity = (chave: string, quantity: number) => {
+    setItems((prev) => setQuantity(prev, chave, quantity));
   };
 
   const clearCart = () => setItems([]);

@@ -421,6 +421,31 @@ sério e não uma simulação dela: sessão válida continua, token antigo sem
 versão continua, apagar a conta termina, repor a palavra-passe termina e a
 entrada seguinte fica, e o papel vem da base de dados.
 
+## Nenhuma decisão de acesso no browser — 24/09/2026
+
+Pedido do negócio, e era a regra que o projeto já seguia em quase tudo. O
+"quase" estava em dois sítios:
+
+- **`/area-pessoal` decidia no cliente.** Era um componente de cliente que
+  redirecionava para a entrada depois de carregar. Os dados não saíam — vêm
+  de rotas que exigem sessão —, mas a página abria para quem a pedisse. Passa
+  a ter `paginaComSessao()` no servidor: sem sessão, a resposta é o
+  redirecionamento, antes de haver página. O teste que existia passava com o
+  redirecionamento feito no browser; o novo pede ao servidor sem seguir
+  redirecionamentos e exige o `307`.
+- **Seis métodos de rotas sem limite de pedidos:** as leituras do catálogo,
+  a criação de categorias (só de administrador, mas sem limite), a leitura da
+  própria conta e a exportação dos dados. Passam todos por `travar()`.
+
+`rotas-seguras.test.ts` passa a falhar se um método de uma rota não limitar
+pedidos, ou se uma rota de `/api/admin` não chamar `exigirAdmin()` antes de
+ler o pedido ou a base de dados. `admin.test.ts` cobre as páginas de `/admin`
+e da área pessoal.
+
+**O limite vive na memória de cada servidor.** Com uma instância, chega. Num
+alojamento *serverless* não: cada instância conta os seus. Está registado no
+`ROADMAP-V2.md` (S1) como critério na escolha do alojamento.
+
 ## Por fazer
 
 - **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços

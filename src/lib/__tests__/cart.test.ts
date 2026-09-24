@@ -5,6 +5,7 @@ import {
   clampQuantity,
   countItems,
   parseStoredCart,
+  chaveDe,
   removeItem,
   setQuantity,
   type CartItem,
@@ -13,6 +14,7 @@ import {
 
 const produto = (over: Partial<CartProduct> = {}): CartProduct => ({
   _id: 'a1',
+  varianteId: 'v1',
   name: 'Quartzo Rosa Bruto',
   slug: 'quartzo-rosa-bruto',
   priceCents: 2400,
@@ -70,11 +72,11 @@ describe('addItem', () => {
 
 describe('setQuantity', () => {
   it('remove o item quando a quantidade chega a zero', () => {
-    expect(setQuantity([item()], 'a1', 0)).toHaveLength(0);
+    expect(setQuantity([item()], 'a1:v1', 0)).toHaveLength(0);
   });
 
   it('limita ao stock', () => {
-    expect(setQuantity([item({ stock: 2 })], 'a1', 99)[0].quantity).toBe(2);
+    expect(setQuantity([item({ stock: 2 })], 'a1:v1', 99)[0].quantity).toBe(2);
   });
 
   it('ignora ids desconhecidos', () => {
@@ -85,7 +87,7 @@ describe('setQuantity', () => {
 
 describe('removeItem', () => {
   it('remove so o item indicado', () => {
-    const items = removeItem([item(), item({ _id: 'b2' })], 'a1');
+    const items = removeItem([item(), item({ _id: 'b2' })], 'a1:v1');
     expect(items.map((i) => i._id)).toEqual(['b2']);
   });
 });
@@ -141,5 +143,29 @@ describe('parseStoredCart', () => {
       { ...item({ _id: 'negativo' }), priceCents: -100 },
     ]);
     expect(parseStoredCart(raw).map((i) => i._id)).toEqual(['bom']);
+  });
+});
+
+describe('medidas', () => {
+  it('o mesmo anel em duas medidas são duas linhas', () => {
+    let items = addItem([], produto({ _id: 'anel', varianteId: '14', medida: '14' }));
+    items = addItem(items, produto({ _id: 'anel', varianteId: '16', medida: '16' }));
+    items = addItem(items, produto({ _id: 'anel', varianteId: '16', medida: '16' }));
+
+    expect(items.map((i) => [chaveDe(i), i.quantity])).toEqual([
+      ['anel:14', 1],
+      ['anel:16', 2],
+    ]);
+  });
+
+  it('tirar uma medida não tira a outra', () => {
+    const items = [item({ _id: 'anel', varianteId: '14' }), item({ _id: 'anel', varianteId: '16' })];
+    expect(removeItem(items, 'anel:14').map(chaveDe)).toEqual(['anel:16']);
+  });
+
+  it('um carrinho guardado sem medida descarta-se', () => {
+    // Os carrinhos de antes das medidas: adivinhar a medida era escolher pela pessoa.
+    const { varianteId: _, ...semMedida } = item();
+    expect(parseStoredCart(JSON.stringify([semMedida]))).toEqual([]);
   });
 });

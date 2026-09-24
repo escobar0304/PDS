@@ -3,9 +3,14 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import { Category, Product } from '@/lib/models';
+import { paraPublico } from '@/lib/catalogo';
+import { LIMITES, travar } from '@/lib/limites';
 import { resolveLimit, resolveSort } from '@/lib/products';
 
 export async function GET(request: Request) {
+  const bloqueio = travar(request, 'catalogo', LIMITES.leitura);
+  if (bloqueio) return bloqueio;
+
   try {
     await connectDB();
 
@@ -39,9 +44,9 @@ export async function GET(request: Request) {
       cursor = cursor.limit(limit);
     }
 
-    const products = await cursor;
+    const products = await cursor.lean();
 
-    return NextResponse.json(products);
+    return NextResponse.json(products.map(paraPublico));
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
     return NextResponse.json(

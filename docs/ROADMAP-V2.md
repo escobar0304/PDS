@@ -103,33 +103,98 @@ preços passam também a escrever-se como em Portugal — `19,90 €`, e não
 `19.90€` como até aqui. Os carrinhos guardados antes da mudança descartam-se:
 convertê-los era adivinhar, e quem tinha um carrinho era quem testava.
 
-## C2. Peças únicas ou modelos com medida
+## C2. Peças únicas e modelos com medida — feito
 
-**Bloqueado: decisão tua.** Disseste que "as peças vão ter medida e as pessoas
-escolhem o que querem". Isso pode querer dizer duas coisas, com modelos de dados
-diferentes:
+**Decidido em 24/09/2026:** é a categoria que diz. Cristais em bruto são peças
+únicas; anéis, por exemplo, têm medidas.
 
 | | peça única | modelo com medidas |
 |---|---|---|
 | exemplo | *esta* drusa de ametista, fotografada | anel de quartzo rosa, tamanhos 14 a 20 |
-| stock | 1, e desaparece ao vender | por medida |
+| stock | 0 ou 1, e desaparece ao vender | por medida |
 | fotografia | tem de ser a da própria peça | pode ser de um exemplar, dito como tal |
-| modelo | o que existe hoje chega | variantes, cada uma com stock e talvez preço |
+| no modelo | o produto, sem medidas | o produto e as suas medidas, cada uma com stock |
 
-É provável que sejam as duas, por categoria: cristais em bruto únicos, anéis
-por tamanho. O modelo tem de suportar as duas antes do painel de produtos ser
-escrito, senão escreve-se duas vezes.
+**Todo o produto tem medidas; uma peça única tem uma só, sem nome.** Uniforme
+de propósito: a reserva, os movimentos e o carrinho seguem sempre o mesmo
+caminho, em vez de dois com um `if` em cada sítio. A categoria ganha
+`pecasUnicas`, e as regras que dependem dela (uma medida, stock 0 ou 1) estão
+em `src/lib/catalogo.ts` — o esquema do Mongoose não vê a categoria do
+produto, por isso não podiam viver lá. Na loja, um anel escolhe-se na página
+dele, e o botão de pôr no carrinho fica desativado até haver medida: o
+servidor também não escolhe por ninguém (`medida-por-escolher`). O preço fica no
+produto, igual para todas as medidas — **se alguma medida tiver de custar
+diferente, diz**, e passa para a medida.
 
-## C3. Painel de produtos
+## O stock é um só, e é o da loja física — feito no servidor; o painel falta
 
-Criar, editar, desativar (nunca apagar: uma encomenda aponta para o produto),
-peso obrigatório — os portes dependem dele —, e imagens.
+**Decidido em 24/09/2026:** não há encomendas a fornecedores nem peças feitas
+por encomenda — tudo o que se vende está na loja. Isto tem duas consequências:
+
+1. **Uma venda ao balcão tem de sair do sítio no mesmo instante.** Senão, o
+   sítio vende uma peça que já não existe. Para uma peça única, é certo que
+   acontece. O painel tem de o tornar rápido: o produto, e "vendido na loja".
+2. **O stock muda-se por movimentos, nunca por valor.** "−1, vendido na
+   loja", "+5, entrada", "−1, partida" — cada um com data, autor e razão. Um
+   "o stock passa a ser 3" escrito por cima apagava em silêncio uma reserva
+   online que estivesse a decorrer no mesmo segundo; um `−1` não apaga nada.
+   É a mesma atualização condicional da E2: o stock nunca fica negativo.
+   Está em `src/lib/stock.ts`, e a reserva online passa por lá também: cada
+   venda ao balcão, entrada ou reserva fica em `MovimentoStock`.
+
+   **Uma armadilha evitada, com teste:** com as medidas numa lista, a
+   condição tem de ser `$elemMatch`. Duas condições soltas —
+   `'variantes._id': X` e `'variantes.stock' >= 1` — são satisfeitas por
+   medidas *diferentes*, e o `$` tirava stock à medida esgotada.
+
+E uma terceira, para quem está ao balcão: o painel mostra o que está
+**reservado online** à espera de pagamento. A peça continua na prateleira
+durante esses 30 minutos, e quem a vender ali tem de saber que alguém a está a
+pagar.
+
+Confirma também que a exceção à livre resolução para peças personalizadas
+(`excecaoPersonalizadas: false`) fica desligada: não há peças feitas por
+encomenda.
+
+## C3. Painel de produtos — feito
+
+**O painel é gestão, e só isso:** produtos, medidas, stock e categorias. Criar,
+editar, desativar (nunca apagar: uma encomenda aponta para o produto), peso
+obrigatório — os portes dependem dele —, movimentos de stock, e imagens.
+
+Cada ação é uma rota em `/api/admin/`, e todas cumprem as mesmas regras, com
+testes que falham se uma rota nova as esquecer:
+
+- `exigirAdmin()` antes de qualquer outra coisa (`rotas-seguras.test.ts`)
+- o corpo validado por esquema, com `strict()`: campos a mais são recusados
+- limite de pedidos por administrador
+- a validação no formulário é só para ajudar quem preenche; o servidor repete-a
+  toda (ver fase 6)
+
+**Feito em 24/09/2026:** `/admin` (resumo), `/admin/produtos` (lista, com
+"−1 vendido na loja" em cada medida e o reservado online), `/admin/produtos/novo`,
+`/admin/produtos/[id]` (dados, movimentos e histórico) e `/admin/categorias`.
+A página `/admin/encomendas` saiu: dizia só "por construir", e volta com a P3.
+
+**O que não se viu a correr:** os formulários só aparecem com categorias e
+produtos lidos da base de dados, e o e2e corre sem ela de propósito. O que o
+e2e prova, com uma sessão assinada: um cliente autenticado leva 404 em todas
+as páginas do painel e 403 na API; um administrador abre-as, sem violações
+WCAG, e sem base de dados vê que ela falta. As operações estão provadas nos
+testes de integração. **Falta um ensaio do painel com dados reais** — ou
+um job de e2e com MongoDB no CI, ou uma passagem tua com a base de dados
+ligada.
+
+**Quem é administrador** não se decide na web. Não há página nem rota que
+promova uma conta: faz-se com um *script* corrido no servidor
+(`npm run admin:promover`). Uma rota que o fizesse seria a rota mais
+interessante do sítio para quem o quisesse atacar.
 
 **O código faz-se agora. As imagens, não:** precisam de sítio onde ficar, e
 esse sítio é um subcontratante (ver "Alojamento" em
 `REGISTO-TRATAMENTOS.md`), por decidir.
 
-## C4. Painel de categorias
+## C4. Painel de categorias — feito, com a C3
 
 Hoje só há a rota da API. Pequeno, e depende da C3 só para reaproveitar os
 componentes.
@@ -195,13 +260,31 @@ ainda não está escolhido.
 
 # Fase 3 - Pagamento
 
-## E4. Fornecedor de pagamentos
+## E4. Fornecedor de pagamentos — decidido: Stripe, com a página alojada
 
-**Decisão tua, com uma medição minha primeiro.** A v1 assumiu Stripe. Não está
-errado, mas não foi comparado: em Portugal, **MB WAY e Multibanco** pesam mais
-do que o cartão, e há fornecedores portugueses que os tratam como primeira
-classe. Comparo antes de escrever uma linha: meios suportados, comissão por
-transação, e o que cada um exige para abrir conta.
+**Decidido em 24/09/2026**, depois da comparação abaixo — que continua por
+confirmar nos preçários. Com o **Checkout alojado** da Stripe: a pessoa escolhe
+pagar, o servidor cria a sessão de pagamento e a pessoa é levada para a página
+da Stripe. Isso decide três coisas de uma vez:
+
+- **o `stripe.js` não carrega no nosso sítio.** Não há cookies da Stripe no
+  nosso domínio, e o consentimento continua desnecessário (F7b)
+- **a CSP não muda**, e a questão do *nonce* na rota do pagamento deixa de se
+  pôr: não há formulário de cartão nenhum no sítio
+- os dados do cartão nunca passam pelo nosso servidor
+
+**A reserva tem de durar mais do que a sessão de pagamento.** Se a sessão e a
+reserva expirassem ao mesmo tempo, um pagamento feito no último segundo podia
+chegar depois de a limpeza ter cancelado a encomenda e devolvido a peça ao
+stock. A reserva dura a sessão mais uma margem, e um pagamento que chegue para
+uma encomenda já cancelada não se perde: fica marcado para reembolso, ou para
+reativar se a peça ainda lá estiver. O prazo mínimo de uma sessão tem de ser
+confirmado na documentação da Stripe.
+
+**Este ambiente não chega à Stripe** — o proxy bloqueia `stripe.com`. O código
+testa-se sem rede: a assinatura dos avisos com a própria biblioteca, a API
+simulada. Um teste de ponta a ponta contra o modo de testes da Stripe precisa
+das chaves de teste da tua conta, nos segredos do CI.
 
 Seja qual for, as regras já estão decididas:
 
@@ -261,7 +344,7 @@ não é opcional:
 - a pessoa fica a saber, antes, se a entrega é por envio ou levantamento — o
   levantamento na loja **continua por responder** (`levantamentoNaLoja`)
 
-**Comprar sem conta: decisão tua.** Recomendo que sim. Obrigar a criar conta
+**Comprar sem conta: decidido em 24/09/2026 — pode.** Obrigar a criar conta
 para comprar uma pedra é guardar dados de quem não pediu uma conta — contra a
 minimização do RGPD —, e é a razão mais comum de desistência a meio do
 checkout. A encomenda precisa de nome, email, morada e telefone de qualquer
@@ -289,10 +372,10 @@ realista para uma loja. Preciso de saber:
 
 1. **Que programa de faturação usa o teu contabilista.** Se já há um, é esse —
    integrar com outro obriga a reconciliar dois
-2. **O regime de IVA.** A v1 diz em `/envios` e `/termos` que os preços incluem IVA. Se
-   a atividade estiver no regime de isenção do art. 53.º do CIVA, não se cobra
-   IVA e essa frase é falsa **hoje**, não só na v2. Confirma com o
-   contabilista antes de a v1 ir para o ar
+2. **O regime de IVA.** O negócio confirmou em 24/09/2026 que os preços
+   incluem IVA, e o texto fica assim. Mas isso só é verdade no regime normal:
+   no regime de isenção do art. 53.º do CIVA não se cobra IVA, e a frase seria
+   falsa. É um facto a confirmar com o contabilista, não uma escolha
 3. **O prazo de conservação** das faturas e das encomendas. Tem de ir para a
    política de privacidade no dia da primeira venda (`src/lib/conta.ts` já
    deixou isto escrito)
@@ -327,6 +410,30 @@ painel mostrar quantos dias faltam.
 
 # Fase 6 - Legal, privacidade e segurança
 
+## S1. Nenhuma decisão de acesso no browser
+
+**Pedido do negócio em 24/09/2026, e é a regra que o projeto já seguia —
+passa a estar escrita e testada.** O browser é de quem o usa: tudo o que lá
+corre pode ser mudado. Esconder um botão, redirecionar uma página no
+cliente, validar um formulário — nada disso protege coisa nenhuma. Serve para
+ajudar quem usa o sítio honestamente; a decisão é sempre do servidor.
+
+| | onde se decide | o teste que o mantém |
+|---|---|---|
+| páginas de `/admin` | `paginaDeAdmin()`, no servidor, em cada página | `admin.test.ts` |
+| rotas de `/api/admin` | `exigirAdmin()` antes de ler o pedido | `rotas-seguras.test.ts` |
+| rotas da conta | `exigirSessao()`, e só o id da sessão | `rotas-seguras.test.ts`, integração |
+| todo o corpo de pedido | esquema no servidor | `rotas-seguras.test.ts` |
+| preços, portes, stock | calculados no servidor a partir da base de dados | `encomenda.test.ts` |
+| **limite de pedidos** | **em todos os métodos de todas as rotas**, leituras incluídas | `rotas-seguras.test.ts` |
+
+O limite de pedidos tem uma fraqueza conhecida: vive na memória de cada
+servidor. Com uma instância chega; num alojamento *serverless*, com muitas
+instâncias de vida curta, cada uma conta os seus e o limite quase desaparece.
+**É um critério na escolha do alojamento:** ou uma instância, ou um
+armazenamento partilhado para os contadores — e esse armazenamento é mais um
+subcontratante.
+
 Não é uma fase no fim: cada ponto entra no PR que o torna verdadeiro.
 
 | | entra com |
@@ -334,8 +441,8 @@ Não é uma fase no fim: cada ponto entra no PR que o torna verdadeiro.
 | Termos: quando o contrato fica celebrado, meios de pagamento | E5 |
 | Privacidade e registo: encomendas (base legal contrato e obrigação fiscal), fornecedor de pagamentos, programa de faturação, CTT | E3, E4, P2 |
 | Cookies: o script de pagamento, só na rota dele, e o teste que o garante | E4 |
-| CSP: os domínios do fornecedor de pagamento | E4 |
-| **CSP sem `'unsafe-inline'`** | E5, **só na rota do pagamento** — medido, ver abaixo |
+| CSP: os domínios do fornecedor de pagamento | não é preciso: o pagamento é na página da Stripe (E4) |
+| **CSP sem `'unsafe-inline'`** | medido, ver abaixo; com o Checkout alojado não há rota de pagamento no sítio onde o aplicar |
 
 O último é dívida da v1. Um sítio com um formulário de pagamento é o sítio
 onde um *script* injetado mais custa. **Medido em 24/09/2026, e a medição
@@ -347,10 +454,10 @@ mudou o plano** — estava "faz-se agora, no sítio todo":
 | *Nonces* no sítio todo | funcionam: 122 de 123 testes verdes. Mas as 20 páginas estáticas passam a dinâmicas, o tempo até ao primeiro byte passa de **1,5–1,9 ms para 6,6–7,4 ms** (mediana de 300 pedidos, sem rede nem base de dados; p95 de 2,8 para 11,5 ms), deixam de se poder servir de uma CDN, e `/loja` volta a chegar com o conteúdo escondido à espera do JavaScript — o problema que saiu com o `loading.tsx` |
 | Superfície que os *nonces* fechariam hoje | nenhum `dangerouslySetInnerHTML`, `innerHTML` ou `eval` no código; o React escapa o texto. O `'unsafe-inline'` é uma segunda linha de defesa, não a primeira |
 
-**A proposta:** a CSP com *nonce* só na rota do pagamento, pelo mesmo princípio
-do `stripe.js` (F7b no roteiro da v1): é lá que o risco está e é lá que o
-fornecedor de pagamento carrega *scripts*. O resto do sítio fica estático.
-Faz-se com a E5, porque antes dela não há rota onde a aplicar.
+**A proposta era** a CSP com *nonce* só na rota do pagamento. Com o Checkout
+alojado da Stripe (E4), o formulário de cartão não está no sítio, e a proposta
+cai: o `'unsafe-inline'` fica, com a condição que o sustenta guardada por
+`injecao.test.ts`.
 
 ---
 
@@ -364,10 +471,21 @@ L2  a dependência stripe sai              feito
 L3  /admin protegido, com teste           feito
 C1  preços em cêntimos                    feito
 E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
-E2  reserva de stock atómica              feito (verdadeira só depois do CI)
+E2  reserva de stock atómica              feito, verificado no CI
 E3  estados, histórico, numeração         feito
-    CSP sem 'unsafe-inline'               medido; passa para a E5, só no pagamento
-    comparação de fornecedores de pagamento  preliminar, na E4; falta confirmar os preçários
+    CSP sem 'unsafe-inline'               medido; fica, e o Checkout alojado dispensa-o
+    comparação de fornecedores de pagamento  feita; Stripe escolhida
+```
+
+Desbloqueado pelas decisões de 24/09/2026, pela ordem em que se faz:
+
+```
+S1  limite de pedidos em todas as rotas, e os testes que o exigem   feito (#37)
+C2  categorias com peças únicas ou com medidas; stock por movimentos   feito
+C3  painel: produtos, medidas, stock, categorias (API, depois páginas)
+    promoção a administrador por script, nunca pela web
+E4  Stripe: sessão de pagamento, aviso assinado e idempotente
+E5  checkout sem conta, fechado enquanto faltarem condições
 ```
 
 ## Código agora, ligar depois
@@ -375,7 +493,7 @@ E3  estados, histórico, numeração         feito
 | | falta para ligar |
 |---|---|
 | C3 painel de produtos | onde ficam as imagens (alojamento) |
-| E4 pagamento | a tua escolha de fornecedor, e a conta dele (NIF, IBAN) |
+| E4 pagamento | as chaves de teste da Stripe para o ensaio real; as de produção pedem NIF e IBAN |
 | E5 checkout | tabela de portes, prazo de entrega, levantamento na loja |
 | P1 email de confirmação | fornecedor de email |
 | P3 painel de encomendas | nada além da E3 |
@@ -384,18 +502,18 @@ E3  estados, histórico, numeração         feito
 
 | | pergunta |
 |---|---|
-| C2 | peças únicas, modelos com medida, ou as duas — e em que categorias |
-| E4 | fornecedor de pagamentos, depois da comparação |
-| E5 | comprar sem conta: sim ou não |
+| C2 | se alguma medida custa diferente das outras |
+| E4 | confirmar os preços da Stripe no preçário |
+| E4 | criar a conta da Stripe, e pôr as chaves **de teste** nos segredos do CI |
 | E5 | levantamento na loja (já estava pendente da v1) |
-| C3, P1 | alojamento, base de dados, email (já estavam pendentes da v1) |
+| C3, P1, S1 | alojamento, base de dados, email — e o alojamento decide o limite de pedidos |
 | Favoritos | se aceitas deixá-los de fora |
 
 ## Espera por terceiros
 
 | | de quem |
 |---|---|
-| Regime de IVA — **afeta a v1** | contabilista |
+| Regime de IVA: confirmar que é o normal, como os preços dizem | contabilista |
 | Programa de faturação certificado | contabilista |
 | Prazo de conservação fiscal | contabilista |
 | Termos de venda e política atualizados | jurista |
@@ -407,11 +525,10 @@ E3  estados, histórico, numeração         feito
 ```
 v1.0.0 publicada
   │
-  ├─ L1 L2 L3                   já
-  ├─ C1 ── C2 ── C3 ── C4       C2 é decisão tua
-  ├─ E1 ── E2 ── E3             já, depois da C1
-  ├─ CSP                        já, antes da E4
-  ├─ E4 ── E5                   fornecedor escolhido, portes preenchidos
+  ├─ L1 L2 L3 C1 E1 E2 E3      feito
+  ├─ S1 C2                      feito
+  ├─ C3 C4                      feito; falta o ensaio com dados reais
+  ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
   ├─ P1 ── P3 ── P4             depois da E5
   ├─ P2                         contabilista
   └─ Conta                      depois da P1

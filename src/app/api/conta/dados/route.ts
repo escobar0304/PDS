@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { exigirSessao } from '@/lib/autorizacao';
 import { exportarDados } from '@/lib/conta';
+import { LIMITES, travar } from '@/lib/limites';
 
 /**
  * Direito de acesso e de portabilidade (RGPD, art. 15.º e 20.º).
@@ -9,9 +10,12 @@ import { exportarDados } from '@/lib/conta';
  * Aceitar `?id=` aqui trocava um direito do titular por um IDOR: qualquer
  * pessoa autenticada descarregaria os dados de qualquer outra.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const permissao = await exigirSessao();
   if (!permissao.ok) return permissao.resposta;
+
+  const bloqueio = travar(request, 'exportar', LIMITES.exportacao, permissao.sessao.id);
+  if (bloqueio) return bloqueio;
 
   try {
     const dados = await exportarDados(permissao.sessao.id);

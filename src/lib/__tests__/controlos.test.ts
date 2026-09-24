@@ -119,3 +119,16 @@ describe('as ligações internas levam a páginas que existem', () => {
     expect(partidas, 'ligações para rotas que não existem').toEqual([]);
   });
 });
+
+describe('as fotografias são das peças', () => {
+  it('nenhuma fotografia de banco de imagens no lugar de uma que falta', () => {
+    // Ate 24/09/2026 um produto sem fotografia mostrava um cristal do
+    // Unsplash. Numa loja de pecas unicas, e mostrar outra pedra como se fosse
+    // aquela. Sem fotografia, `SemFotografia` diz que nao ha.
+    const culpados = ficheiros(SRC)
+      .filter((f) => f.endsWith('.tsx'))
+      .filter((f) => /https:\/\/(images\.unsplash\.com|images\.pexels\.com|picsum\.photos|placehold)/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.slice(SRC.length + 1));
+    expect(culpados).toEqual([]);
+  });
+});

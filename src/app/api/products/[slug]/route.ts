@@ -1,6 +1,8 @@
 // src/app/api/products/[slug]/route.ts
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
+import { paraPublico } from '@/lib/catalogo';
+import { LIMITES, travar } from '@/lib/limites';
 import { Product } from '@/lib/models';
 
 /**
@@ -15,13 +17,17 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const bloqueio = travar(request, 'catalogo', LIMITES.leitura);
+  if (bloqueio) return bloqueio;
+
   try {
     await connectDB();
 
     const { slug } = await params;
     
     const product = await Product.findOne({ slug, active: true })
-      .populate('categoryId', 'name slug');
+      .populate('categoryId', 'name slug')
+      .lean();
     
     if (!product) {
       return NextResponse.json(
@@ -30,7 +36,7 @@ export async function GET(
       );
     }
     
-    return NextResponse.json(product);
+    return NextResponse.json(paraPublico(product));
   } catch (error) {
     console.error('Erro ao buscar produto:', error);
     return NextResponse.json(
