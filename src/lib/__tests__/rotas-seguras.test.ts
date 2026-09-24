@@ -59,6 +59,50 @@ describe('rotas de API', () => {
     ).toEqual([]);
   });
 
+  /** Cada metodo exportado, com o seu corpo, para verificar um a um. */
+  function metodos(fonte: string): { nome: string; corpo: string }[] {
+    const partes = fonte.split(/(?=export async function (?:GET|POST|PUT|PATCH|DELETE)\b)/);
+    return partes
+      .map((corpo) => ({ nome: /export async function (\w+)/.exec(corpo)?.[1] ?? '', corpo }))
+      .filter((m) => m.nome);
+  }
+
+  it('todos os métodos de todas as rotas limitam pedidos', () => {
+    // Leitura incluida: uma leitura publica que vai a base de dados e a
+    // maneira mais barata de a pôr de joelhos.
+    const faltosos: string[] = [];
+
+    for (const caminho of ficheiros) {
+      const relativo = caminho.slice(RAIZ.length + 1);
+      if (ISENTAS[relativo]) continue;
+
+      for (const { nome, corpo } of metodos(readFileSync(caminho, 'utf8'))) {
+        if (!/\btravar\(|\bconsumir\(/.test(corpo)) faltosos.push(`${nome} ${relativo}`);
+      }
+    }
+
+    expect(faltosos, 'sem limite de pedidos: ver travar() em src/lib/limites.ts').toEqual([]);
+  });
+
+  it('em /api/admin, todos os métodos exigem administrador antes de mais nada', () => {
+    const faltosos: string[] = [];
+
+    for (const caminho of ficheiros) {
+      const relativo = caminho.slice(RAIZ.length + 1);
+      if (!relativo.startsWith('admin/')) continue;
+
+      for (const { nome, corpo } of metodos(readFileSync(caminho, 'utf8'))) {
+        const guarda = corpo.indexOf('exigirAdmin(');
+        const corpoLido = corpo.search(/lerCorpo\(|connectDB\(|\.find|\.update|\.create/);
+        if (guarda === -1 || (corpoLido !== -1 && corpoLido < guarda)) {
+          faltosos.push(`${nome} ${relativo}`);
+        }
+      }
+    }
+
+    expect(faltosos, 'rota de administração sem exigirAdmin() à cabeça').toEqual([]);
+  });
+
   it('nenhuma monta HTML a partir de entrada externa', () => {
     const suspeitas: string[] = [];
 

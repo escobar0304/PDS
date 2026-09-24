@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { consumir, identificar, reiniciarLimites } from '../limites';
+import { consumir, identificar, reiniciarLimites, travar } from '../limites';
 
 describe('limite de pedidos', () => {
   beforeEach(reiniciarLimites);
@@ -77,5 +77,30 @@ describe('o que o limitador guarda não fica para sempre', () => {
     // Hora e um minuto depois, outro pedido qualquer faz a limpeza.
     consumir('teste:ip:198.51.100.1', { max: 5, janelaMs: 1000 }, agora + 61 * 60 * 1000);
     expect(chavesGuardadas()).toBe(1);
+  });
+});
+
+describe('travar', () => {
+  const pedido = (ip: string) => new Request('http://x/api', { headers: { 'x-forwarded-for': ip } });
+  const LIMITE = { max: 2, janelaMs: 60_000 };
+
+  it('deixa passar até ao limite, e depois responde 429 com Retry-After', async () => {
+    reiniciarLimites();
+    expect(travar(pedido('1.1.1.1'), 't', LIMITE)).toBeNull();
+    expect(travar(pedido('1.1.1.1'), 't', LIMITE)).toBeNull();
+
+    const r = travar(pedido('1.1.1.1'), 't', LIMITE);
+    expect(r?.status).toBe(429);
+    expect(Number(r?.headers.get('Retry-After'))).toBeGreaterThan(0);
+    expect(await r?.json()).toEqual({ error: 'Demasiados pedidos. Tente mais tarde.' });
+  });
+
+  it('conta por quem, não por todos', () => {
+    reiniciarLimites();
+    travar(pedido('1.1.1.1'), 't', LIMITE);
+    travar(pedido('1.1.1.1'), 't', LIMITE);
+    expect(travar(pedido('2.2.2.2'), 't', LIMITE)).toBeNull();
+    // Nas rotas autenticadas conta a sessao: o mesmo IP, outra pessoa, passa.
+    expect(travar(pedido('1.1.1.1'), 't', LIMITE, 'utilizador-b')).toBeNull();
   });
 });

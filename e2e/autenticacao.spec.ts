@@ -105,3 +105,14 @@ test('a área pessoal exige sessão iniciada', async ({ page }) => {
   await page.goto('/area-pessoal');
   await expect(page).toHaveURL(/\/auth\/login/);
 });
+
+test('quem decide é o servidor: sem sessão, a área pessoal nem chega ao browser', async ({
+  request,
+}) => {
+  // O teste de cima passava com o redirecionamento feito no cliente, depois
+  // de a pagina carregar. Este so passa se o servidor responder logo com o
+  // redirecionamento, sem pagina nenhuma.
+  const res = await request.get('/area-pessoal', { maxRedirects: 0 });
+  expect([303, 307]).toContain(res.status());
+  expect(res.headers()['location']).toMatch(/^\/auth\/login\?callbackUrl=%2Farea-pessoal$/);
+});

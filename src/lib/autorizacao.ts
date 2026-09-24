@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 
@@ -118,4 +118,29 @@ export async function paginaDeAdmin(): Promise<Sessao> {
   const permissao = await exigirAdmin();
   if (!permissao.ok) notFound();
   return permissao.sessao;
+}
+
+/**
+ * A porta das paginas que pedem sessao, como a area pessoal.
+ *
+ * No servidor, e nao no browser. Ate 24/09/2026 a area pessoal decidia no
+ * cliente, com um redirecionamento depois de carregar: os dados estavam
+ * protegidos pelas rotas, mas a pagina abria para quem a pedisse. Quem nao
+ * tem sessao recebe o redirecionamento para a entrada antes de a pagina
+ * existir. O destino e sempre um caminho fixo do sitio, nunca do pedido —
+ * senao era um redirecionamento aberto.
+ */
+export async function paginaComSessao(caminho: `/${string}`): Promise<Sessao> {
+  const sessao = await getServerSession(authOptions);
+  const utilizador = sessao?.user as { id?: string; email?: string; role?: string } | undefined;
+
+  if (!utilizador?.id) {
+    redirect(`/auth/login?callbackUrl=${encodeURIComponent(caminho)}`);
+  }
+
+  return {
+    id: utilizador.id,
+    email: utilizador.email ?? '',
+    role: utilizador.role ?? 'USER',
+  };
 }

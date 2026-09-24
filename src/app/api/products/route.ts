@@ -3,9 +3,13 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import { Category, Product } from '@/lib/models';
+import { LIMITES, travar } from '@/lib/limites';
 import { resolveLimit, resolveSort } from '@/lib/products';
 
 export async function GET(request: Request) {
+  const bloqueio = travar(request, 'catalogo', LIMITES.leitura);
+  if (bloqueio) return bloqueio;
+
   try {
     await connectDB();
 

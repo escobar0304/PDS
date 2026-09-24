@@ -1,6 +1,7 @@
 // src/app/api/products/[slug]/route.ts
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
+import { LIMITES, travar } from '@/lib/limites';
 import { Product } from '@/lib/models';
 
 /**
@@ -15,6 +16,9 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  const bloqueio = travar(request, 'catalogo', LIMITES.leitura);
+  if (bloqueio) return bloqueio;
+
   try {
     await connectDB();
 

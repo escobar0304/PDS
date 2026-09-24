@@ -3,15 +3,15 @@ import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * Nenhuma pagina de `/admin` abre sem a guarda.
+ * As paginas privadas decidem quem entra no servidor, nunca no browser.
  *
- * Ate 24/09/2026 as tres abriam para qualquer pessoa. Nao expunham nada,
- * porque nao faziam nada — mas a guarda tem de estar la antes da primeira
- * linha que leia dados, nao depois. E tem de estar em cada pagina: um
- * `layout.tsx` nao chega (ver `paginaDeAdmin`).
+ * Ate 24/09/2026 as tres de `/admin` abriam para qualquer pessoa, e a area
+ * pessoal redirecionava no cliente, depois de carregar. Tudo o que corre no
+ * browser pode ser mudado por quem o usa; a guarda tem de estar no servidor,
+ * e em cada pagina — um `layout.tsx` nao chega (ver `paginaDeAdmin`).
  */
 
-const RAIZ = join(__dirname, '..', '..', 'app', 'admin');
+const APP = join(__dirname, '..', '..', 'app');
 
 function paginas(dir: string): string[] {
   return readdirSync(dir).flatMap((nome) => {
@@ -21,25 +21,31 @@ function paginas(dir: string): string[] {
   });
 }
 
-describe('/admin', () => {
-  const ficheiros = paginas(RAIZ);
+const PRIVADAS = [
+  { pasta: 'admin', guarda: /await paginaDeAdmin\(\)/ },
+  { pasta: 'area-pessoal', guarda: /await paginaComSessao\(/ },
+];
+
+describe.each(PRIVADAS)('/$pasta', ({ pasta, guarda }) => {
+  const raiz = join(APP, pasta);
+  const ficheiros = paginas(raiz);
 
   it('encontra páginas para verificar', () => {
     expect(ficheiros.length).toBeGreaterThan(0);
   });
 
-  it('todas chamam a guarda antes de renderizar', () => {
+  it('todas chamam a guarda no servidor antes de renderizar', () => {
     const sem = ficheiros
-      .filter((f) => !/await paginaDeAdmin\(\)/.test(readFileSync(f, 'utf8')))
-      .map((f) => relative(RAIZ, f));
-    expect(sem, 'páginas de /admin sem paginaDeAdmin()').toEqual([]);
+      .filter((f) => !guarda.test(readFileSync(f, 'utf8')))
+      .map((f) => relative(raiz, f));
+    expect(sem, `páginas de /${pasta} sem guarda no servidor`).toEqual([]);
   });
 
   it('nenhuma é componente de cliente', () => {
     // Num componente de cliente a guarda nao corre no servidor.
     const cliente = ficheiros
       .filter((f) => /^['"]use client['"]/m.test(readFileSync(f, 'utf8')))
-      .map((f) => relative(RAIZ, f));
+      .map((f) => relative(raiz, f));
     expect(cliente).toEqual([]);
   });
 });

@@ -150,7 +150,9 @@ test('cada página tem um título seu', async ({ request }) => {
     '/termos',
     '/envios',
     '/carrinho',
-    '/area-pessoal',
+    // Sem '/area-pessoal': sem sessao, o servidor redireciona para a entrada
+    // antes de haver pagina (ver `autenticacao.spec.ts`), e o que se leria
+    // aqui era o titulo de '/auth/login'.
     '/auth/login',
     '/auth/register',
     '/auth/recuperar-password',

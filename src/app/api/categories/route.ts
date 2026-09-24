@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import { Category } from '@/lib/models';
 import { exigirAdmin } from '@/lib/autorizacao';
+import { LIMITES, travar } from '@/lib/limites';
 import { esquemaCategoria, lerCorpo } from '@/lib/validacao';
 
 /** Leitura publica: o catalogo e para ser visto. */
-export async function GET() {
+export async function GET(request: Request) {
+  const bloqueio = travar(request, 'catalogo', LIMITES.leitura);
+  if (bloqueio) return bloqueio;
+
   try {
     await connectDB();
     const categorias = await Category.find().sort({ order: 1, name: 1 });
@@ -26,6 +30,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const permissao = await exigirAdmin();
   if (!permissao.ok) return permissao.resposta;
+
+  const bloqueio = travar(request, 'admin', LIMITES.administracao, permissao.sessao.id);
+  if (bloqueio) return bloqueio;
 
   const corpo = await lerCorpo(request, esquemaCategoria);
   if (!corpo.ok) {

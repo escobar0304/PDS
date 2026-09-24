@@ -108,3 +108,40 @@ export function identificar(pedido: Request): string {
   }
   return pedido.headers.get('x-real-ip') ?? 'desconhecido';
 }
+
+/**
+ * Limites partilhados pelas rotas que nao tem um proprio. As rotas de
+ * credenciais e de correio tem limites mais apertados, escritos nelas.
+ */
+export const LIMITES = {
+  /** Leituras publicas do catalogo: largo, para quem navega nao dar por ele. */
+  leitura: { max: 300, janelaMs: 60 * 1000 },
+  /** O que a propria pessoa le da sua conta. */
+  conta: { max: 60, janelaMs: 60 * 1000 },
+  /** Exportar a conta inteira: pesado, e ninguem precisa de o fazer a miude. */
+  exportacao: { max: 5, janelaMs: 60 * 60 * 1000 },
+  /** Escritas de administracao, por administrador e nao por IP. */
+  administracao: { max: 120, janelaMs: 60 * 1000 },
+} as const satisfies Record<string, Limite>;
+
+/**
+ * Consome um pedido do limite e devolve a resposta 429 pronta, ou `null` se
+ * passou. `quem` e o IP por omissao; nas rotas autenticadas, e melhor o id da
+ * sessao — varias pessoas atras do mesmo IP nao se bloqueiam umas as outras.
+ *
+ * `rotas-seguras.test.ts` falha se um metodo de uma rota nao
+ * chamar isto (ou `consumir`).
+ */
+export function travar(
+  pedido: Request,
+  nome: string,
+  limite: Limite,
+  quem: string = identificar(pedido)
+): Response | null {
+  const r = consumir(`${nome}:${quem}`, limite);
+  if (r.permitido) return null;
+  return Response.json(
+    { error: 'Demasiados pedidos. Tente mais tarde.' },
+    { status: 429, headers: { 'Retry-After': String(r.segundosAteReiniciar) } }
+  );
+}
