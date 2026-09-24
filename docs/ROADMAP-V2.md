@@ -176,14 +176,18 @@ testes que falham se uma rota nova as esquecer:
 `/admin/produtos/[id]` (dados, movimentos e histórico) e `/admin/categorias`.
 A página `/admin/encomendas` saiu: dizia só "por construir", e volta com a P3.
 
-**O que não se viu a correr:** os formulários só aparecem com categorias e
-produtos lidos da base de dados, e o e2e corre sem ela de propósito. O que o
-e2e prova, com uma sessão assinada: um cliente autenticado leva 404 em todas
-as páginas do painel e 403 na API; um administrador abre-as, sem violações
-WCAG, e sem base de dados vê que ela falta. As operações estão provadas nos
-testes de integração. **Falta um ensaio do painel com dados reais** — ou
-um job de e2e com MongoDB no CI, ou uma passagem tua com a base de dados
-ligada.
+**Ensaiado com dados reais em 24/09/2026** (`e2e-bd/`, job `e2e-bd` no CI):
+criar uma categoria e um anel com duas medidas pela interface, vender ao
+balcão pelo formulário e pela lista, ver a loja mostrar o que o painel gravou,
+a peça única que não passa de uma unidade, a categoria que não muda de regra
+com anéis dentro, e uma sessão que diz ser de administrador numa conta de
+cliente — com base de dados, o papel vem dela, e o painel responde 404.
+
+**O ensaio mudou o desenho da lista.** Era uma tabela, e no telemóvel o
+"−1 vendido na loja" ficava na última coluna, aos 641 px de um ecrã de 390 —
+fora da vista, na ação que mais se usa ao balcão. Passou a cartões, um por
+produto e uma linha por medida, e há um teste que falha se o botão sair do
+ecrã.
 
 **Quem é administrador** não se decide na web. Não há página nem rota que
 promova uma conta: faz-se com um *script* corrido no servidor
@@ -527,7 +531,7 @@ v1.0.0 publicada
   │
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
   ├─ S1 C2                      feito
-  ├─ C3 C4                      feito; falta o ensaio com dados reais
+  ├─ C3 C4                      feito, ensaiado com dados reais
   ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
   ├─ P1 ── P3 ── P4             depois da E5
   ├─ P2                         contabilista

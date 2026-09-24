@@ -37,7 +37,9 @@ Cada tarefa numa branch própria. O PR é criado automaticamente; a branch apaga
 quando o PR fecha. Nunca empurrar para `master` diretamente.
 
 Antes de qualquer PR: `npm run typecheck`, `npm run lint`, `npm test`,
-`npm run build` e `npx playwright test`. Todos verdes, sem exceção.
+`npm run build` e `npx playwright test`. Todos verdes, sem exceção. Com o
+MongoDB a correr (ver abaixo), também `npm test` com `MONGODB_URI` e
+`npm run test:e2e:bd`.
 
 **As dependências contam como código.** `npm audit --omit=dev` faz parte da
 revisão, não é opcional: quando foi corrido pela primeira vez trouxe duas
@@ -45,10 +47,21 @@ críticas e quatro altas em produção, mais do que tudo o que a F11 encontrou n
 código escrito aqui. O que fica por corrigir fica explicado em
 `docs/SEGURANCA.md`, com a razão — nunca em silêncio.
 
-**Os testes de integração não correm aqui.** `src/lib/__tests__/integracao.test.ts`
-precisa de `MONGODB_URI` e é ignorado sem ela — o binário do MongoDB não é
-descarregável deste ambiente. Correm no CI, em contentor. Uma alteração que lhes
-toque só se sabe verdadeira depois do CI passar; dizer o contrário é mentir.
+**Os testes que precisam de MongoDB correm por Docker.** São dois:
+`src/lib/__tests__/integracao.test.ts` (ignorado sem `MONGODB_URI`) e
+`e2e-bd/`, o painel de gestão com dados reais. O binário do MongoDB não se
+descarrega deste ambiente, mas a imagem Docker sim — medido em 24/09/2026:
+
+```
+dockerd &                                   # se o daemon não estiver a correr
+docker run -d --name pds-mongo -p 27017:27017 mongo:7
+MONGODB_URI=mongodb://127.0.0.1:27017 npm test
+MONGODB_URI=mongodb://127.0.0.1:27017/pds-e2e npm run test:e2e:bd
+```
+
+Correm também no CI, em contentor, e **é o CI que decide**: uma alteração que
+lhes toque, testada só aqui, diz-se "passou localmente", e não "está
+verificada".
 
 ## Onde está o raciocínio
 
