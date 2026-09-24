@@ -61,10 +61,10 @@ test('a página do carrinho soma, altera quantidades e remove', async ({ page })
   await page.getByRole('button', { name: 'Adicionar ao Carrinho', exact: true }).click();
   await page.goto('/carrinho');
 
-  await expect(page.getByText('42.50€').first()).toBeVisible();
+  await expect(page.getByText('42,50\u00a0€').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Aumentar quantidade' }).click();
-  await expect(page.getByText('85.00€').first()).toBeVisible();
+  await expect(page.getByText('85,00\u00a0€').first()).toBeVisible();
 
   await page.getByRole('button', { name: 'Remover item' }).click();
   await expect(page.getByRole('heading', { name: 'Carrinho Vazio' })).toBeVisible();

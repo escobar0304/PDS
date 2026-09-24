@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { botaoClasses } from '@/components/ui/Button';
 import { ArrowLeft, Check, Minus, Plus, ShoppingBag, Trash } from '@phosphor-icons/react';
 import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
+import { formatarPreco } from '@/lib/dinheiro';
 
 export default function Carrinho() {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
@@ -99,7 +100,7 @@ export default function Carrinho() {
                       </div>
 
                       <p className="tabular mb-4 text-xl font-semibold text-rose-700">
-                        {item.price.toFixed(2)}€
+                        {formatarPreco(item.priceCents)}
                       </p>
 
                       {/* Controles de Quantidade */}
@@ -134,7 +135,7 @@ export default function Carrinho() {
 
                       {/* Subtotal por item */}
                       <p className="text-sm text-ink-muted mt-3">
-                        Subtotal: <span className="font-semibold text-ink">{(item.price * item.quantity).toFixed(2)}€</span>
+                        Subtotal: <span className="font-semibold text-ink">{formatarPreco(item.priceCents * item.quantity)}</span>
                       </p>
                     </div>
                   </div>
@@ -160,7 +161,7 @@ export default function Carrinho() {
                 <div className="space-y-3 mb-6 pb-6 border-b">
                   <div className="flex justify-between text-base">
                     <span className="text-ink-muted">Subtotal</span>
-                    <span className="font-medium text-ink">{total.toFixed(2)}€</span>
+                    <span className="font-medium text-ink">{formatarPreco(total)}</span>
                   </div>
                   <div className="flex justify-between text-base">
                     <span className="text-ink-muted">Envio</span>
@@ -171,7 +172,7 @@ export default function Carrinho() {
                 {/* "Total" sem os portes era um total que nao o era. */}
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-lg font-semibold text-ink">Total das peças</span>
-                  <span className="tabular text-3xl font-semibold text-rose-700">{total.toFixed(2)}€</span>
+                  <span className="tabular text-3xl font-semibold text-rose-700">{formatarPreco(total)}</span>
                 </div>
 
                 {/*

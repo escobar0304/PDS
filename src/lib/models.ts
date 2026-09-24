@@ -1,5 +1,6 @@
 // src/lib/models.ts
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import { eCentimos } from '@/lib/dinheiro';
 
 // ============================================
 // INTERFACES TYPESCRIPT
@@ -19,7 +20,8 @@ export interface IProduct extends Document {
   name: string;
   slug: string;
   description?: string;
-  price: number;
+  /** Em centimos, inteiro. Ver `lib/dinheiro.ts`. */
+  priceCents: number;
   images: string[];
   stock: number;
   categoryId: mongoose.Types.ObjectId;
@@ -68,15 +70,16 @@ export interface IOrder extends Document {
   deliveryType: 'PICKUP' | 'SHIPPING';
   stripePaymentId?: string;
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
-  subtotal: number;
-  shippingCost: number;
-  total: number;
+  /** Em centimos, como todos os valores da encomenda. */
+  subtotalCents: number;
+  shippingCents: number;
+  totalCents: number;
   status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'READY_PICKUP' | 'COMPLETED' | 'CANCELLED';
   notes?: string;
   items: Array<{
     productId: mongoose.Types.ObjectId;
     name: string;
-    price: number;
+    priceCents: number;
     quantity: number;
     image?: string;
   }>;
@@ -140,10 +143,10 @@ const productSchema = new Schema<IProduct>(
       type: String,
       trim: true,
     },
-    price: {
+    priceCents: {
       type: Number,
       required: [true, 'Preço é obrigatório'],
-      min: [0, 'Preço não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'O preço é um número inteiro de cêntimos' },
     },
     images: {
       type: [String],
@@ -191,7 +194,7 @@ const productSchema = new Schema<IProduct>(
 productSchema.index({ categoryId: 1 });
 productSchema.index({ featured: -1 });
 productSchema.index({ active: 1 });
-productSchema.index({ price: 1 });
+productSchema.index({ priceCents: 1 });
 
 const userSchema = new Schema<IUser>(
   {
@@ -307,20 +310,20 @@ const orderSchema = new Schema<IOrder>(
       enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'],
       default: 'PENDING',
     },
-    subtotal: {
+    subtotalCents: {
       type: Number,
       required: [true, 'Subtotal é obrigatório'],
-      min: [0, 'Subtotal não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'O subtotal é um número inteiro de cêntimos' },
     },
-    shippingCost: {
+    shippingCents: {
       type: Number,
       default: 0,
-      min: [0, 'Custo de envio não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'Os portes são um número inteiro de cêntimos' },
     },
-    total: {
+    totalCents: {
       type: Number,
       required: [true, 'Total é obrigatório'],
-      min: [0, 'Total não pode ser negativo'],
+      validate: { validator: eCentimos, message: 'O total é um número inteiro de cêntimos' },
     },
     status: {
       type: String,
@@ -342,10 +345,10 @@ const orderSchema = new Schema<IOrder>(
           type: String,
           required: true,
         },
-        price: {
+        priceCents: {
           type: Number,
           required: true,
-          min: 0,
+          validate: { validator: eCentimos, message: 'O preço é um número inteiro de cêntimos' },
         },
         quantity: {
           type: Number,

@@ -5,13 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Check, ShoppingCart } from '@phosphor-icons/react';
 import { useCart } from '../contexts/CartContext';
+import { formatarPreco } from '@/lib/dinheiro';
 
 interface Product {
   _id: string;
   name: string;
   slug: string;
   description?: string;
-  price: number;
+  priceCents: number;
   images: string[];
   stock: number;
   featured: boolean;
@@ -34,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       _id: product._id,
       name: product.name,
       slug: product.slug,
-      price: product.price,
+      priceCents: product.priceCents,
       image: product.images[0] || '',
       stock: product.stock,
     };
@@ -91,7 +92,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div className="mt-auto flex items-end justify-between gap-3 pt-4">
           <div>
             <span className="tabular text-2xl font-semibold text-rose-700">
-              {product.price.toFixed(2)}€
+              {formatarPreco(product.priceCents)}
             </span>
             <p className="mt-1 min-h-[1rem] text-xs text-danger-700">
               {product.stock > 0 && product.stock <= 5

@@ -28,8 +28,8 @@ describe('resolveSort', () => {
   });
 
   it('ordena o preco nos dois sentidos', () => {
-    expect(resolveSort('price-asc')).toEqual({ price: 1 });
-    expect(resolveSort('price-desc')).toEqual({ price: -1 });
+    expect(resolveSort('price-asc')).toEqual({ priceCents: 1 });
+    expect(resolveSort('price-desc')).toEqual({ priceCents: -1 });
   });
 });
 

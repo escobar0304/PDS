@@ -16,8 +16,8 @@ export type SortKey = (typeof SORT_KEYS)[number];
 
 export const SORTS: Record<SortKey, Record<string, 1 | -1>> = {
   featured: { featured: -1, createdAt: -1 },
-  'price-asc': { price: 1 },
-  'price-desc': { price: -1 },
+  'price-asc': { priceCents: 1 },
+  'price-desc': { priceCents: -1 },
   'name-asc': { name: 1 },
   'name-desc': { name: -1 },
   newest: { createdAt: -1 },

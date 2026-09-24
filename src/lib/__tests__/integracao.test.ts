@@ -236,10 +236,10 @@ executar('contra MongoDB', () => {
         customerEmail: 'marta@exemplo.pt',
         customerPhone: '910000000',
         deliveryType: 'PICKUP',
-        subtotal: total,
-        total,
+        subtotalCents: total,
+        totalCents: total,
         items: [
-          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', price: total, quantity: 1 },
+          { productId: new mongoose.Types.ObjectId(), name: 'Quartzo rosa', priceCents: total, quantity: 1 },
         ],
       });
     }
@@ -262,15 +262,15 @@ executar('contra MongoDB', () => {
       const eu = await conta('eu@exemplo.pt');
       const outro = await conta('outro@exemplo.pt');
 
-      await encomenda(eu._id, 10);
-      await encomenda(outro._id, 99);
+      await encomenda(eu._id, 1000);
+      await encomenda(outro._id, 9900);
 
       const dados = await exportarDados(eu._id.toString());
 
       // Nao procurar "99" no JSON: ids e datas sao aleatorios e contem-no por
       // acaso. Compara-se o dono e o valor.
       expect(dados!.encomendas).toHaveLength(1);
-      expect(dados!.encomendas[0].total).toBe(10);
+      expect(dados!.encomendas[0].totalCents).toBe(1000);
       expect(String(dados!.encomendas[0].userId)).toBe(eu._id.toString());
     });
 
@@ -307,7 +307,7 @@ executar('contra MongoDB', () => {
 
     it('apagar nao destroi encomendas: desliga-as da conta', async () => {
       const u = await conta('fiscal@exemplo.pt');
-      const e = await encomenda(u._id, 42);
+      const e = await encomenda(u._id, 4200);
 
       await apagarConta(u._id.toString());
 
@@ -315,7 +315,7 @@ executar('contra MongoDB', () => {
       // A conservacao fiscal dos documentos de venda sobrepoe-se ao direito ao
       // apagamento (art. 17.º, n.º 3, alinea b). A encomenda fica, sem dono.
       expect(depois).not.toBeNull();
-      expect(depois!.total).toBe(42);
+      expect(depois!.totalCents).toBe(4200);
       expect(depois!.userId).toBeUndefined();
       // E fica com o nome e o email de quem comprou: o documento fiscal
       // precisa deles. Desligar da conta nao anonimiza — este teste existe

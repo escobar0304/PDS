@@ -12,13 +12,14 @@ import { ArrowCounterClockwise, CaretLeft, CaretRight, Check, Dot, Minus, Plus, 
 import { botaoClasses } from '@/components/ui/Button';
 import { AnuncioEstado, Skeleton } from '@/components/ui';
 import { AVISO_TRADICAO, INFORMACAO_COMPRA } from '@/lib/afirmacoes';
+import { formatarPreco } from '@/lib/dinheiro';
 
 interface Product {
   _id: string;
   name: string;
   slug: string;
   description?: string;
-  price: number;
+  priceCents: number;
   images: string[];
   stock: number;
   categoryId: {
@@ -124,7 +125,7 @@ export default function ProdutoPage() {
       _id: product._id,
       name: product.name,
       slug: product.slug,
-      price: product.price,
+      priceCents: product.priceCents,
       image: product.images[0] || '',
       stock: product.stock,
     }, quantity);
@@ -314,7 +315,7 @@ export default function ProdutoPage() {
 
               <div className="flex items-baseline gap-4 mb-6">
                 <span className="tabular text-4xl font-semibold text-rose-700">
-                  {product.price.toFixed(2)}€
+                  {formatarPreco(product.priceCents)}
                 </span>
                 {product.stock > 0 ? (
                   <span className="text-sm font-medium text-sage-600">

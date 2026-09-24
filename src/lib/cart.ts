@@ -3,11 +3,14 @@
 // Logica pura do carrinho, separada do contexto React para poder ser testada
 // sem montar componentes.
 
+import { eCentimos } from '@/lib/dinheiro';
+
 export interface CartItem {
   _id: string;
   name: string;
   slug: string;
-  price: number;
+  /** Em centimos. So para mostrar: o servidor nunca o le (ROADMAP-V2, E1). */
+  priceCents: number;
   image: string;
   quantity: number;
   stock: number;
@@ -64,7 +67,7 @@ export function countItems(items: CartItem[]): number {
 }
 
 export function cartTotal(items: CartItem[]): number {
-  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  return items.reduce((sum, item) => sum + item.priceCents * item.quantity, 0);
 }
 
 /** Descarta o que nao tem a forma esperada, para o localStorage nao partir a app. */
@@ -79,7 +82,7 @@ export function parseStoredCart(raw: string | null): CartItem[] {
         typeof item._id === 'string' &&
         typeof item.name === 'string' &&
         typeof item.slug === 'string' &&
-        typeof item.price === 'number' &&
+        eCentimos(item.priceCents) &&
         typeof item.quantity === 'number' &&
         typeof item.stock === 'number'
     );

@@ -87,7 +87,7 @@ e não impede as páginas-filhas de renderizar. Cada página chama
 
 # Fase 1 - Catálogo
 
-## C1. Dinheiro em cêntimos
+## C1. Dinheiro em cêntimos — feito
 
 `19.9` em vírgula flutuante não é 19,90 €: `0.1 + 0.2 !== 0.3`, e somar
 quantidades por portes arredonda mal ao terceiro produto. Todos os fornecedores
@@ -95,6 +95,13 @@ de pagamento pedem inteiros em cêntimos.
 
 **Fazer agora** é barato porque a base de dados não tem produtos. Depois da
 primeira encomenda, é uma migração com dinheiro real no meio.
+
+Feito com nomes novos (`priceCents`, `totalCents`…) e não com `price` a mudar
+de significado: um sítio esquecido mostraria 1990 € em vez de 19,90 €, e com o
+nome novo não compila. Os esquemas recusam valores que não sejam inteiros. Os
+preços passam também a escrever-se como em Portugal — `19,90 €`, e não
+`19.90€` como até aqui. Os carrinhos guardados antes da mudança descartam-se:
+convertê-los era adivinhar, e quem tinha um carrinho era quem testava.
 
 ## C2. Peças únicas ou modelos com medida
 
@@ -288,7 +295,7 @@ dinâmicas; **o custo mede-se antes** — é o tipo de coisa que a
 L1  /sucesso e /falha saem                feito
 L2  a dependência stripe sai              feito
 L3  /admin protegido, com teste           feito
-C1  preços em cêntimos
+C1  preços em cêntimos                    feito
 E1  cálculo de total e portes no servidor
 E2  reserva de stock atómica           (verdadeira só depois do CI)
 E3  estados, histórico, numeração

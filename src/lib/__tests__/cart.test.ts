@@ -15,7 +15,7 @@ const produto = (over: Partial<CartProduct> = {}): CartProduct => ({
   _id: 'a1',
   name: 'Quartzo Rosa Bruto',
   slug: 'quartzo-rosa-bruto',
-  price: 24,
+  priceCents: 2400,
   image: '/x.webp',
   stock: 3,
   ...over,
@@ -95,13 +95,18 @@ describe('totais', () => {
     expect(countItems([item({ quantity: 2 }), item({ _id: 'b2', quantity: 3 })])).toBe(5);
   });
 
-  it('soma preco vezes quantidade', () => {
+  it('soma preco vezes quantidade, em centimos', () => {
     expect(
       cartTotal([
-        item({ price: 24, quantity: 2 }),
-        item({ _id: 'b2', price: 10.5, quantity: 1 }),
+        item({ priceCents: 2400, quantity: 2 }),
+        item({ _id: 'b2', priceCents: 1050, quantity: 1 }),
       ])
-    ).toBe(58.5);
+    ).toBe(5850);
+  });
+
+  it('nao acumula erro de virgula flutuante', () => {
+    // Em euros, 19.9 * 3 da 59.699999999999996.
+    expect(cartTotal([item({ priceCents: 1990, quantity: 3 })])).toBe(5970);
   });
 
   it('carrinho vazio vale zero', () => {
@@ -124,5 +129,17 @@ describe('parseStoredCart', () => {
     const items = parseStoredCart(raw);
     expect(items).toHaveLength(1);
     expect(items[0]._id).toBe('a1');
+  });
+
+  it('descarta precos que nao sao centimos inteiros', () => {
+    // Inclui os carrinhos guardados antes da mudanca, com `price` em euros:
+    // tentar converte-los era adivinhar, e o preco vem sempre do servidor.
+    const raw = JSON.stringify([
+      item({ _id: 'bom' }),
+      { ...item({ _id: 'euros' }), priceCents: 19.9 },
+      { ...item({ _id: 'antigo' }), priceCents: undefined, price: 24 },
+      { ...item({ _id: 'negativo' }), priceCents: -100 },
+    ]);
+    expect(parseStoredCart(raw).map((i) => i._id)).toEqual(['bom']);
   });
 });

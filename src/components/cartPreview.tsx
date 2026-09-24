@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { botaoClasses } from '@/components/ui/Button';
 import { Minus, Plus, ShoppingBag, Trash, X } from '@phosphor-icons/react';
 import { useEffect, useRef } from 'react';
+import { formatarPreco } from '@/lib/dinheiro';
 
 export default function CartPreview() {
   const { items, total, isOpen, closeCart, updateQuantity, removeItem } = useCart();
@@ -132,7 +133,7 @@ export default function CartPreview() {
                       {item.name}
                     </Link>
                     <p className="tabular mt-1 text-sm font-semibold text-rose-700">
-                      {item.price.toFixed(2)}€
+                      {formatarPreco(item.priceCents)}
                     </p>
 
                     {/* Quantidade */}
@@ -179,7 +180,7 @@ export default function CartPreview() {
                 Total:
               </span>
               <span className="tabular text-2xl font-semibold text-rose-700">
-                {total.toFixed(2)}€
+                {formatarPreco(total)}
               </span>
             </div>
 
