@@ -213,6 +213,36 @@ Seja qual for, as regras já estão decididas:
   fazer nada duas vezes
 - nunca da página para onde a pessoa volta: essa pode ser aberta à mão
 
+### Comparação preliminar — 24/09/2026
+
+**Não confirmada na fonte.** O ambiente onde isto foi feito bloqueia os sítios
+dos três fornecedores; os valores vêm de resumos de pesquisa e têm de ser
+confirmados nos preçários antes de decidir. Ficam aqui pela ordem de grandeza.
+
+| | MB WAY | Multibanco | Cartões | Mensalidade | A notar |
+|---|---|---|---|---|---|
+| [Stripe](https://stripe.com/en-pt/pricing/local-payment-methods) | 1,5% + 0,25 € | 1,5% + 0,25 € durante um período promocional; depois, por confirmar | 1,5% + 0,25 € (europeus) | não | uma integração só para tudo; modo de testes sem NIF; página de pagamento alojada |
+| [ifthenpay](https://helpdesk.ifthenpay.com/pt-PT/support/solutions/articles/79000086484-quais-os-custos-do-servico-) | 0,7% + 0,07 € + IVA | 1,5–1,6% + 0,20 € + IVA (as fontes discordam) | por confirmar | não | português, o MB WAY mais barato |
+| [Eupago](https://www.eupago.pt/tpa) | 0,7% + 0,07 € | por confirmar | por confirmar | isenta no 1.º ano | depois do 1.º ano, por confirmar |
+| [easypay](https://www.easypay.pt/en/prices) | 1,5% + 0,25 € + IVA | igual | igual (+2% fora da SEPA) | não | **500 € + IVA de adesão se não transacionar nos primeiros 6 meses** — um risco real para uma loja que ainda não abriu |
+
+Numa encomenda de 30 € paga por MB WAY: cerca de **0,28 €** na ifthenpay ou
+na Eupago, contra **0,70 €** na Stripe ou na easypay (antes do IVA, onde se
+aplica). A diferença é de uns 40
+cêntimos por encomenda: a 100 encomendas por mês, uns 40 € por mês.
+
+**A minha leitura, se os números se confirmarem:** Stripe para abrir. Os 40
+cêntimos compram uma integração só para os três meios, um modo de testes que
+não precisa do NIF — o que deixa fazer e testar a E4 e a E5 inteiras
+enquanto os dados do negócio não chegam — e uma página de pagamento alojada,
+onde os dados do cartão nunca passam pelo sítio. Com volume, a ifthenpay ou a
+Eupago para o MB WAY passam a compensar, e a troca é num sítio só
+(`lib/encomenda.ts` não sabe quem é o fornecedor). A easypay fica de fora pela
+cláusula dos seis meses.
+
+**Decisão tua.** Depende de quantas encomendas esperas, e se aceitas cartões
+desde o início.
+
 **O código pode fazer-se antes de haver conta real**, com o fornecedor simulado
 nos testes. A conta de testes normalmente só pede email; a conta real pede NIF
 e IBAN.
@@ -337,7 +367,7 @@ E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
 E2  reserva de stock atómica              feito (verdadeira só depois do CI)
 E3  estados, histórico, numeração         feito
     CSP sem 'unsafe-inline'               medido; passa para a E5, só no pagamento
-    comparação de fornecedores de pagamento, para decidires a E4
+    comparação de fornecedores de pagamento  preliminar, na E4; falta confirmar os preçários
 ```
 
 ## Código agora, ligar depois
