@@ -82,7 +82,9 @@ export const EMPRESA: Empresa = {
     localidade: null,
     pais: 'Portugal',
   },
-  email: null,
+  // Dado pelo negocio em 25/09/2026. E tambem o que envia o correio do sitio
+  // (`SMTP_FROM`): responder a confirmacao de uma encomenda chega aqui.
+  email: 'petalasdesonho@gmail.com',
   telefone: null,
   horario: null,
   entidadeRal: {

@@ -29,7 +29,7 @@ página `/privacidade`; quando uma muda, a outra muda.
 | | |
 |---|---|
 | Nome | **por preencher** (`EMPRESA.denominacao`) |
-| Contacto | **por preencher** (`EMPRESA.email`, `EMPRESA.telefone`) |
+| Contacto | petalasdesonho@gmail.com (`EMPRESA.email`, dado em 25/09/2026); o telefone **por preencher** (`EMPRESA.telefone`) |
 | Morada | **por preencher** (`EMPRESA.morada`) |
 | Encarregado de proteção de dados | Não designado. Não é obrigatório (art. 37.º): o tratamento não é em grande escala nem de categorias especiais |
 | Representante na UE | Não se aplica: o responsável está em Portugal |
