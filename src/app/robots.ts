@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { identificacaoCompleta } from '@/lib/empresa';
 import { paginasObrigatoriasProntas } from '@/lib/paginas';
 import { condicoesCompletas } from '@/lib/condicoes';
+import { ensaioPedido } from '@/lib/loja';
 import { ROTAS_PRIVADAS, SITE_URL } from '@/lib/site';
 
 /**
@@ -28,7 +29,9 @@ const indexavel =
   paginasObrigatoriasProntas() &&
   // As paginas de envios e termos existem, mas com os portes e o prazo de
   // entrega por preencher nao dizem o que a lei pede antes de uma compra.
-  condicoesCompletas();
+  condicoesCompletas() &&
+  // O ensaio da loja mostra portes e prazo inventados (`lib/loja.ts`).
+  !ensaioPedido();
 
 
 export default function robots(): MetadataRoute.Robots {

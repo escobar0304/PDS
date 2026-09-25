@@ -112,6 +112,11 @@ export interface IOrder extends Document {
   status: Estado;
   /** Ate quando o stock fica reservado a espera do pagamento. */
   reservaAte?: Date;
+  /**
+   * O resumo da chave que so quem fez a encomenda tem, para a ver e desistir
+   * dela sem conta. Nunca a chave: ver `lib/tokens.ts`.
+   */
+  chaveHash?: string;
   /** Cada mudanca de estado, com data e autor. Nunca se reescreve. */
   historico: Array<{ de?: Estado; para: Estado; em: Date; por: string; nota?: string }>;
   notes?: string;
@@ -405,6 +410,8 @@ const orderSchema = new Schema<IOrder>(
     reservaAte: {
       type: Date,
     },
+    // Fora das consultas por omissao: so quem verifica a chave a pede.
+    chaveHash: { type: String, select: false },
     historico: [
       {
         _id: false,

@@ -26,6 +26,7 @@ acrescenta-se aqui.
 | `Caixa` | Caixa de seleção com etiqueta e dica. A caixa tem 24×24 e a etiqueta inteira é alvo |
 | `SemFotografia` | No lugar de uma fotografia que falta. Nunca uma fotografia de banco de imagens: numa loja de peças únicas, seria mostrar outra pedra como se fosse aquela |
 | `Alert` | Mensagens de erro, sucesso e informação, com ação de recuperação opcional |
+| `LIGACAO_EM_TEXTO` | As classes de uma ligação no meio de texto corrido: sublinhada em repouso, porque só a cor não a distingue (WCAG 1.4.1) |
 | `Spinner`, `Skeleton`, `SkeletonCartao` | Estados de espera |
 | `EmptyState` | Estados vazios com ícone, explicação e saída |
 | `Container`, `Section`, `PageHeader` | Largura e ritmo vertical |

@@ -261,3 +261,79 @@ export const esquemaEdicaoCategoria = z
   })
   .partial()
   .strict();
+
+// ============================================
+// CHECKOUT (ROADMAP-V2, E5)
+// ============================================
+
+/**
+ * O codigo postal, so do continente. Os da Madeira comecam por 9 (9000 a
+ * 9399), e os dos Acores tambem (9500 a 9999): envia-se so para o continente
+ * (`CONDICOES.zonaEnvio`), e um portes calculado para o continente e cobrado
+ * para as ilhas seria um preco errado.
+ */
+export const codigoPostalContinente = z
+  .string()
+  .trim()
+  .regex(/^[1-8]\d{3}-\d{3}$/, 'Código postal do continente, como 4000-123');
+
+/**
+ * O telefone, para os CTT avisarem da entrega. Um portugues (fixo ou movel,
+ * com ou sem +351) ou um estrangeiro com o indicativo. Espacos e hifenes
+ * saem antes de verificar, e o que fica guardado ja vem sem eles.
+ */
+export const telefone = z
+  .string()
+  .transform((t) => t.replace(/[\s-]/g, ''))
+  .pipe(z.string().regex(/^(?:(?:\+351)?[29]\d{8}|\+(?!351)\d{8,15})$/, 'Telefone inválido'));
+
+/**
+ * Quem compra, e para onde. So o que a entrega precisa: sem conta, sem
+ * palavra-passe, sem data de nascimento (ROADMAP-V2, E5, sobre minimizacao).
+ *
+ * **O mesmo esquema corre no browser e no servidor.** No browser, so para
+ * dizer campo a campo o que falta; e o do servidor que conta, porque o do
+ * browser muda-o quem quiser.
+ */
+export const esquemaCliente = z
+  .object({
+    nome: texto(120),
+    email: z.string().trim().toLowerCase().email().max(254),
+    telefone,
+    morada: texto(200),
+    codigoPostal: codigoPostalContinente,
+    localidade: texto(80),
+  })
+  .strict();
+
+export type DadosDoCliente = z.infer<typeof esquemaCliente>;
+
+/** Pedir o total, com portes, antes de encomendar. */
+export const esquemaOrcamento = z.object({ linhas: esquemaPedido }).strict();
+
+/**
+ * Encomendar.
+ *
+ * `totalVistoCents` **nao e um preco que o servidor use** — nunca entra em
+ * conta nenhuma. E o total que a pessoa viu imediatamente antes do botao, que
+ * a lei obriga a mostrar (DL 24/2014, art. 4.º): se o calculo do servidor der
+ * outro valor (um preco mudou entretanto), a encomenda e recusada e a pessoa
+ * ve o novo, em vez de pagar um total que nao lhe foi mostrado.
+ *
+ * A entrega e so por envio: o levantamento na loja esta por decidir
+ * (`CONDICOES.levantamentoNaLoja`), e aceita-lo agora era prometer um servico
+ * que ninguem confirmou.
+ */
+export const esquemaCheckout = z
+  .object({
+    linhas: esquemaPedido,
+    cliente: esquemaCliente,
+    entrega: z.literal('SHIPPING'),
+    totalVistoCents: z.number().int().min(0).max(100_000_000),
+  })
+  .strict();
+
+/** Desistir de uma encomenda por pagar, com a chave que so quem a fez tem. */
+export const esquemaDesistencia = z
+  .object({ chave: z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'Chave inválida') })
+  .strict();

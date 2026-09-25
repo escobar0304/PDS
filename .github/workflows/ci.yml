@@ -117,12 +117,13 @@ jobs:
           path: playwright-report/
           retention-days: 7
 
-  # O painel de gestao contra uma base de dados a serio.
+  # O painel de gestao e a compra, contra uma base de dados a serio.
   #
   # A suite de cima corre sem MongoDB de proposito, e por isso nunca ve os
   # formularios do painel, que so aparecem com dados. Esta ve: cria
   # categorias e produtos pela interface, vende ao balcao, e confirma que a
-  # loja mostra o que o painel gravou e que o papel vem da base de dados.
+  # loja mostra o que o painel gravou e que o papel vem da base de dados. E
+  # compra, com a loja em ensaio, ate a pagina da Stripe (do `stripe-mock`).
   e2e-bd:
     name: Painel com base de dados
     runs-on: ubuntu-latest
@@ -139,8 +140,14 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      stripe:
+        image: stripe/stripe-mock:latest
+        ports:
+          - 12111:12111
+
     env:
       MONGODB_URI: mongodb://127.0.0.1:27017/pds-e2e
+      STRIPE_API_HOST: 127.0.0.1
 
     steps:
       - uses: actions/checkout@v7

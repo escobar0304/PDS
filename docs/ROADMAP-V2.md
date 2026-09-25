@@ -354,7 +354,7 @@ desde o início.
 nos testes. A conta de testes normalmente só pede email; a conta real pede NIF
 e IBAN.
 
-## E5. Checkout
+## E5. Checkout — feito, com a loja fechada
 
 Dados, entrega, resumo com portes e total, pagar. Com o que a lei pede e que
 não é opcional:
@@ -374,6 +374,48 @@ minimização do RGPD —, e é a razão mais comum de desistência a meio do
 checkout. A encomenda precisa de nome, email, morada e telefone de qualquer
 maneira; a palavra-passe não acrescenta nada à venda.
 
+**Feito em 25/09/2026.** O `/checkout`, as rotas `/api/encomendas` (e
+`/orcamento`, e `/[id]/desistir`), e o carrinho a ligar para lá. O que
+ficou decidido pelo caminho:
+
+- **Uma fonte só decide se a loja abre** (`src/lib/loja.ts`), e junta tudo o
+  que falta: a decisão de abrir, os portes, o prazo, a identificação do
+  prestador (que o art. 4.º pede também antes da compra), a confirmação por
+  email (P1) e as chaves da Stripe. Fechada, `/checkout` dá 404 e as rotas
+  dão 503; o painel mostra a lista do que falta. **A P1 fecha a loja, de
+  propósito:** vender sem a confirmação em suporte duradouro era cumprir o
+  art. 4.º e falhar o 6.º no minuto seguinte
+- **O total que a pessoa viu vai com o pedido, e o servidor recusa se não
+  bater** (`totalVistoCents`). Não entra em conta nenhuma: sem isto, um preço
+  mudado no painel entre o orçamento e o botão cobrava um total que não
+  tinha sido mostrado
+- **Só o continente**, pelo código postal: os da Madeira e dos Açores
+  começam por 9. Os portes da tabela são do continente
+- **Só envio.** O levantamento na loja continua por decidir, e o esquema
+  recusa-o até lá
+- **Sem caixa "li e aceito".** Os termos, os envios e a privacidade estão em
+  ligação imediatamente antes do botão, com a frase "ao encomendar, aceita".
+  É a leitura que faço do DL 446/85 (comunicar as cláusulas antes), **a
+  validar pelo jurista**
+- **O contrato fica celebrado com o pagamento confirmado** — está nos termos.
+  Antes disso a encomenda existe, com as peças reservadas, mas pode cair
+  sozinha
+- **Voltar atrás na Stripe desiste, e o stock volta na hora.** Sem isto, uma
+  peça única ficava presa pela reserva da própria pessoa: quem voltasse para
+  corrigir a morada não a conseguia comprar
+- **Uma chave por encomenda**, para quem compra sem conta a poder ver e
+  desistir dela (`docs/SEGURANCA.md`). É a mesma chave que a página da P1 vai
+  pedir
+
+**O ensaio.** Com os portes e o prazo a `null`, a loja fica fechada, e o
+checkout ficava sem teste de ponta a ponta até ao dia de abrir — o pior dia
+para encontrar um erro. `LOJA_ENSAIO=1`, só com uma chave de testes da
+Stripe, abre-a com portes e prazo inventados que a página diz serem
+inventados. `e2e-bd/checkout.spec.ts` compra com ele contra o `stripe-mock`:
+o total com portes, os erros campo a campo, a Madeira recusada, a encomenda
+gravada com a peça reservada, a mesma peça em dois carrinhos, e o preço que
+muda antes do botão.
+
 ---
 
 # Fase 4 - Depois do pagamento
@@ -383,6 +425,11 @@ maneira; a palavra-passe não acrescenta nada à venda.
 Email com o resumo da encomenda, as condições e o formulário de livre
 resolução: **obrigatório**, em "suporte duradouro" (DL 24/2014, art. 6.º). E
 as páginas de sucesso e de falha, de volta, a ler o estado real.
+
+A Stripe já devolve a pessoa para `/encomenda/<id>?chave=…` depois de pagar
+(E5): a página é esta, e a chave é a que prova que a encomenda é de quem a
+abre. Até ela existir, a loja não abre (`CONFIRMACAO_DURADOURA`, em
+`lib/loja.ts`).
 
 O código faz-se agora. **O envio depende do fornecedor de email**, por decidir
 (`REGISTO-TRATAMENTOS.md`).
@@ -494,7 +541,7 @@ L1  /sucesso e /falha saem                feito
 L2  a dependência stripe sai              feito
 L3  /admin protegido, com teste           feito
 C1  preços em cêntimos                    feito
-E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
+E1  cálculo de total e portes no servidor  feito; a rota é a da E5
 E2  reserva de stock atómica              feito, verificado no CI
 E3  estados, histórico, numeração         feito
     CSP sem 'unsafe-inline'               medido; fica, e o Checkout alojado dispensa-o
@@ -509,7 +556,7 @@ C2  categorias com peças únicas ou com medidas; stock por movimentos   feito
 C3  painel: produtos, medidas, stock, categorias (API, depois páginas)
     promoção a administrador por script, nunca pela web
 E4  Stripe: sessão de pagamento, aviso assinado e idempotente
-E5  checkout sem conta, fechado enquanto faltarem condições
+E5  checkout sem conta, fechado enquanto faltarem condições   feito, ensaiado
 ```
 
 ## Código agora, ligar depois
@@ -518,7 +565,7 @@ E5  checkout sem conta, fechado enquanto faltarem condições
 |---|---|
 | C3 painel de produtos | onde ficam as imagens (alojamento) |
 | E4 pagamento | as chaves de teste da Stripe para o ensaio real; as de produção pedem NIF e IBAN |
-| E5 checkout | tabela de portes, prazo de entrega, levantamento na loja |
+| E5 checkout | tabela de portes, prazo de entrega, identificação do prestador (F4), a P1, e as chaves da Stripe; o levantamento na loja, se o houver |
 | P1 email de confirmação | fornecedor de email |
 | P3 painel de encomendas | nada além da E3 |
 
@@ -552,7 +599,7 @@ v1.0.0 publicada
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
   ├─ S1 C2                      feito
   ├─ C3 C4                      feito, ensaiado com dados reais
-  ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
+  ├─ E4 ── E5                   feito; abrir pede portes, prazo, F4, P1 e chaves
   ├─ P1 ── P3 ── P4             depois da E5
   ├─ P2                         contabilista
   └─ Conta                      depois da P1

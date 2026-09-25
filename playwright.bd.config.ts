@@ -9,9 +9,13 @@ import { defineConfig, devices } from '@playwright/test';
  * sobre o painel de gestao, cujos formularios so aparecem com categorias e
  * produtos lidos da base de dados. E isso que esta prova.
  *
- * Nao corre aqui: o binario do MongoDB nao e descarregavel deste ambiente.
- * Corre no CI, contra o MongoDB do job `e2e-bd`. Uma alteracao que lhe toque
- * so se sabe verdadeira depois do CI passar.
+ * Corre no CI, contra o MongoDB e o `stripe-mock` do job `e2e-bd`; aqui,
+ * pelos contentores Docker do CLAUDE.md. Uma alteracao que lhe toque so se
+ * sabe verdadeira depois do CI passar.
+ *
+ * A loja abre **em ensaio** (`LOJA_ENSAIO`, `lib/loja.ts`): com os portes e
+ * o prazo do negocio por preencher, sem ele o checkout nao existia para
+ * testar. Com uma chave de testes, e contra o simulador da Stripe.
  */
 
 const PORT = 3200;
@@ -51,6 +55,11 @@ export default defineConfig({
     timeout: 240_000,
     env: {
       MONGODB_URI: process.env.MONGODB_URI,
+      LOJA_ENSAIO: '1',
+      STRIPE_SECRET_KEY: 'sk_test_123',
+      STRIPE_WEBHOOK_SECRET: 'whsec_apenas_para_testes',
+      STRIPE_API_HOST: process.env.STRIPE_API_HOST ?? '127.0.0.1',
+      NEXT_PUBLIC_SITE_URL: `http://127.0.0.1:${PORT}`,
       NEXTAUTH_SECRET: 'segredo-apenas-para-testes-e2e',
       NEXTAUTH_URL: `http://127.0.0.1:${PORT}`,
     },

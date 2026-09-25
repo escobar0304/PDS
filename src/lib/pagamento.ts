@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Stripe from 'stripe';
 import connectDB from '@/lib/db';
 import { requireEnv } from '@/lib/env';
-import { mudarEstado } from '@/lib/encomenda';
+import { chaveDaEncomenda, mudarEstado } from '@/lib/encomenda';
 import { AvisoPagamento, Order } from '@/lib/models';
 
 /**
@@ -80,9 +80,16 @@ export type Inicio =
  * O preco de cada linha vem da encomenda, que o calculou a partir da base de
  * dados (`lib/encomenda.ts`), e nunca do pedido do browser. A chave de
  * idempotencia e a encomenda: pedir duas vezes da a mesma sessao, e nao duas.
+ *
+ * `chave` e a da encomenda (`criarEncomenda`), e vai nos dois enderecos de
+ * volta: e ela que deixa quem comprou sem conta ver a encomenda, ou desistir
+ * dela. `baseUrl` vem do `SITE_URL`, e nunca do cabecalho `Host` do pedido —
+ * esse escreve-o quem pede, e mandava a pessoa, depois de pagar, para onde
+ * ele quisesse.
  */
 export async function iniciarPagamento(
   encomendaId: string,
+  chave: string,
   baseUrl: string,
   agora = new Date()
 ): Promise<Inicio> {
@@ -119,8 +126,8 @@ export async function iniciarPagamento(
       metadata: { encomendaId, numero: e.numero },
       expires_at: expira,
       locale: 'pt',
-      success_url: `${baseUrl}/encomenda/${encomendaId}?estado=pago`,
-      cancel_url: `${baseUrl}/carrinho`,
+      success_url: `${baseUrl}/encomenda/${encomendaId}?chave=${chave}`,
+      cancel_url: `${baseUrl}/carrinho?desistir=${encomendaId}&chave=${chave}`,
     },
     { idempotencyKey: `sessao-${encomendaId}` }
   );
@@ -132,6 +139,43 @@ export async function iniciarPagamento(
 
   if (!sessao.url) throw new Error('A Stripe não devolveu o endereço da sessão.');
   return { ok: true, url: sessao.url };
+}
+
+export type Desistencia =
+  | { ok: true }
+  | { ok: false; motivo: 'nao-existe' | 'ja-nao-esta-por-pagar' | 'ja-pago' };
+
+/**
+ * Quem estava a pagar voltou atras. Cancela a encomenda e devolve o stock
+ * **ja**, em vez de daqui a 40 minutos.
+ *
+ * Sem isto, uma peca unica ficava presa pela reserva da propria pessoa: quem
+ * voltasse ao carrinho para mudar a morada nao a conseguia comprar outra vez.
+ *
+ * A sessao da Stripe fecha-se primeiro. Pela ordem contraria, havia um
+ * instante em que a encomenda estava cancelada e a pagina de pagamento ainda
+ * aceitava o cartao. Se ja nao se conseguir fechar porque foi paga, nao se
+ * cancela nada: o aviso da Stripe esta a caminho.
+ */
+export async function desistirDoPagamento(id: string, chave: string): Promise<Desistencia> {
+  if (!(await chaveDaEncomenda(id, chave))) return { ok: false, motivo: 'nao-existe' };
+
+  const e = await Order.findById(id).select('status pagamentoId').lean();
+  if (!e || e.status !== 'PENDING') return { ok: false, motivo: 'ja-nao-esta-por-pagar' };
+
+  if (e.pagamentoId) {
+    try {
+      await stripe().checkout.sessions.expire(e.pagamentoId);
+    } catch (erro) {
+      // Ja nao estava aberta: ou expirou, ou foi paga entretanto.
+      const sessao = await stripe().checkout.sessions.retrieve(e.pagamentoId);
+      if (sessao.status === 'complete') return { ok: false, motivo: 'ja-pago' };
+      if (sessao.status === 'open') throw erro;
+    }
+  }
+
+  const r = await mudarEstado(id, 'CANCELLED', 'cliente', 'desistiu antes de pagar');
+  return r.ok ? { ok: true } : { ok: false, motivo: 'ja-nao-esta-por-pagar' };
 }
 
 export type ResultadoAviso = 'processado' | 'repetido' | 'ignorado';

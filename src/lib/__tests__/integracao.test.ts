@@ -718,6 +718,19 @@ executar('encomendas, contra a base de dados', () => {
     expect(e.items[0].varianteId).toBeDefined();
   });
 
+  it('com um total diferente do que a pessoa viu, não se reserva nada', async () => {
+    const p = await peca({ stock: 3 });
+    const pedido = [{ id: p._id.toString(), quantidade: 2 }];
+
+    const r = await criarEncomenda(pedido, CLIENTE, TABELA, new Date(), 3980);
+
+    // O total real inclui os portes: 3980 era so o das pecas.
+    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'total-mudou', totalCents: 3980 + 450 }] });
+    expect(await stock(p._id)).toBe(3);
+    expect(await Order.countDocuments()).toBe(0);
+    expect(await criarEncomenda(pedido, CLIENTE, TABELA, new Date(), 3980 + 450)).toMatchObject({ ok: true });
+  });
+
   it('os números nunca se repetem, mesmo pedidos ao mesmo tempo', async () => {
     const numeros = await Promise.all(Array.from({ length: 10 }, () => proximoNumero()));
     expect(new Set(numeros).size).toBe(10);
@@ -956,7 +969,7 @@ executar('pagamentos, contra a base de dados', () => {
       deliveryType: 'SHIPPING',
     }, TABELA);
     if (!r.ok) throw new Error(JSON.stringify(r));
-    return { id: r.id, total: r.totalCents, produto: p._id };
+    return { id: r.id, total: r.totalCents, produto: p._id, chave: r.chave };
   }
 
   async function aviso(tipo: string, sessao: Record<string, unknown>, id = `evt_${new mongoose.Types.ObjectId()}`) {
@@ -1021,7 +1034,7 @@ executar('pagamentos, contra a base de dados', () => {
     const e = await encomendaPorPagar();
     const agora = new Date();
 
-    const r = await iniciarPagamento(e.id, 'http://127.0.0.1:3100', agora);
+    const r = await iniciarPagamento(e.id, e.chave, 'http://127.0.0.1:3100', agora);
 
     expect(r.ok).toBe(true);
     const depois = await estado(e.id);
@@ -1034,7 +1047,40 @@ executar('pagamentos, contra a base de dados', () => {
     const { iniciarPagamento } = await import('../pagamento');
     const e = await encomendaPorPagar();
     await mudarEstado(e.id, 'CANCELLED', 'cliente');
-    expect(await iniciarPagamento(e.id, 'http://x')).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+    expect(await iniciarPagamento(e.id, e.chave, 'http://x')).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+  });
+
+  it('a chave da encomenda: a certa passa, uma errada ou de outra encomenda não', async () => {
+    const { chaveDaEncomenda } = await import('../encomenda');
+    const a = await encomendaPorPagar();
+    const b = await encomendaPorPagar();
+    expect(a.chave).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(await chaveDaEncomenda(a.id, a.chave)).toBe(true);
+    expect(await chaveDaEncomenda(a.id, b.chave)).toBe(false);
+    expect(await chaveDaEncomenda(a.id, 'x'.repeat(43))).toBe(false);
+    expect(await chaveDaEncomenda('nao-e-um-id', a.chave)).toBe(false);
+    // Na base de dados fica o resumo, e nunca a chave.
+    const guardada = await Order.findById(a.id).select('+chaveHash').lean();
+    expect(guardada!.chaveHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(JSON.stringify(guardada)).not.toContain(a.chave);
+  });
+
+  comStripeMock('quem volta atrás do pagamento desiste, e o stock volta já', async () => {
+    const { desistirDoPagamento, iniciarPagamento } = await import('../pagamento');
+    const e = await encomendaPorPagar();
+    await iniciarPagamento(e.id, e.chave, 'http://127.0.0.1:3100');
+    expect((await Product.findById(e.produto).lean())!.variantes[0].stock).toBe(0);
+
+    // Sem a chave, nada acontece.
+    expect(await desistirDoPagamento(e.id, 'x'.repeat(43))).toEqual({ ok: false, motivo: 'nao-existe' });
+    expect((await estado(e.id)).status).toBe('PENDING');
+
+    expect(await desistirDoPagamento(e.id, e.chave)).toEqual({ ok: true });
+    expect((await estado(e.id)).status).toBe('CANCELLED');
+    expect((await Product.findById(e.produto).lean())!.variantes[0].stock).toBe(1);
+    // Duas vezes nao devolve o stock duas vezes.
+    expect(await desistirDoPagamento(e.id, e.chave)).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+    expect((await Product.findById(e.produto).lean())!.variantes[0].stock).toBe(1);
   });
 });
 

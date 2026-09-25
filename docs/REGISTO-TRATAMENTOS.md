@@ -114,11 +114,26 @@ cláusulas contratuais-tipo) antes de começar.
 
 ### 6. Encomendas
 
-**Não existe nesta versão.** O modelo `Order` existe desde o início, mas não há
-checkout. Quando houver, entra aqui com a conservação fiscal: as encomendas não
-se apagam quando a conta é apagada, porque o documento de venda tem de ser
-guardado (art. 17.º, n.º 3, al. b)), e isso tem de estar na política antes da
-primeira venda. Ver `docs/DADOS-PESSOAIS.md`.
+**Existe no código, e a loja não abre ainda:** `src/lib/loja.ts` fecha-a
+enquanto faltarem os portes, o prazo, a identificação do prestador e a
+confirmação por email (P1). Entra na política antes da primeira venda.
+
+| | |
+|---|---|
+| Finalidade | Vender e entregar a encomenda, e recebê-la paga |
+| Base legal | Execução de contrato (art. 6.º, n.º 1, al. b)); guardar o documento de venda é obrigação legal (al. c)) |
+| Titulares | Quem compra, com ou sem conta |
+| Dados | nome, email, telefone, morada, código postal, localidade; o que comprou, a que preço e com que portes; o estado e o histórico da encomenda; o identificador do pagamento na Stripe; com conta, a ligação a ela. **Nunca dados do cartão** — ficam na Stripe |
+| Destinatários | a Stripe recebe o email, as linhas da encomenda e o total; os CTT vão receber o nome, a morada e o telefone quando a expedição existir (P3) |
+| Prazo | **por decidir com o contabilista** (P2). Não se apaga quando a conta é apagada, porque o documento de venda tem de ser guardado (art. 17.º, n.º 3, al. b)) |
+| Onde no código | `src/lib/models.ts` (`orderSchema`), `src/lib/encomenda.ts`, `src/app/api/encomendas/` |
+
+O telefone é pedido por causa dos CTT, que avisam da entrega por ele. Nada
+mais é pedido: nem conta, nem palavra-passe, nem data de nascimento. O NIF na
+fatura, que o consumidor pode pedir, entra com o programa de faturação (P2):
+recolhê-lo antes de haver para onde o mandar era guardar um dado sem uso.
+
+Ver `docs/DADOS-PESSOAIS.md`.
 
 ### O que não é tratamento nosso
 

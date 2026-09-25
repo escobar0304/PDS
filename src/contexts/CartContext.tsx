@@ -18,6 +18,12 @@ const STORAGE_KEY = 'cart';
 
 interface CartContextType {
   items: CartItem[];
+  /**
+   * Se o carrinho guardado ja foi lido. Antes disso `items` esta vazio sem o
+   * carrinho o estar: o checkout nao pode dizer "carrinho vazio" nem pedir
+   * um total a meio da leitura.
+   */
+  pronto: boolean;
   itemCount: number;
   total: number;
   addItem: (product: CartProduct, quantity?: number) => void;
@@ -82,6 +88,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     <CartContext.Provider
       value={{
         items,
+        pronto: hydrated,
         itemCount: countItems(items),
         total: cartTotal(items),
         addItem,

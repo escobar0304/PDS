@@ -51,7 +51,7 @@ describe('páginas institucionais', () => {
     // Uma pagina que exista mas nao conste da lista nunca aparece no rodape.
     const conhecidas = new Set(PAGINAS.map((p) => p.href.slice(1)));
     const ignorar = new Set([
-      'admin', 'api', 'auth', 'area-pessoal', 'carrinho', 'catalogo',
+      'admin', 'api', 'auth', 'area-pessoal', 'carrinho', 'catalogo', 'checkout',
       'loja', 'produto', 'sobre-nos',
     ]);
 

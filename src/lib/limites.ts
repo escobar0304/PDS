@@ -124,6 +124,18 @@ export const LIMITES = {
   administracao: { max: 120, janelaMs: 60 * 1000 },
   /** Os avisos da Stripe: vem dos servidores dela, em rajadas. So trava abuso. */
   avisosPagamento: { max: 600, janelaMs: 60 * 1000 },
+  /** Pedir o total com portes: uma leitura, repetida a cada mudanca no carrinho. */
+  orcamento: { max: 60, janelaMs: 60 * 1000 },
+  /**
+   * Encomendar. Apertado, e nao por causa da carga: **cada encomenda prende o
+   * stock ~40 minutos**. Sem limite, um programa esgotava as pecas unicas
+   * todas sem pagar nenhuma. Nao mais apertado do que isto porque as redes
+   * moveis poem muita gente atras do mesmo IP (CGNAT): dez por hora deixam
+   * uma familia inteira comprar, e voltar atras e tentar outra vez.
+   */
+  encomendas: { max: 10, janelaMs: 60 * 60 * 1000 },
+  /** Desistir de uma encomenda por pagar, com a chave. */
+  desistencias: { max: 20, janelaMs: 60 * 60 * 1000 },
 } as const satisfies Record<string, Limite>;
 
 /**

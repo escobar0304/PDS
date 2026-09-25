@@ -5,3 +5,4 @@ export type { OpcaoEscolha } from './Field';
 export { Alert, AnuncioEstado, EmptyState, SemFotografia, Skeleton, SkeletonCartao, Spinner } from './Feedback';
 export { Badge, Card, Container, PageHeader, Section } from './Layout';
 export { default as AuthShell, GoogleButton, Separador } from './AuthShell';
+export { LIGACAO_EM_TEXTO } from './texto';

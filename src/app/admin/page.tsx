@@ -4,6 +4,7 @@ import { Alert, Card, Container, PageHeader } from '@/components/ui';
 import { paginaDeAdmin } from '@/lib/autorizacao';
 import { stockTotal } from '@/lib/catalogo';
 import { listarProdutos } from '@/lib/gestao';
+import { estadoDaLoja } from '@/lib/loja';
 
 export const metadata = { title: 'Painel' };
 
@@ -28,6 +29,7 @@ async function resumo() {
 export default async function AdminPage() {
   await paginaDeAdmin();
   const r = await resumo();
+  const loja = estadoDaLoja();
 
   return (
     <>
@@ -54,6 +56,32 @@ export default async function AdminPage() {
               Não foi possível ler a base de dados. O resumo volta quando ela voltar.
             </Alert>
           )}
+
+          {/*
+            A loja abre sozinha quando nao faltar nada (`lib/loja.ts`). Quem
+            gere tem de saber o que falta sem ler o codigo.
+          */}
+          <Card className="mt-8 p-5">
+            <h2 className="font-medium text-ink">
+              {loja.aberta
+                ? loja.ensaio
+                  ? 'Loja online aberta em ensaio: portes e prazo inventados, pagamentos de teste'
+                  : 'Loja online aberta: aceita encomendas'
+                : 'Loja online fechada: não aceita encomendas'}
+            </h2>
+            {!loja.aberta && (
+              <>
+                <p className="mt-2 text-sm text-ink-muted">Abre quando deixar de faltar:</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-muted">
+                  {loja.faltas.map((f) => (
+                    <li key={f.campo}>
+                      <span className="font-medium text-ink">{f.campo}</span> — {f.porque}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </Card>
 
           <ul className="mt-8 space-y-2">
             <li>

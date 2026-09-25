@@ -446,12 +446,53 @@ e da área pessoal.
 alojamento *serverless* não: cada instância conta os seus. Está registado no
 `ROADMAP-V2.md` (S1) como critério na escolha do alojamento.
 
+## O checkout — 25/09/2026
+
+**O preço.** A rota de encomenda (`/api/encomendas`) usa só o cálculo do
+servidor. Recebe `totalVistoCents`, o total que a pessoa viu antes do botão,
+e **nunca o usa numa conta**: se o do servidor for outro, a encomenda é
+recusada e nada se reserva. Só pode fazer falhar, nunca baixar um preço. O
+`e2e-bd/checkout.spec.ts` muda o preço entre o orçamento e o botão e verifica
+as duas coisas.
+
+**A loja fecha no servidor, e não no carrinho.** O `/checkout` dá 404 e as
+duas rotas dão 503 enquanto `estadoDaLoja()` disser que falta alguma coisa.
+A rota não conta com a página: `e2e/seguranca.spec.ts` pede-lhe
+diretamente.
+
+**O ensaio**, que abre a loja com portes e prazo inventados para os testes
+de ponta a ponta, tem três travões: só com `LOJA_ENSAIO=1`, só com uma chave
+de testes da Stripe (com uma real, fecha a loja em vez de a abrir), e a
+página diz que é ensaio enquanto o `robots.ts` não deixa indexar.
+`loja.test.ts` verifica os três.
+
+**A chave da encomenda.** Quem compra sem conta não tem sessão, e a
+encomenda tem de ser sua para a ver e para desistir dela. Cada encomenda tem
+uma chave de 32 bytes aleatórios; na base de dados fica o resumo, comparado
+em tempo constante, como os tokens de email (`lib/tokens.ts`). Sem ela, a
+resposta é igual à de uma encomenda que não existe. Vai nos endereços de
+volta da Stripe; o carrinho tira-a do endereço logo que a usa, e com o
+`Referrer-Policy` que já havia, a Stripe só recebe a origem de quem vem
+daqui.
+
+**Os endereços de volta saem do `SITE_URL`**, e não do cabeçalho `Host` do
+pedido: esse escreve-o quem pede, e mandava a pessoa, depois de pagar, para
+onde quisesse.
+
+**Reservar como ataque.** Cada encomenda prende o stock ~40 minutos. Um
+programa que encomendasse sem pagar esgotava as peças únicas todas. O limite
+é de 10 encomendas por hora por IP — não mais apertado, porque as redes
+móveis põem muita gente atrás do mesmo IP. **Não trava quem troque de IP.**
+Se acontecer, as saídas são um limite por email, um desafio antes do botão,
+ou uma reserva mais curta; nenhuma se justifica antes de haver tráfego que a
+peça. Quem volta atrás na página da Stripe liberta a sua reserva na hora
+(`desistirDoPagamento`), e um pagamento que não chega a abrir cancela a
+encomenda logo.
+
 ## Por fazer
 
-- **Manipulação de preço**, quando o checkout existir. O carrinho guarda preços
-  em `localStorage`. O cálculo que os ignora já existe (`src/lib/encomenda.ts`,
-  com testes, e `esquemaPedido` recusa um preço enviado junto); falta a rota
-  do checkout usá-lo, e só a ele
+- ~~**Manipulação de preço**, quando o checkout existir.~~ Feito com a E5, ver
+  abaixo
 - **Rotas de administração** da v2 — as de API passam por `exigirAdmin()`, as
   páginas por `paginaDeAdmin()`
 - ~~**Invalidar sessões ao repor a palavra-passe.**~~ Feito, ver abaixo

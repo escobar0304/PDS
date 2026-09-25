@@ -66,6 +66,22 @@ test.describe('controlo de acesso', () => {
     expect(res.status()).toBe(503);
   });
 
+  test('com a loja fechada, não se encomenda nem pela API', async ({ request }) => {
+    // A pagina de checkout da 404, mas a rota nao conta com isso: fecha por
+    // si, antes de ler o pedido.
+    const linhas = [{ id: 'a'.repeat(24), quantidade: 1 }];
+    const encomenda = await request.post('/api/encomendas', {
+      data: { linhas, cliente: {}, entrega: 'SHIPPING', totalVistoCents: 0 },
+      failOnStatusCode: false,
+    });
+    expect(encomenda.status()).toBe(503);
+    const orcamento = await request.post('/api/encomendas/orcamento', {
+      data: { linhas },
+      failOnStatusCode: false,
+    });
+    expect(orcamento.status()).toBe(503);
+  });
+
   const ID = 'a'.repeat(24);
   for (const [metodo, caminho] of [
     ['GET', '/api/admin/produtos'],
