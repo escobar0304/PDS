@@ -17,7 +17,7 @@ export function estadoParaPessoa(
   e: Pick<
     EncomendaVista,
     'status' | 'paymentStatus' | 'pagoDepoisDeCancelada' | 'pagamentoDivergente' | 'confirmacaoEnviada' | 'customerEmail'
-  >
+  > & { seguimento?: string }
 ): EstadoParaPessoa {
   if (e.pagamentoDivergente) {
     return {
@@ -51,7 +51,14 @@ export function estadoParaPessoa(
     case 'PROCESSING':
       return { titulo: 'Paga. Estamos a preparar a encomenda', detalhe: email, tom: 'sucesso', aEsperar: false };
     case 'SHIPPED':
-      return { titulo: 'Enviada', detalhe: 'A encomenda já saiu, pelos CTT.', tom: 'sucesso', aEsperar: false };
+      return {
+        titulo: 'Enviada',
+        detalhe: e.seguimento
+          ? `A encomenda já saiu, pelos CTT. Número de seguimento: ${e.seguimento}.`
+          : 'A encomenda já saiu, pelos CTT.',
+        tom: 'sucesso',
+        aEsperar: false,
+      };
     case 'READY_PICKUP':
       return { titulo: 'Pronta para levantar', detalhe: 'Pode levantá-la na loja.', tom: 'sucesso', aEsperar: false };
     case 'COMPLETED':

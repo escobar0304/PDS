@@ -314,3 +314,70 @@ test('voltar da Stripe com uma ligação que não é de nenhuma encomenda: nada 
   await expect(page).toHaveURL(/\/carrinho$/);
   await expect(page.getByRole('main').getByRole('alert')).toHaveCount(0);
 });
+
+/** Uma encomenda feita pelo checkout e paga pelo aviso da Stripe. */
+async function encomendaPaga(browser: Browser, page: Page, precoCents: number) {
+  const p = await peca(browser, precoCents);
+  await simularStripe(page);
+  await paraOCarrinho(page, p.slug);
+  await page.goto('/checkout');
+  await preencher(page);
+  await page.getByRole('button', ENCOMENDAR).click();
+  await expect(page).toHaveURL(/checkout\.stripe\.com/);
+  const e = (await mongoose.connection
+    .collection('orders')
+    .findOne({ 'items.productId': new mongoose.Types.ObjectId(p.id) }))!;
+  await avisoDaStripe(page, { id: e.pagamentoId, client_reference_id: String(e._id), amount_total: e.totalCents });
+  return { id: String(e._id), numero: e.numero as string, produto: p };
+}
+
+test.describe('o painel de encomendas', () => {
+  test('uma encomenda paga aparece por preparar, e sai com o seguimento dos CTT', async ({ browser, page }) => {
+    const e = await encomendaPaga(browser, page, 3500);
+
+    const admin = await browser.newContext({ baseURL: BASE });
+    await iniciarSessao(admin, 'ADMIN', { base: BASE, userId: ADMIN_ID });
+    const painel = await admin.newPage();
+
+    await painel.goto('/admin');
+    await painel.getByRole('link', { name: /pagas?, por preparar/ }).click();
+    await painel.getByRole('link', { name: e.numero }).click();
+    await expect(painel.getByRole('heading', { level: 1, name: `Encomenda ${e.numero}` })).toBeVisible();
+
+    const r = await new AxeBuilder({ page: painel }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    expect(r.violations.map((v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)).toEqual([]);
+
+    await painel.getByLabel('Número de seguimento dos CTT').fill('rr 123 456 789 pt');
+    await painel.getByRole('button', { name: 'Marcar como enviada' }).click();
+    await expect(painel.getByRole('status').filter({ hasText: 'Feito.' })).toBeVisible();
+    await expect(painel.getByText('Seguimento dos CTT: RR123456789PT')).toBeVisible();
+    await expect(painel.getByRole('button', { name: 'Marcar como entregue' })).toBeVisible();
+
+    const enviada = await email(`${e.numero} enviada`);
+    expect(enviada.para).toEqual(['marta@exemplo.pt']);
+    expect(enviada.texto).toContain('RR123456789PT');
+    await admin.close();
+  });
+
+  test('cancelar e reembolsar pede confirmação, devolve o stock e avisa quem comprou', async ({ browser, page }) => {
+    const e = await encomendaPaga(browser, page, 2200);
+
+    const admin = await browser.newContext({ baseURL: BASE });
+    await iniciarSessao(admin, 'ADMIN', { base: BASE, userId: ADMIN_ID });
+    const painel = await admin.newPage();
+    await painel.goto(`/admin/encomendas/${e.id}`);
+
+    await painel.getByRole('button', { name: 'Cancelar e reembolsar' }).click();
+    // Dois passos: o primeiro clique nao devolve nada.
+    expect((await mongoose.connection.collection('orders').findOne({ _id: new mongoose.Types.ObjectId(e.id) }))!.paymentStatus).toBe('PAID');
+    await painel.getByRole('button', { name: 'Confirmar: devolver 26,50 €' }).click();
+    await expect(painel.getByRole('status').filter({ hasText: 'Feito.' })).toBeVisible();
+    await expect(painel.getByText(/Cancelada · pagamento reembolsada/)).toBeVisible();
+
+    await painel.goto(`/produto/${e.produto.slug}`);
+    await expect(painel.getByText('Em Stock')).toBeVisible();
+
+    expect((await email(`${e.numero}: valor devolvido`)).para).toEqual(['marta@exemplo.pt']);
+    await admin.close();
+  });
+});

@@ -12,6 +12,9 @@ export default function AdminHeader() {
           Painel · Pétalas de Sonho
         </Link>
         <nav aria-label="Painel" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <Link href="/admin/encomendas" className="py-1 transition-smooth hover:text-rose-200">
+            Encomendas
+          </Link>
           <Link href="/admin/produtos" className="py-1 transition-smooth hover:text-rose-200">
             Produtos
           </Link>

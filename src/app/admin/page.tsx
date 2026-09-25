@@ -4,15 +4,17 @@ import { Alert, Card, Container, PageHeader } from '@/components/ui';
 import { paginaDeAdmin } from '@/lib/autorizacao';
 import { stockTotal } from '@/lib/catalogo';
 import { listarProdutos } from '@/lib/gestao';
+import { contarEncomendas } from '@/lib/gestao-encomendas';
 import { estadoDaLoja } from '@/lib/loja';
 
 export const metadata = { title: 'Painel' };
 
 async function resumo() {
   try {
-    const produtos = await listarProdutos();
+    const [produtos, encomendas] = await Promise.all([listarProdutos(), contarEncomendas()]);
     const ativos = produtos.filter((p) => p.active);
     return {
+      ...encomendas,
       ativos: ativos.length,
       esgotados: ativos.filter((p) => stockTotal(p.variantes) === 0).length,
       reservados: produtos.reduce(
@@ -36,7 +38,29 @@ export default async function AdminPage() {
       <AdminHeader />
       <main id="conteudo" className="py-10">
         <Container>
-          <PageHeader title="Painel" lead="Produtos, medidas, stock e categorias." align="left" />
+          <PageHeader title="Painel" lead="Encomendas, produtos, medidas, stock e categorias." align="left" />
+
+          {r && (r.porPreparar > 0 || r.aResolver > 0) && (
+            <Card className="mt-8 p-5">
+              <h2 className="font-medium text-ink">Encomendas à espera</h2>
+              <ul className="mt-2 space-y-1 text-sm">
+                {r.porPreparar > 0 && (
+                  <li>
+                    <Link href="/admin/encomendas?filtro=por-preparar" className="text-rose-700 underline underline-offset-2">
+                      {r.porPreparar} {r.porPreparar === 1 ? 'paga, por preparar' : 'pagas, por preparar'}
+                    </Link>
+                  </li>
+                )}
+                {r.aResolver > 0 && (
+                  <li>
+                    <Link href="/admin/encomendas?filtro=a-resolver" className="text-danger-700 underline underline-offset-2">
+                      {r.aResolver} com dinheiro por resolver
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </Card>
+          )}
 
           {r ? (
             <dl className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -84,6 +108,11 @@ export default async function AdminPage() {
           </Card>
 
           <ul className="mt-8 space-y-2">
+            <li>
+              <Link href="/admin/encomendas" className="text-rose-700 underline underline-offset-2">
+                Encomendas
+              </Link>
+            </li>
             <li>
               <Link href="/admin/produtos" className="text-rose-700 underline underline-offset-2">
                 Produtos e stock

@@ -171,3 +171,38 @@ export function textoParaALoja(
   ].join('\n');
   return { assunto: c.assunto, texto };
 }
+
+/** A encomenda saiu: o numero de seguimento, e o que fazer se nao chegar. */
+export function textoDaExpedicao(e: EncomendaParaAviso, seguimento: string): { assunto: string; texto: string } {
+  return {
+    assunto: `Encomenda n.º ${e.numero} enviada — Pétalas de Sonho`,
+    texto: [
+      `Olá ${e.customerName},`,
+      '',
+      `A encomenda n.º ${e.numero} saiu hoje, pelos ${CONDICOES.transportadora}, para:`,
+      ...morada(e),
+      '',
+      `Número de seguimento: ${seguimento}`,
+      `Pode segui-la no sítio dos ${CONDICOES.transportadora}, com este número.`,
+      '',
+      `Os ${PRAZOS_LEGAIS.livreResolucaoDias} dias para desistir da compra contam a partir do dia em que a`,
+      'receber. Para isso, ou se alguma coisa chegar mal, basta responder a este email.',
+    ].join('\n'),
+  };
+}
+
+/** O valor foi devolvido. */
+export function textoDoReembolso(e: EncomendaParaAviso): { assunto: string; texto: string } {
+  return {
+    assunto: `Encomenda n.º ${e.numero}: valor devolvido — Pétalas de Sonho`,
+    texto: [
+      `Olá ${e.customerName},`,
+      '',
+      `A encomenda n.º ${e.numero} foi cancelada, e devolvemos ${formatarPreco(e.totalCents)}`,
+      'pelo mesmo meio com que pagou. O banco pode demorar alguns dias a mostrar',
+      'o valor de volta.',
+      '',
+      'Se tiver alguma dúvida, basta responder a este email.',
+    ].join('\n'),
+  };
+}

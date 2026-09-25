@@ -91,6 +91,7 @@ test.describe('controlo de acesso', () => {
     ['POST', `/api/admin/produtos/${ID}/stock`],
     ['POST', '/api/admin/categorias'],
     ['PATCH', `/api/admin/categorias/${ID}`],
+    ['PATCH', `/api/admin/encomendas/${ID}`],
   ] as const) {
     test(`${metodo} ${caminho} exige administrador`, async ({ request }) => {
       const res = await request.fetch(caminho, {
@@ -108,7 +109,7 @@ test.describe('controlo de acesso', () => {
     expect([200, 500]).toContain(res.status());
   });
 
-  for (const caminho of ['/admin', '/admin/produtos', '/admin/produtos/novo', '/admin/categorias']) {
+  for (const caminho of ['/admin', '/admin/produtos', '/admin/produtos/novo', '/admin/categorias', '/admin/encomendas', `/admin/encomendas/${ID}`]) {
     test(`${caminho} não existe para quem não é administrador`, async ({ request }) => {
       const res = await request.get(caminho);
       expect(res.status()).toBe(404);

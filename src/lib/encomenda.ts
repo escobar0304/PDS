@@ -463,6 +463,7 @@ export interface EncomendaVista {
   pagoDepoisDeCancelada: boolean;
   pagamentoDivergente: boolean;
   confirmacaoEnviada: boolean;
+  seguimento?: string;
   customerName: string;
   customerEmail: string;
   shippingAddress?: string;
@@ -494,6 +495,7 @@ export async function lerEncomenda(id: string, chave: string): Promise<Encomenda
     pagoDepoisDeCancelada: Boolean(e.pagoDepoisDeCancelada),
     pagamentoDivergente: Boolean(e.pagamentoDivergente),
     confirmacaoEnviada: Boolean(e.confirmacaoEnviadaEm),
+    ...(e.seguimento ? { seguimento: e.seguimento } : {}),
     customerName: e.customerName,
     customerEmail: e.customerEmail,
     shippingAddress: e.shippingAddress,

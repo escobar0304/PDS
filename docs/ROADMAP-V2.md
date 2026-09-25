@@ -471,10 +471,34 @@ realista para uma loja. Preciso de saber:
    política de privacidade no dia da primeira venda (`src/lib/conta.ts` já
    deixou isto escrito)
 
-## P3. Painel de encomendas
+## P3. Painel de encomendas — feito
 
 Ver, mudar de estado, marcar como expedida com o número de seguimento dos CTT,
 reembolsar. Depende da E3. O código faz-se agora.
+
+**Feito em 25/09/2026** (`/admin/encomendas`, `lib/gestao-encomendas.ts`):
+
+- **Filtros pelo trabalho que pedem:** por preparar (pagas), a resolver
+  (dinheiro por resolver: paga depois de cancelada, valor diferente, ou um
+  reembolso que falhou a meio), enviadas, por pagar, todas. O início do
+  painel conta as duas primeiras
+- **Expedir** pede o número de seguimento, que vai por email a quem comprou
+  e aparece na página da encomenda. É o email que diz desde quando contam os
+  14 dias
+- **Cancelar e reembolsar** em dois cliques, porque devolver dinheiro não se
+  desfaz. **Primeiro cancela, depois devolve:** se o reembolso falhar, a
+  encomenda fica cancelada e paga, em "a resolver", e tenta-se outra vez — a
+  Stripe nunca devolve duas vezes a mesma encomenda
+- **Um email que falha não desfaz a ação.** O painel diz que ficou por
+  enviar, e oferece enviá-lo outra vez
+- **Uma encomenda enviada não se reembolsa aqui.** Isso é a desistência (P4),
+  que tem prazos e regras de portes próprios
+
+**Fica de fora, de propósito:** reabrir uma encomenda paga depois de
+cancelada, quando as peças ainda existem. Pedia voltar a reservar o stock e
+uma transição que hoje não existe (`CANCELLED` não volta atrás); para já, a
+loja fala com quem comprou ou reembolsa. Se acontecer mais do que uma vez,
+faz-se.
 
 ## P4. Desistência e reembolso
 
@@ -587,7 +611,7 @@ E5  checkout sem conta, fechado enquanto faltarem condições   feito, ensaiado
 | E4 pagamento | as chaves de teste da Stripe para o ensaio real; as de produção pedem NIF e IBAN |
 | E5 checkout | tabela de portes, prazo de entrega, identificação do prestador (F4), as chaves da Stripe e as do email; o levantamento na loja, se o houver |
 | P1 email de confirmação | a conta Gmail e a palavra-passe de aplicação, nas variáveis `SMTP_*` |
-| P3 painel de encomendas | nada além da E3 |
+| P3 painel de encomendas | nada: feito |
 
 ## Espera por ti
 
@@ -621,7 +645,8 @@ v1.0.0 publicada
   ├─ C3 C4                      feito, ensaiado com dados reais
   ├─ E4 ── E5                   feito; abrir pede portes, prazo, F4 e chaves
   ├─ P1                         feito
-  ├─ P3 ── P4                   painel de encomendas, desistência
+  ├─ P3                         feito
+  ├─ P4                         desistência e reembolso parcial
   ├─ P2                         contabilista
   └─ Conta                      depois da P1
 ```

@@ -337,3 +337,24 @@ export const esquemaCheckout = z
 export const esquemaDesistencia = z
   .object({ chave: z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'Chave inválida') })
   .strict();
+
+/**
+ * O que o painel faz a uma encomenda (ROADMAP-V2, P3). O numero de
+ * seguimento dos CTT vai em maiusculas e sem espacos, como vem na etiqueta
+ * (ex.: RR123456789PT); nao se restringe mais do que isso, porque os
+ * servicos dos CTT nao tem todos o mesmo formato.
+ */
+export const esquemaAcaoEncomenda = z.discriminatedUnion('acao', [
+  z
+    .object({
+      acao: z.literal('expedir'),
+      seguimento: z
+        .string()
+        .transform((s) => s.replace(/\s+/g, '').toUpperCase())
+        .pipe(z.string().regex(/^[A-Z0-9]{8,30}$/, 'Número de seguimento inválido')),
+    })
+    .strict(),
+  z.object({ acao: z.literal('concluir') }).strict(),
+  z.object({ acao: z.literal('reembolsar'), nota: z.string().trim().max(500).optional() }).strict(),
+  z.object({ acao: z.literal('reenviar-aviso') }).strict(),
+]);

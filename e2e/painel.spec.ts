@@ -11,7 +11,14 @@ import { iniciarSessao } from './fixtures/sessao';
  * qualquer cliente.
  */
 
-const PAGINAS = ['/admin', '/admin/produtos', '/admin/produtos/novo', '/admin/categorias'];
+const PAGINAS = [
+  '/admin',
+  '/admin/produtos',
+  '/admin/produtos/novo',
+  '/admin/categorias',
+  '/admin/encomendas',
+  `/admin/encomendas/${'a'.repeat(24)}`,
+];
 
 test.describe('com sessão de cliente', () => {
   test.beforeEach(async ({ context }) => iniciarSessao(context, 'USER'));

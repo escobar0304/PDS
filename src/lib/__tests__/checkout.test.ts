@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { mensagemDoProblema } from '@/components/checkout/problemas';
 import type { Problema } from '@/lib/encomenda';
-import { esquemaCheckout, esquemaCliente, esquemaDesistencia } from '@/lib/validacao';
+import { esquemaAcaoEncomenda, esquemaCheckout, esquemaCliente, esquemaDesistencia } from '@/lib/validacao';
 
 /**
  * O checkout do lado do servidor: o que o esquema aceita e recusa. O
@@ -117,5 +117,25 @@ describe('os problemas, em português', () => {
 
   it('uma peça que já não está no carrinho não parte a mensagem', () => {
     expect(mensagemDoProblema({ tipo: 'indisponivel', id: 'e'.repeat(24) }, linhas)).toMatch(/^Uma das peças/);
+  });
+});
+
+describe('o que o painel faz a uma encomenda', () => {
+  it('o seguimento fica em maiúsculas e sem espaços', () => {
+    expect(esquemaAcaoEncomenda.parse({ acao: 'expedir', seguimento: ' rr 123 456 789 pt ' })).toEqual({
+      acao: 'expedir',
+      seguimento: 'RR123456789PT',
+    });
+  });
+
+  it.each([
+    [{ acao: 'expedir', seguimento: '' }],
+    [{ acao: 'expedir', seguimento: 'RR-123' }],
+    [{ acao: 'expedir' }],
+    [{ acao: 'apagar' }],
+    [{ acao: 'concluir', status: 'COMPLETED' }],
+    [{ acao: 'reembolsar', valorCents: 100 }],
+  ])('recusa %j', (corpo) => {
+    expect(esquemaAcaoEncomenda.safeParse(corpo).success).toBe(false);
   });
 });

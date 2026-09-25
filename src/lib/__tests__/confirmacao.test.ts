@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { estadoParaPessoa } from '@/components/checkout/estado';
-import { textoDaConfirmacao, textoParaALoja, type EncomendaParaAviso } from '@/lib/confirmacao';
+import {
+  textoDaConfirmacao,
+  textoDaExpedicao,
+  textoDoReembolso,
+  textoParaALoja,
+  type EncomendaParaAviso,
+} from '@/lib/confirmacao';
 
 /**
  * O email de confirmacao e obrigatorio e tem conteudo obrigatorio (DL 24/2014,
@@ -98,6 +104,21 @@ describe('o aviso à loja', () => {
   });
 });
 
+describe('depois da confirmação', () => {
+  it('a expedição leva o seguimento, e diz desde quando contam os 14 dias', () => {
+    const { assunto, texto } = textoDaExpedicao(E, 'RR123456789PT');
+    expect(assunto).toContain('enviada');
+    expect(texto).toContain('Número de seguimento: RR123456789PT');
+    expect(texto).toContain('14 dias');
+  });
+
+  it('o reembolso diz quanto e por onde', () => {
+    const texto = sp(textoDoReembolso(E).texto);
+    expect(texto).toContain('89,30 €');
+    expect(texto).toContain('pelo mesmo meio');
+  });
+});
+
 describe('o estado dito a quem comprou', () => {
   const base = {
     status: 'PENDING' as const,
@@ -124,6 +145,12 @@ describe('o estado dito a quem comprou', () => {
     expect(estadoParaPessoa({ ...base, status: 'CANCELLED' }).detalhe).toContain('nada foi cobrado');
     expect(estadoParaPessoa({ ...base, status: 'CANCELLED', paymentStatus: 'PAID' }).detalhe).not.toContain(
       'nada foi cobrado'
+    );
+  });
+
+  it('enviada, com o seguimento', () => {
+    expect(estadoParaPessoa({ ...base, status: 'SHIPPED', paymentStatus: 'PAID', seguimento: 'RR1PT' }).detalhe).toContain(
+      'RR1PT'
     );
   });
 

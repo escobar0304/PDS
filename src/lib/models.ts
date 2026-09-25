@@ -124,6 +124,13 @@ export interface IOrder extends Document {
    */
   confirmacaoEnviadaEm?: Date;
   avisoLojaEnviadoEm?: Date;
+  /** O numero de seguimento dos CTT, quando sai (P3). */
+  seguimento?: string;
+  /** O reembolso na Stripe, quando o houve. */
+  reembolsoId?: string;
+  /** Os emails de expedicao e de reembolso: como os de cima, sem data e por enviar. */
+  avisoExpedicaoEm?: Date;
+  avisoReembolsoEm?: Date;
   /** Cada mudanca de estado, com data e autor. Nunca se reescreve. */
   historico: Array<{ de?: Estado; para: Estado; em: Date; por: string; nota?: string }>;
   notes?: string;
@@ -421,6 +428,10 @@ const orderSchema = new Schema<IOrder>(
     chaveHash: { type: String, select: false },
     confirmacaoEnviadaEm: { type: Date },
     avisoLojaEnviadoEm: { type: Date },
+    seguimento: { type: String, trim: true },
+    reembolsoId: { type: String },
+    avisoExpedicaoEm: { type: Date },
+    avisoReembolsoEm: { type: Date },
     historico: [
       {
         _id: false,

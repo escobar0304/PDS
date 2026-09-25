@@ -181,6 +181,19 @@ export async function desistirDoPagamento(id: string, chave: string): Promise<De
   return r.ok ? { ok: true } : { ok: false, motivo: 'ja-nao-esta-por-pagar' };
 }
 
+/**
+ * Devolve tudo o que foi pago numa sessao. A chave de idempotencia e a
+ * encomenda: carregar duas vezes no botao, ou tentar outra vez depois de uma
+ * falha de rede, nunca devolve duas vezes. Devolve o id do reembolso.
+ */
+export async function reembolsarPagamento(pagamentoId: string, encomendaId: string): Promise<string> {
+  const sessao = await stripe().checkout.sessions.retrieve(pagamentoId);
+  const intencao = typeof sessao.payment_intent === 'string' ? sessao.payment_intent : sessao.payment_intent?.id;
+  if (!intencao) throw new Error(`A sessão ${pagamentoId} não tem pagamento para devolver.`);
+  const r = await stripe().refunds.create({ payment_intent: intencao }, { idempotencyKey: `reembolso-${encomendaId}` });
+  return r.id;
+}
+
 export type ResultadoAviso = 'processado' | 'repetido' | 'ignorado';
 
 export class AssinaturaInvalida extends Error {

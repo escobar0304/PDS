@@ -1,6 +1,13 @@
 import connectDB from '@/lib/db';
 import { CONDICOES } from '@/lib/condicoes';
-import { textoDaConfirmacao, textoParaALoja, type AvisoLoja, type EncomendaParaAviso } from '@/lib/confirmacao';
+import {
+  textoDaConfirmacao,
+  textoDaExpedicao,
+  textoDoReembolso,
+  textoParaALoja,
+  type AvisoLoja,
+  type EncomendaParaAviso,
+} from '@/lib/confirmacao';
 import { EMPRESA } from '@/lib/empresa';
 import { estadoDaLoja } from '@/lib/loja';
 import { Order } from '@/lib/models';
@@ -23,7 +30,7 @@ import { enviar } from '@/services/mailer';
  * enviar sem ninguem saber. E o preco de nunca enviar duas vezes.
  */
 
-type Campo = 'confirmacaoEnviadaEm' | 'avisoLojaEnviadoEm';
+type Campo = 'confirmacaoEnviadaEm' | 'avisoLojaEnviadoEm' | 'avisoExpedicaoEm' | 'avisoReembolsoEm';
 
 /** Envia, se ainda ninguem enviou. Devolve se enviou agora. */
 async function umaVez(id: string, campo: Campo, envio: () => Promise<void>): Promise<boolean> {
@@ -39,6 +46,54 @@ async function umaVez(id: string, campo: Campo, envio: () => Promise<void>): Pro
     await Order.updateOne({ _id: id }, { $unset: { [campo]: '' } });
     throw erro;
   }
+}
+
+type Lida = NonNullable<Awaited<ReturnType<typeof ler>>>;
+
+function ler(id: string) {
+  return Order.findById(id).select('+chaveHash').lean();
+}
+
+function paraAviso(e: Lida): EncomendaParaAviso {
+  return {
+    numero: e.numero,
+    criadaEm: e.createdAt,
+    customerName: e.customerName,
+    customerEmail: e.customerEmail,
+    customerPhone: e.customerPhone,
+    shippingAddress: e.shippingAddress,
+    shippingPostal: e.shippingPostal,
+    shippingCity: e.shippingCity,
+    items: e.items.map((l) => ({ name: l.name, medida: l.medida, priceCents: l.priceCents, quantity: l.quantity })),
+    subtotalCents: e.subtotalCents,
+    shippingCents: e.shippingCents,
+    totalCents: e.totalCents,
+  };
+}
+
+/** A resposta a um email da loja vai para o contacto dela. */
+const resposta = () => (EMPRESA.email ? { responderPara: EMPRESA.email } : {});
+
+/**
+ * O email de que a encomenda saiu, com o seguimento. Nao e obrigatorio por
+ * lei, mas e o que diz a pessoa desde quando contam os 14 dias. Devolve se
+ * enviou agora; um erro sobe, e o painel oferece enviar outra vez.
+ */
+export async function avisarExpedicao(id: string): Promise<boolean> {
+  await connectDB();
+  const e = await ler(id);
+  if (!e || e.status !== 'SHIPPED' || !e.seguimento) return false;
+  const { assunto, texto } = textoDaExpedicao(paraAviso(e), e.seguimento);
+  return umaVez(id, 'avisoExpedicaoEm', () => enviar({ para: e.customerEmail, assunto, texto, ...resposta() }));
+}
+
+/** O email de que o valor foi devolvido. Como o de cima. */
+export async function avisarReembolso(id: string): Promise<boolean> {
+  await connectDB();
+  const e = await ler(id);
+  if (!e || e.paymentStatus !== 'REFUNDED') return false;
+  const { assunto, texto } = textoDoReembolso(paraAviso(e));
+  return umaVez(id, 'avisoReembolsoEm', () => enviar({ para: e.customerEmail, assunto, texto, ...resposta() }));
 }
 
 /** Qual o aviso a loja, pelo estado da encomenda. `null` se nao ha nenhum a dar. */
@@ -67,23 +122,10 @@ export async function enviarAvisos(
   { chave, pagoCents }: { chave?: string | null; pagoCents?: number | null } = {}
 ): Promise<void> {
   await connectDB();
-  const e = await Order.findById(id).select('+chaveHash').lean();
+  const e = await ler(id);
   if (!e) return;
 
-  const dados: EncomendaParaAviso = {
-    numero: e.numero,
-    criadaEm: e.createdAt,
-    customerName: e.customerName,
-    customerEmail: e.customerEmail,
-    customerPhone: e.customerPhone,
-    shippingAddress: e.shippingAddress,
-    shippingPostal: e.shippingPostal,
-    shippingCity: e.shippingCity,
-    items: e.items.map((l) => ({ name: l.name, medida: l.medida, priceCents: l.priceCents, quantity: l.quantity })),
-    subtotalCents: e.subtotalCents,
-    shippingCents: e.shippingCents,
-    totalCents: e.totalCents,
-  };
+  const dados = paraAviso(e);
 
   const paga = e.paymentStatus === 'PAID' && e.status !== 'CANCELLED' && !e.pagamentoDivergente;
   if (paga) {
@@ -101,7 +143,7 @@ export async function enviarAvisos(
         texto,
         // Desistir "respondendo a este email" so funciona se a resposta
         // chegar ao contacto da loja.
-        ...(EMPRESA.email ? { responderPara: EMPRESA.email } : {}),
+        ...resposta(),
       })
     );
   }

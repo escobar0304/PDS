@@ -41,3 +41,13 @@ export type Autor = 'sistema' | 'cliente' | `admin:${string}`;
 export function formatarNumero(ano: number, sequencia: number): string {
   return `${ano}-${String(sequencia).padStart(6, '0')}`;
 }
+
+/** Os estados, como o painel os diz. */
+export const NOMES_DOS_ESTADOS: Record<Estado, string> = {
+  PENDING: 'Por pagar',
+  PROCESSING: 'Paga, por preparar',
+  SHIPPED: 'Enviada',
+  READY_PICKUP: 'Pronta a levantar',
+  COMPLETED: 'Entregue',
+  CANCELLED: 'Cancelada',
+};
