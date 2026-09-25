@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import AdminHeader from '@/components/adminHeader';
 import VendaNaLoja from '@/components/admin/VendaNaLoja';
-import { Alert, Badge, Container, PageHeader, botaoClasses } from '@/components/ui';
+import { Alert, Badge, Card, Container, PageHeader, botaoClasses } from '@/components/ui';
 import { paginaDeAdmin } from '@/lib/autorizacao';
 import { formatarPreco } from '@/lib/dinheiro';
 import { listarProdutos } from '@/lib/gestao';
@@ -44,70 +44,58 @@ export default async function AdminProdutosPage() {
           ) : produtos.length === 0 ? (
             <p className="mt-8 text-ink-muted">Ainda não há produtos.</p>
           ) : (
-            <div className="mt-8 overflow-x-auto">
-              <table className="w-full min-w-[40rem] text-left text-sm">
-                <caption className="sr-only">
-                  Produtos, com o stock e o reservado online de cada medida
-                </caption>
-                <thead>
-                  <tr className="border-b border-line">
-                    <th scope="col" className="py-2 pr-4 font-medium">Produto</th>
-                    <th scope="col" className="py-2 pr-4 font-medium">Preço</th>
-                    <th scope="col" className="py-2 pr-4 font-medium">Medida</th>
-                    <th scope="col" className="py-2 pr-4 font-medium">Stock</th>
-                    <th scope="col" className="py-2 pr-4 font-medium">Reservado online</th>
-                    <th scope="col" className="py-2 font-medium">
-                      <span className="sr-only">Ações</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {produtos.map((p) =>
-                    p.variantes.map((v, i) => (
-                      <tr key={String(v._id)} className="border-b border-line align-middle">
-                        {i === 0 && (
-                          <>
-                            <th scope="row" rowSpan={p.variantes.length} className="py-3 pr-4 font-normal">
-                              <Link
-                                href={`/admin/produtos/${p._id}`}
-                                className="font-medium text-rose-700 underline underline-offset-2"
-                              >
-                                {p.name}
-                              </Link>
-                              {!p.active && (
-                                <Badge tone="neutro" className="ml-2">
-                                  desativado
-                                </Badge>
-                              )}
-                            </th>
-                            <td rowSpan={p.variantes.length} className="tabular py-3 pr-4">
-                              {formatarPreco(p.priceCents)}
-                            </td>
-                          </>
+            // Cartoes e nao tabela: numa tabela, o "vendido na loja" ficava na
+            // ultima coluna e, no telemovel, fora do ecra — e e no telemovel,
+            // ao balcao, que ele mais se usa.
+            <ul className="mt-8 space-y-4">
+              {produtos.map((p) => (
+                <li key={String(p._id)}>
+                  <Card className="p-5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <h2 className="font-medium">
+                        <Link
+                          href={`/admin/produtos/${p._id}`}
+                          className="text-rose-700 underline underline-offset-2"
+                        >
+                          {p.name}
+                        </Link>
+                        {!p.active && (
+                          <Badge tone="neutro" className="ml-2">
+                            desativado
+                          </Badge>
                         )}
-                        <td className="py-3 pr-4">{v.medida ?? <span className="text-ink-muted">—</span>}</td>
-                        <td className="tabular py-3 pr-4">{v.stock}</td>
-                        <td className="tabular py-3 pr-4">
-                          {v.reservadoOnline > 0 ? (
-                            <strong className="text-danger-700">{v.reservadoOnline}</strong>
-                          ) : (
-                            0
-                          )}
-                        </td>
-                        <td className="py-3">
+                      </h2>
+                      <span className="tabular text-ink">{formatarPreco(p.priceCents)}</span>
+                    </div>
+                    <ul className="mt-3 divide-y divide-line border-t border-line">
+                      {p.variantes.map((v) => (
+                        <li
+                          key={String(v._id)}
+                          className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3 text-sm"
+                        >
+                          <span className="min-w-[5rem] font-medium">{v.medida ?? 'Única'}</span>
+                          <span className="tabular">Em stock: {v.stock}</span>
+                          <span className="tabular">
+                            Reservado online:{' '}
+                            {v.reservadoOnline > 0 ? (
+                              <strong className="text-danger-700">{v.reservadoOnline}</strong>
+                            ) : (
+                              0
+                            )}
+                          </span>
                           <VendaNaLoja
                             produtoId={String(p._id)}
                             varianteId={String(v._id)}
                             rotulo={v.medida ? `${p.name}, medida ${v.medida}` : p.name}
                             disponivel={v.stock > 0}
                           />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                </li>
+              ))}
+            </ul>
           )}
         </Container>
       </main>

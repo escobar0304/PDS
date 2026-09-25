@@ -14,6 +14,7 @@
     "admin": "tsx scripts/administrador.ts",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
+    "test:e2e:bd": "playwright test -c playwright.bd.config.ts",
     "marca:og": "node scripts/gerar-og.mjs",
     "marca:simbolo": "python3 scripts/gerar-simbolo.py"
   },
@@ -27,6 +28,7 @@
     "nodemailer": "^10.0.10",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "stripe": "^22.6.2",
     "zod": "^4.6.5"
   },
   "devDependencies": {

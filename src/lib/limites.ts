@@ -122,6 +122,8 @@ export const LIMITES = {
   exportacao: { max: 5, janelaMs: 60 * 60 * 1000 },
   /** Escritas de administracao, por administrador e nao por IP. */
   administracao: { max: 120, janelaMs: 60 * 1000 },
+  /** Os avisos da Stripe: vem dos servidores dela, em rajadas. So trava abuso. */
+  avisosPagamento: { max: 600, janelaMs: 60 * 1000 },
 } as const satisfies Record<string, Limite>;
 
 /**

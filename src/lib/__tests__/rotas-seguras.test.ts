@@ -28,6 +28,8 @@ function rotas(dir: string): string[] {
 const ISENTAS: Record<string, string> = {
   'auth/[...nextauth]/route.ts':
     'Delega no NextAuth. A validação das credenciais está em src/lib/auth.ts.',
+  'pagamentos/aviso/route.ts':
+    'A assinatura da Stripe é sobre o texto tal como chegou; é ela que o valida, em src/lib/pagamento.ts.',
 };
 
 describe('rotas de API', () => {
@@ -74,7 +76,9 @@ describe('rotas de API', () => {
 
     for (const caminho of ficheiros) {
       const relativo = caminho.slice(RAIZ.length + 1);
-      if (ISENTAS[relativo]) continue;
+      // So o NextAuth: o limite da entrada esta em src/lib/auth.ts. As outras
+      // isencoes sao do `lerCorpo`, nao do limite.
+      if (relativo === 'auth/[...nextauth]/route.ts') continue;
 
       for (const { nome, corpo } of metodos(readFileSync(caminho, 'utf8'))) {
         if (!/\btravar\(|\bconsumir\(/.test(corpo)) faltosos.push(`${nome} ${relativo}`);

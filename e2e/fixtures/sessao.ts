@@ -13,10 +13,13 @@ import { encode } from 'next-auth/jwt';
 export async function iniciarSessao(
   contexto: BrowserContext,
   papel: 'USER' | 'ADMIN',
-  base = `http://127.0.0.1:${process.env.PORT ?? 3100}`
+  {
+    base = 'http://127.0.0.1:3100',
+    userId = 'a'.repeat(24),
+  }: { base?: string; userId?: string } = {}
 ) {
   const valor = await encode({
-    token: { userId: 'a'.repeat(24), role: papel, versao: 0, name: 'Teste', email: 'teste@exemplo.pt' },
+    token: { userId, role: papel, versao: 0, name: 'Teste', email: 'teste@exemplo.pt' },
     secret: 'segredo-apenas-para-testes-e2e',
   });
   await contexto.addCookies([

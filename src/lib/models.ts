@@ -97,6 +97,14 @@ export interface IOrder extends Document {
   /** O identificador do pagamento no fornecedor, seja ele qual for (E4). */
   pagamentoId?: string;
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  /**
+   * O pagamento chegou depois de a reserva expirar e a encomenda ter sido
+   * cancelada: a peca pode ja ter sido vendida. Fica para o painel decidir
+   * reembolsar (ver `lib/pagamento.ts`).
+   */
+  pagoDepoisDeCancelada?: boolean;
+  /** O valor pago nao bate com o total da encomenda. Nunca avanca sozinha. */
+  pagamentoDivergente?: boolean;
   /** Em centimos, como todos os valores da encomenda. */
   subtotalCents: number;
   shippingCents: number;
@@ -367,6 +375,8 @@ const orderSchema = new Schema<IOrder>(
     pagamentoId: {
       type: String,
     },
+    pagoDepoisDeCancelada: { type: Boolean },
+    pagamentoDivergente: { type: Boolean },
     paymentStatus: {
       type: String,
       enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'],
@@ -525,6 +535,27 @@ movimentoSchema.index({ productId: 1, em: -1 });
 export const MovimentoStock: Model<IMovimentoStock> =
   mongoose.models.MovimentoStock ||
   mongoose.model<IMovimentoStock>('MovimentoStock', movimentoSchema);
+
+/**
+ * Os avisos da Stripe ja processados, pelo id do evento. A Stripe reenvia um
+ * aviso ate ter resposta 2xx, e pode entregar o mesmo duas vezes: isto e o
+ * que impede o mesmo pagamento de contar duas vezes. Ver `lib/pagamento.ts`.
+ */
+interface IAvisoPagamento {
+  _id: string;
+  tipo: string;
+  em: Date;
+}
+
+const avisoSchema = new Schema<IAvisoPagamento>({
+  _id: { type: String, required: true },
+  tipo: { type: String, required: true },
+  em: { type: Date, required: true },
+});
+
+export const AvisoPagamento: Model<IAvisoPagamento> =
+  mongoose.models.AvisoPagamento ||
+  mongoose.model<IAvisoPagamento>('AvisoPagamento', avisoSchema);
 
 /**
  * Contadores com incremento atomico. Hoje so o das encomendas, um por ano:

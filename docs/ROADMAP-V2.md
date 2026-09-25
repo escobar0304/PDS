@@ -176,14 +176,18 @@ testes que falham se uma rota nova as esquecer:
 `/admin/produtos/[id]` (dados, movimentos e histórico) e `/admin/categorias`.
 A página `/admin/encomendas` saiu: dizia só "por construir", e volta com a P3.
 
-**O que não se viu a correr:** os formulários só aparecem com categorias e
-produtos lidos da base de dados, e o e2e corre sem ela de propósito. O que o
-e2e prova, com uma sessão assinada: um cliente autenticado leva 404 em todas
-as páginas do painel e 403 na API; um administrador abre-as, sem violações
-WCAG, e sem base de dados vê que ela falta. As operações estão provadas nos
-testes de integração. **Falta um ensaio do painel com dados reais** — ou
-um job de e2e com MongoDB no CI, ou uma passagem tua com a base de dados
-ligada.
+**Ensaiado com dados reais em 24/09/2026** (`e2e-bd/`, job `e2e-bd` no CI):
+criar uma categoria e um anel com duas medidas pela interface, vender ao
+balcão pelo formulário e pela lista, ver a loja mostrar o que o painel gravou,
+a peça única que não passa de uma unidade, a categoria que não muda de regra
+com anéis dentro, e uma sessão que diz ser de administrador numa conta de
+cliente — com base de dados, o papel vem dela, e o painel responde 404.
+
+**O ensaio mudou o desenho da lista.** Era uma tabela, e no telemóvel o
+"−1 vendido na loja" ficava na última coluna, aos 641 px de um ecrã de 390 —
+fora da vista, na ação que mais se usa ao balcão. Passou a cartões, um por
+produto e uma linha por medida, e há um teste que falha se o botão sair do
+ecrã.
 
 **Quem é administrador** não se decide na web. Não há página nem rota que
 promova uma conta: faz-se com um *script* corrido no servidor
@@ -260,7 +264,7 @@ ainda não está escolhido.
 
 # Fase 3 - Pagamento
 
-## E4. Fornecedor de pagamentos — decidido: Stripe, com a página alojada
+## E4. Pagamento — feito, sem rota de checkout: Stripe, com a página alojada
 
 **Decidido em 24/09/2026**, depois da comparação abaixo — que continua por
 confirmar nos preçários. Com o **Checkout alojado** da Stripe: a pessoa escolhe
@@ -280,6 +284,26 @@ stock. A reserva dura a sessão mais uma margem, e um pagamento que chegue para
 uma encomenda já cancelada não se perde: fica marcado para reembolso, ou para
 reativar se a peça ainda lá estiver. O prazo mínimo de uma sessão tem de ser
 confirmado na documentação da Stripe.
+
+**Feito em 24/09/2026** (`src/lib/pagamento.ts`, `/api/pagamentos/aviso`):
+
+- a sessão abre-se a partir da encomenda, com os preços que ela calculou, e a
+  chave de idempotência é a encomenda — pedir duas vezes dá a mesma sessão
+- a sessão dura 31 minutos (o mínimo da Stripe é 30, confirmado na
+  documentação da própria biblioteca) e a reserva dura a sessão mais 10
+- "pago" só com o aviso assinado; o mesmo aviso duas vezes conta uma
+- um valor que não bate com o total não faz avançar nada, e fica marcado
+- um pagamento que chega depois de a encomenda expirar não a reabre: fica
+  marcada para reembolso, porque a peça pode já ter sido vendida ao balcão
+- testado contra o MongoDB e contra o `stripe-mock`, o simulador oficial,
+  que corre por Docker aqui e no CI
+
+**Sem Multibanco, até decidires.** É assíncrono: a pessoa recebe uma
+referência e paga mais tarde, num multibanco. A reserva de uma peça dura 30
+minutos. Com uma peça única, ou se segura a peça dias a fio à espera de um
+pagamento que pode não vir, ou se reembolsa quem pagou depois de ela ter sido
+vendida. Cartão e MB WAY confirmam na hora. O código já trata os avisos
+assíncronos, para o Multibanco entrar sem mudar nada se decidires que entra.
 
 **Este ambiente não chega à Stripe** — o proxy bloqueia `stripe.com`. O código
 testa-se sem rede: a assinatura dos avisos com a própria biblioteca, a API
@@ -527,7 +551,7 @@ v1.0.0 publicada
   │
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
   ├─ S1 C2                      feito
-  ├─ C3 C4                      feito; falta o ensaio com dados reais
+  ├─ C3 C4                      feito, ensaiado com dados reais
   ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
   ├─ P1 ── P3 ── P4             depois da E5
   ├─ P2                         contabilista

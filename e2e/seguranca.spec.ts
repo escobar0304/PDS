@@ -56,6 +56,16 @@ test.describe('controlo de acesso', () => {
     expect(res.status()).toBe(405);
   });
 
+  test('um "pago" inventado não passa: sem a Stripe configurada, os avisos nem se leem', async ({
+    request,
+  }) => {
+    const res = await request.post('/api/pagamentos/aviso', {
+      data: { type: 'checkout.session.completed', data: { object: { payment_status: 'paid' } } },
+      failOnStatusCode: false,
+    });
+    expect(res.status()).toBe(503);
+  });
+
   const ID = 'a'.repeat(24);
   for (const [metodo, caminho] of [
     ['GET', '/api/admin/produtos'],
