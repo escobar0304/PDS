@@ -9,7 +9,7 @@ import { defineConfig, devices } from '@playwright/test';
  * sobre o painel de gestao, cujos formularios so aparecem com categorias e
  * produtos lidos da base de dados. E isso que esta prova.
  *
- * Corre no CI, contra o MongoDB e o `stripe-mock` do job `e2e-bd`; aqui,
+ * Corre no CI, contra o MongoDB, o `stripe-mock` e o Mailpit do job `e2e-bd`; aqui,
  * pelos contentores Docker do CLAUDE.md. Uma alteracao que lhe toque so se
  * sabe verdadeira depois do CI passar.
  *
@@ -60,6 +60,11 @@ export default defineConfig({
       STRIPE_WEBHOOK_SECRET: 'whsec_apenas_para_testes',
       STRIPE_API_HOST: process.env.STRIPE_API_HOST ?? '127.0.0.1',
       NEXT_PUBLIC_SITE_URL: `http://127.0.0.1:${PORT}`,
+      // O Mailpit: recebe o correio sem o entregar, e deixa le-lo por API.
+      SMTP_HOST: process.env.SMTP_HOST ?? '127.0.0.1',
+      SMTP_PORT: process.env.SMTP_PORT ?? '1025',
+      SMTP_FROM: 'loja@exemplo.pt',
+      ADMIN_EMAIL: 'loja@exemplo.pt',
       NEXTAUTH_SECRET: 'segredo-apenas-para-testes-e2e',
       NEXTAUTH_URL: `http://127.0.0.1:${PORT}`,
     },

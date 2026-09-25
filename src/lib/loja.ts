@@ -16,14 +16,6 @@ export interface Falta {
   porque: string;
 }
 
-/**
- * A confirmacao da encomenda em suporte duradouro, com as condicoes e o
- * formulario de livre resolucao, e obrigatoria (DL 24/2014, art. 6.º). Vem
- * com a P1, e depende do fornecedor de email. Ate la nao se vende: seria
- * vender sem cumprir o que a lei exige logo a seguir a venda.
- */
-export const CONFIRMACAO_DURADOURA = false;
-
 /** O que a loja precisa para vender: os portes e o prazo que se mostram. */
 export interface CondicoesDeVenda {
   tabelaPortes: readonly Escalao[];
@@ -75,6 +67,16 @@ function faltasDeConfiguracao(env: Ambiente): Falta[] {
       porque: 'sem ela nenhum pagamento chega a ser confirmado',
     });
   }
+  // A confirmacao por email e obrigatoria (DL 24/2014, art. 6.º), e o aviso
+  // a loja e, sem painel de encomendas, a unica maneira de ela saber que tem
+  // uma encomenda. Sem correio nao se vende: era cumprir o art. 4.º e falhar
+  // o 6.º no minuto seguinte.
+  if (!env.SMTP_HOST) {
+    faltas.push({ campo: 'SMTP_HOST', porque: 'DL 24/2014 art. 6.º: a confirmação da encomenda por email' });
+  }
+  if (!env.ADMIN_EMAIL) {
+    faltas.push({ campo: 'ADMIN_EMAIL', porque: 'para onde vai o aviso de cada encomenda paga' });
+  }
   return faltas;
 }
 
@@ -113,12 +115,6 @@ export function estadoDaLoja(env: Ambiente = process.env): EstadoLoja {
   faltas.push(
     ...paginasEmFalta().map((p) => ({ campo: p.href, porque: p.porQueFalta ?? 'página obrigatória' }))
   );
-  if (!CONFIRMACAO_DURADOURA) {
-    faltas.push({
-      campo: 'confirmação por email',
-      porque: 'DL 24/2014 art. 6.º: confirmar em suporte duradouro (ROADMAP-V2, P1)',
-    });
-  }
   faltas.push(...configuracao);
 
   // Com as faltas vazias, a tabela e o prazo estao preenchidos: e o que

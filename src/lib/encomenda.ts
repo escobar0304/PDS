@@ -452,3 +452,63 @@ export async function chaveDaEncomenda(id: string, chave: string): Promise<boole
   const e = await Order.findById(id).select('+chaveHash').lean();
   return Boolean(e?.chaveHash && resumosIguais(e.chaveHash, resumir(chave)));
 }
+
+/** O que a pagina da encomenda mostra a quem tem a chave. Nada mais sai. */
+export interface EncomendaVista {
+  id: string;
+  numero: string;
+  criadaEm: string;
+  status: Estado;
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  pagoDepoisDeCancelada: boolean;
+  pagamentoDivergente: boolean;
+  confirmacaoEnviada: boolean;
+  customerName: string;
+  customerEmail: string;
+  shippingAddress?: string;
+  shippingPostal?: string;
+  shippingCity?: string;
+  items: { productId: string; varianteId: string; name: string; medida?: string; priceCents: number; quantity: number }[];
+  subtotalCents: number;
+  shippingCents: number;
+  totalCents: number;
+}
+
+/**
+ * A encomenda, se a chave for a dela; `null` em tudo o resto — uma encomenda
+ * que nao existe e uma chave errada dao o mesmo, como em `chaveDaEncomenda`.
+ * Sem o historico, o telefone nem o identificador do pagamento: a pagina nao
+ * precisa deles, e o que nao sai nao se perde.
+ */
+export async function lerEncomenda(id: string, chave: string): Promise<EncomendaVista | null> {
+  if (!mongoose.Types.ObjectId.isValid(id)) return null;
+  await connectDB();
+  const e = await Order.findById(id).select('+chaveHash').lean();
+  if (!e?.chaveHash || !resumosIguais(e.chaveHash, resumir(chave))) return null;
+  return {
+    id: String(e._id),
+    numero: e.numero,
+    criadaEm: e.createdAt.toISOString(),
+    status: e.status,
+    paymentStatus: e.paymentStatus,
+    pagoDepoisDeCancelada: Boolean(e.pagoDepoisDeCancelada),
+    pagamentoDivergente: Boolean(e.pagamentoDivergente),
+    confirmacaoEnviada: Boolean(e.confirmacaoEnviadaEm),
+    customerName: e.customerName,
+    customerEmail: e.customerEmail,
+    shippingAddress: e.shippingAddress,
+    shippingPostal: e.shippingPostal,
+    shippingCity: e.shippingCity,
+    items: e.items.map((l) => ({
+      productId: String(l.productId),
+      varianteId: String(l.varianteId),
+      name: l.name,
+      ...(l.medida ? { medida: l.medida } : {}),
+      priceCents: l.priceCents,
+      quantity: l.quantity,
+    })),
+    subtotalCents: e.subtotalCents,
+    shippingCents: e.shippingCents,
+    totalCents: e.totalCents,
+  };
+}

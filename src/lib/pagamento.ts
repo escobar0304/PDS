@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Stripe from 'stripe';
+import { enviarAvisos } from '@/lib/avisos';
 import connectDB from '@/lib/db';
 import { requireEnv } from '@/lib/env';
 import { chaveDaEncomenda, mudarEstado } from '@/lib/encomenda';
@@ -123,7 +124,9 @@ export async function iniciarPagamento(
       payment_method_types: [...MEIOS_DE_PAGAMENTO],
       customer_email: e.customerEmail,
       client_reference_id: encomendaId,
-      metadata: { encomendaId, numero: e.numero },
+      // A chave volta no aviso de pagamento, para o email de confirmacao
+      // levar a ligacao da encomenda: na base de dados so ha o resumo.
+      metadata: { encomendaId, numero: e.numero, chave },
       expires_at: expira,
       locale: 'pt',
       success_url: `${baseUrl}/encomenda/${encomendaId}?chave=${chave}`,
@@ -256,33 +259,41 @@ function idDaEncomenda(sessao: Stripe.Checkout.Session): string | null {
 /**
  * Pago. Antes de avancar, confere o valor: um pagamento que nao bate com o
  * total da encomenda nao a faz avancar — fica marcado para o painel.
+ *
+ * Os emails saem no fim, em todos os casos (`lib/avisos.ts`). Se falharem, o
+ * erro sobe e a Stripe volta a entregar este aviso: da segunda vez o estado
+ * ja nao muda, mas o que ficou por enviar envia-se.
  */
 async function confirmar(sessao: Stripe.Checkout.Session) {
   const id = idDaEncomenda(sessao);
   if (!id) return;
   const e = await Order.findById(id).select('status totalCents').lean();
   if (!e) return;
+  const avisos = { chave: sessao.metadata?.chave, pagoCents: sessao.amount_total };
 
   if (sessao.amount_total !== e.totalCents || sessao.currency !== 'eur') {
     await Order.updateOne({ _id: id }, { $set: { pagamentoDivergente: true, pagamentoId: sessao.id } });
     console.error(`Pagamento divergente na encomenda ${id}: ${sessao.amount_total} ${sessao.currency}.`);
+    await enviarAvisos(id, avisos);
     return;
   }
 
   const r = await mudarEstado(id, 'PROCESSING', 'sistema', 'pagamento confirmado pela Stripe');
   if (r.ok) {
     await Order.updateOne({ _id: id }, { $set: { paymentStatus: 'PAID', pagamentoId: sessao.id } });
-    return;
+  } else {
+    // Pago depois de a reserva expirar: a encomenda ja foi cancelada e a peca
+    // pode ja ter sido vendida. Nao se reabre sozinha — decide a loja, que e
+    // avisada por email.
+    const depois = await Order.findById(id).select('status').lean();
+    if (depois?.status === 'CANCELLED') {
+      await Order.updateOne(
+        { _id: id },
+        { $set: { paymentStatus: 'PAID', pagamentoId: sessao.id, pagoDepoisDeCancelada: true } }
+      );
+    }
   }
-  // Pago depois de a reserva expirar: a encomenda ja foi cancelada e a peca
-  // pode ja ter sido vendida. Nao se reabre sozinha — decide o painel.
-  const depois = await Order.findById(id).select('status').lean();
-  if (depois?.status === 'CANCELLED') {
-    await Order.updateOne(
-      { _id: id },
-      { $set: { paymentStatus: 'PAID', pagamentoId: sessao.id, pagoDepoisDeCancelada: true } }
-    );
-  }
+  await enviarAvisos(id, avisos);
 }
 
 /** Expirou ou falhou: cancela a encomenda por pagar, e o stock volta. */

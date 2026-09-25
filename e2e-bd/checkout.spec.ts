@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import { createHash } from 'node:crypto';
 import mongoose from 'mongoose';
+import Stripe from 'stripe';
 import { iniciarSessao } from '../e2e/fixtures/sessao';
 import { ADMIN_ID, BASE } from './contas';
 
@@ -205,6 +207,104 @@ test('o checkout não tem violações WCAG 2.1 AA, nem com os erros à vista', a
   await page.getByRole('button', ENCOMENDAR).click();
   await expect(page.getByText('Falta o nome.')).toBeVisible();
   expect(await violacoes()).toEqual([]);
+});
+
+/** O aviso da Stripe, assinado com o segredo do servidor dos testes. */
+async function avisoDaStripe(page: Page, sessao: Record<string, unknown>) {
+  const corpo = JSON.stringify({
+    id: `evt_${new mongoose.Types.ObjectId()}`,
+    object: 'event',
+    type: 'checkout.session.completed',
+    data: { object: { object: 'checkout.session', currency: 'eur', payment_status: 'paid', ...sessao } },
+  });
+  const assinatura = new Stripe('sk_test_123').webhooks.generateTestHeaderString({
+    payload: corpo,
+    secret: 'whsec_apenas_para_testes',
+  });
+  const r = await page.request.post('/api/pagamentos/aviso', {
+    data: corpo,
+    headers: { 'content-type': 'application/json', 'stripe-signature': assinatura },
+  });
+  expect(r.status()).toBe(200);
+}
+
+const MAILPIT = process.env.MAILPIT_API ?? 'http://127.0.0.1:8025';
+
+/** O texto do email cujo assunto tem `assunto`, a quem o recebeu. */
+async function email(assunto: string): Promise<{ para: string[]; texto: string }> {
+  let id: string | undefined;
+  await expect
+    .poll(async () => {
+      const r = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`subject:"${assunto}"`)}`);
+      id = ((await r.json()) as { messages: { ID: string }[] }).messages[0]?.ID;
+      return id;
+    })
+    .toBeTruthy();
+  const m = (await (await fetch(`${MAILPIT}/api/v1/message/${id}`)).json()) as {
+    To: { Address: string }[];
+    Text: string;
+  };
+  return { para: m.To.map((t) => t.Address), texto: m.Text };
+}
+
+test('depois de pagar: o aviso da Stripe, o email com a ligação, e a página que muda sozinha', async ({
+  browser,
+  page,
+}) => {
+  const p = await peca(browser, 4000);
+  await simularStripe(page);
+  await paraOCarrinho(page, p.slug);
+  await page.goto('/checkout');
+  await preencher(page);
+  await page.getByRole('button', ENCOMENDAR).click();
+  await expect(page).toHaveURL(/checkout\.stripe\.com/);
+
+  const encomendas = mongoose.connection.collection('orders');
+  const e = (await encomendas.findOne({ 'items.productId': new mongoose.Types.ObjectId(p.id) }))!;
+  // A chave verdadeira so existe nos enderecos que foram para a Stripe, que
+  // o `stripe-mock` nao devolve. O teste poe uma que conhece no lugar dela.
+  const chave = 'C'.repeat(43);
+  await encomendas.updateOne(
+    { _id: e._id },
+    { $set: { chaveHash: createHash('sha256').update(chave).digest('hex') } }
+  );
+  const pagina = `/encomenda/${e._id}?chave=${chave}`;
+
+  // Sem a chave, ou com outra, a encomenda nao existe.
+  expect((await page.goto(`/encomenda/${e._id}`))?.status()).toBe(404);
+  expect((await page.goto(`/encomenda/${e._id}?chave=${'D'.repeat(43)}`))?.status()).toBe(404);
+
+  // Voltar da Stripe antes de o aviso chegar: espera, e diz para nao pagar outra vez.
+  await page.goto(pagina);
+  await expect(page.getByText('À espera da confirmação do pagamento')).toBeVisible();
+  await expect(page.getByText('Não pague outra vez')).toBeVisible();
+
+  await avisoDaStripe(page, {
+    id: e.pagamentoId,
+    client_reference_id: String(e._id),
+    amount_total: e.totalCents,
+    metadata: { chave },
+  });
+
+  // A pagina muda sozinha, sem recarregar.
+  await expect(page.getByText('Paga. Estamos a preparar a encomenda')).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('Enviámos a confirmação para marta@exemplo.pt')).toBeVisible();
+  // E a peca paga sai do carrinho.
+  await expect
+    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('cart') ?? '[]').length))
+    .toBe(0);
+
+  // O email chegou, com o que a lei pede e a ligacao para esta pagina.
+  const confirmacao = await email(`${e.numero} confirmada`);
+  expect(confirmacao.para).toEqual(['marta@exemplo.pt']);
+  expect(confirmacao.texto).toContain('FORMULÁRIO DE LIVRE RESOLUÇÃO');
+  expect(confirmacao.texto).toContain(`${BASE}${pagina}`);
+  // E a loja soube.
+  expect((await email(`Encomenda paga: ${e.numero}`)).para).toEqual(['loja@exemplo.pt']);
+
+  // A pagina da encomenda cumpre o mesmo criterio que as outras.
+  const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  expect(r.violations.map((v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)).toEqual([]);
 });
 
 test('voltar da Stripe com uma ligação que não é de nenhuma encomenda: nada acontece, e a chave sai do endereço', async ({

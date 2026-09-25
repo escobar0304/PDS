@@ -8,7 +8,12 @@ import { MEIOS_DE_PAGAMENTO } from '@/lib/pagamento';
  * erro aqui ou vende sem a informacao que a lei pede, ou nao vende nada.
  */
 
-const CHAVES = { STRIPE_SECRET_KEY: 'sk_test_123', STRIPE_WEBHOOK_SECRET: 'whsec_x' };
+const CHAVES = {
+  STRIPE_SECRET_KEY: 'sk_test_123',
+  STRIPE_WEBHOOK_SECRET: 'whsec_x',
+  SMTP_HOST: 'smtp.exemplo.pt',
+  ADMIN_EMAIL: 'loja@exemplo.pt',
+};
 
 function faltas(env: Record<string, string>) {
   const e = estadoDaLoja(env);
@@ -20,7 +25,7 @@ describe('o estado da loja', () => {
     const f = faltas(CHAVES);
     // Os dados do negocio que ainda nao chegaram.
     expect(f).toEqual(
-      expect.arrayContaining(['encomendasOnline', 'prazoEntrega', 'tabelaPortes', 'nif', 'confirmação por email'])
+      expect.arrayContaining(['encomendasOnline', 'prazoEntrega', 'tabelaPortes', 'nif'])
     );
     // Com as chaves postas, a configuracao nao e uma das faltas.
     expect(f).not.toContain('STRIPE_SECRET_KEY');
@@ -28,6 +33,15 @@ describe('o estado da loja', () => {
 
   it('sem as chaves da Stripe, a falta aparece', () => {
     expect(faltas({})).toEqual(expect.arrayContaining(['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']));
+  });
+
+  it('sem correio não abre, nem em ensaio: a confirmação por email é obrigatória', () => {
+    expect(faltas({})).toEqual(expect.arrayContaining(['SMTP_HOST', 'ADMIN_EMAIL']));
+    const { SMTP_HOST: _, ...semCorreio } = CHAVES;
+    expect(estadoDaLoja({ ...semCorreio, LOJA_ENSAIO: '1' })).toMatchObject({
+      aberta: false,
+      faltas: [{ campo: 'SMTP_HOST' }],
+    });
   });
 
   it('cada falta diz porquê', () => {

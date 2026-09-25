@@ -43,7 +43,7 @@ e à política quando for:
 |---|---|---|
 | Alojamento | onde o sítio corre, e os registos do servidor | **por decidir** |
 | Base de dados | onde vivem as contas (`MONGODB_URI`) | **por decidir** — e a região decide se há transferência para fora da UE |
-| Envio de email | confirmação de conta, reposição, formulário de contacto (`SMTP_*`) | **por decidir** |
+| Envio de email | confirmação de conta, reposição, formulário de contacto, confirmação de cada encomenda e aviso à loja (`SMTP_*`) | **Gmail, decidido em 25/09/2026.** Numa conta Gmail gratuita, a Google trata os emails pelos termos de consumidor, **sem o contrato de subcontratante do art. 28.º**; o Google Workspace (pago) oferece-o. A validar pelo jurista antes de abrir a loja |
 | Pagamentos | Stripe, escolhida em 24/09/2026, com a página de pagamento alojada nela: os dados do cartão nunca passam pelo sítio | entra quando o checkout abrir; a entidade contratante e a região dos dados confirmam-se no contrato |
 
 **A Google não é subcontratante**, quando a entrada pela Google estiver ligada:
@@ -124,7 +124,7 @@ confirmação por email (P1). Entra na política antes da primeira venda.
 | Base legal | Execução de contrato (art. 6.º, n.º 1, al. b)); guardar o documento de venda é obrigação legal (al. c)) |
 | Titulares | Quem compra, com ou sem conta |
 | Dados | nome, email, telefone, morada, código postal, localidade; o que comprou, a que preço e com que portes; o estado e o histórico da encomenda; o identificador do pagamento na Stripe; com conta, a ligação a ela. **Nunca dados do cartão** — ficam na Stripe |
-| Destinatários | a Stripe recebe o email, as linhas da encomenda e o total; os CTT vão receber o nome, a morada e o telefone quando a expedição existir (P3) |
+| Destinatários | a Stripe recebe o email, as linhas da encomenda e o total; o fornecedor de email leva a confirmação e o aviso à loja, com tudo o que a encomenda tem; os CTT vão receber o nome, a morada e o telefone quando a expedição existir (P3) |
 | Prazo | **por decidir com o contabilista** (P2). Não se apaga quando a conta é apagada, porque o documento de venda tem de ser guardado (art. 17.º, n.º 3, al. b)) |
 | Onde no código | `src/lib/models.ts` (`orderSchema`), `src/lib/encomenda.ts`, `src/app/api/encomendas/` |
 

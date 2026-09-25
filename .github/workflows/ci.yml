@@ -68,9 +68,21 @@ jobs:
         ports:
           - 12111:12111
 
+      # Um servidor de correio que guarda o que recebe e o deixa ler: a
+      # confirmacao da encomenda e obrigatoria, e isto prova que sai.
+      mail:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
     env:
       MONGODB_URI: mongodb://127.0.0.1:27017
       STRIPE_API_HOST: 127.0.0.1
+      SMTP_HOST: 127.0.0.1
+      SMTP_PORT: 1025
+      SMTP_FROM: loja@exemplo.pt
+      MAILPIT_API: http://127.0.0.1:8025
 
     steps:
       - uses: actions/checkout@v7
@@ -145,9 +157,18 @@ jobs:
         ports:
           - 12111:12111
 
+      # Um servidor de correio que guarda o que recebe e o deixa ler: a
+      # confirmacao da encomenda e obrigatoria, e isto prova que sai.
+      mail:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+
     env:
       MONGODB_URI: mongodb://127.0.0.1:27017/pds-e2e
       STRIPE_API_HOST: 127.0.0.1
+      MAILPIT_API: http://127.0.0.1:8025
 
     steps:
       - uses: actions/checkout@v7

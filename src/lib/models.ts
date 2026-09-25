@@ -117,6 +117,13 @@ export interface IOrder extends Document {
    * dela sem conta. Nunca a chave: ver `lib/tokens.ts`.
    */
   chaveHash?: string;
+  /**
+   * Quando saiu o email de confirmacao para quem comprou (DL 24/2014,
+   * art. 6.º), e o aviso para a loja. Sem data, esta por enviar: ver
+   * `lib/avisos.ts`.
+   */
+  confirmacaoEnviadaEm?: Date;
+  avisoLojaEnviadoEm?: Date;
   /** Cada mudanca de estado, com data e autor. Nunca se reescreve. */
   historico: Array<{ de?: Estado; para: Estado; em: Date; por: string; nota?: string }>;
   notes?: string;
@@ -412,6 +419,8 @@ const orderSchema = new Schema<IOrder>(
     },
     // Fora das consultas por omissao: so quem verifica a chave a pede.
     chaveHash: { type: String, select: false },
+    confirmacaoEnviadaEm: { type: Date },
+    avisoLojaEnviadoEm: { type: Date },
     historico: [
       {
         _id: false,

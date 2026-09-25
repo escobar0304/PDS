@@ -382,9 +382,9 @@ ficou decidido pelo caminho:
   que falta: a decisão de abrir, os portes, o prazo, a identificação do
   prestador (que o art. 4.º pede também antes da compra), a confirmação por
   email (P1) e as chaves da Stripe. Fechada, `/checkout` dá 404 e as rotas
-  dão 503; o painel mostra a lista do que falta. **A P1 fecha a loja, de
-  propósito:** vender sem a confirmação em suporte duradouro era cumprir o
-  art. 4.º e falhar o 6.º no minuto seguinte
+  dão 503; o painel mostra a lista do que falta. **Sem correio, a loja
+  fecha, de propósito:** vender sem a confirmação em suporte duradouro era
+  cumprir o art. 4.º e falhar o 6.º no minuto seguinte
 - **O total que a pessoa viu vai com o pedido, e o servidor recusa se não
   bater** (`totalVistoCents`). Não entra em conta nenhuma: sem isto, um preço
   mudado no painel entre o orçamento e o botão cobrava um total que não
@@ -420,19 +420,39 @@ muda antes do botão.
 
 # Fase 4 - Depois do pagamento
 
-## P1. Confirmação
+## P1. Confirmação — feito
 
 Email com o resumo da encomenda, as condições e o formulário de livre
 resolução: **obrigatório**, em "suporte duradouro" (DL 24/2014, art. 6.º). E
 as páginas de sucesso e de falha, de volta, a ler o estado real.
 
-A Stripe já devolve a pessoa para `/encomenda/<id>?chave=…` depois de pagar
-(E5): a página é esta, e a chave é a que prova que a encomenda é de quem a
-abre. Até ela existir, a loja não abre (`CONFIRMACAO_DURADOURA`, em
-`lib/loja.ts`).
+**Email: a Gmail da loja, decidido em 25/09/2026.** O código não sabe quem é
+o fornecedor (`services/mailer.ts`, SMTP); troca-se pelas variáveis. O que a
+escolha traz está no `REGISTO-TRATAMENTOS.md`.
 
-O código faz-se agora. **O envio depende do fornecedor de email**, por decidir
-(`REGISTO-TRATAMENTOS.md`).
+**Feito em 25/09/2026:**
+
+- **`/encomenda/<id>?chave=…`**, para onde a Stripe devolve a pessoa depois
+  de pagar, e a ligação que vai no email. Uma página só, em vez de sucesso e
+  falha: o estado lê-se da base de dados a cada pedido, e enquanto o aviso da
+  Stripe não chega a página volta a perguntar sozinha — e diz para não pagar
+  outra vez. Paga, as peças compradas saem do carrinho
+- **A confirmação por email** (`lib/confirmacao.ts`) leva tudo no próprio
+  texto: as peças, os portes, o total, a entrega e o prazo, o direito de
+  desistir, o formulário do anexo do DL 24/2014 já com o número da
+  encomenda, a garantia e quem vende. Uma ligação para /termos não chegava: a
+  página muda, e o email tem de dizer o que valia no dia
+- **Um aviso à loja** por cada encomenda paga. Sem painel de encomendas (P3),
+  é por ele que a loja sabe que tem uma encomenda para preparar, e é por ele
+  que sabe de um pagamento que chegou depois de a encomenda ter sido
+  cancelada, ou com outro valor
+- **Cada email sai uma vez, e um que falhe volta a tentar-se** pela própria
+  Stripe: o aviso de pagamento responde 500, e ela reentrega-o (`lib/avisos.ts`)
+- **Sem correio configurado, a loja não abre** (`SMTP_HOST`, `ADMIN_EMAIL`
+  em `lib/loja.ts`) — nem em ensaio
+
+**A validar pelo jurista:** o texto da confirmação, e o formulário, que
+segue o modelo do anexo.
 
 ## P2. Faturação certificada
 
@@ -565,8 +585,8 @@ E5  checkout sem conta, fechado enquanto faltarem condições   feito, ensaiado
 |---|---|
 | C3 painel de produtos | onde ficam as imagens (alojamento) |
 | E4 pagamento | as chaves de teste da Stripe para o ensaio real; as de produção pedem NIF e IBAN |
-| E5 checkout | tabela de portes, prazo de entrega, identificação do prestador (F4), a P1, e as chaves da Stripe; o levantamento na loja, se o houver |
-| P1 email de confirmação | fornecedor de email |
+| E5 checkout | tabela de portes, prazo de entrega, identificação do prestador (F4), as chaves da Stripe e as do email; o levantamento na loja, se o houver |
+| P1 email de confirmação | a conta Gmail e a palavra-passe de aplicação, nas variáveis `SMTP_*` |
 | P3 painel de encomendas | nada além da E3 |
 
 ## Espera por ti
@@ -599,8 +619,9 @@ v1.0.0 publicada
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
   ├─ S1 C2                      feito
   ├─ C3 C4                      feito, ensaiado com dados reais
-  ├─ E4 ── E5                   feito; abrir pede portes, prazo, F4, P1 e chaves
-  ├─ P1 ── P3 ── P4             depois da E5
+  ├─ E4 ── E5                   feito; abrir pede portes, prazo, F4 e chaves
+  ├─ P1                         feito
+  ├─ P3 ── P4                   painel de encomendas, desistência
   ├─ P2                         contabilista
   └─ Conta                      depois da P1
 ```

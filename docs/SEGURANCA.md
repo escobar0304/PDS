@@ -489,6 +489,13 @@ peça. Quem volta atrás na página da Stripe liberta a sua reserva na hora
 (`desistirDoPagamento`), e um pagamento que não chega a abrir cancela a
 encomenda logo.
 
+**Os emails da encomenda** (P1) são texto simples, como todo o correio do
+sítio: o nome e a morada vêm de quem comprou, e sem HTML não há onde os
+injetar (`confirmacao.test.ts` verifica-o com um nome com marcação). O
+destino é o email da encomenda, validado no checkout, ou o `ADMIN_EMAIL` do
+ambiente — nunca um que venha no aviso. A ligação da encomenda só vai no
+email se a chave que volta da Stripe for mesmo a dela.
+
 ## Por fazer
 
 - ~~**Manipulação de preço**, quando o checkout existir.~~ Feito com a E5, ver

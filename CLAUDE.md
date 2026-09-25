@@ -49,13 +49,19 @@ código escrito aqui. O que fica por corrigir fica explicado em
 
 **Os testes que precisam de MongoDB correm por Docker.** São dois:
 `src/lib/__tests__/integracao.test.ts` (ignorado sem `MONGODB_URI`) e
-`e2e-bd/`, o painel de gestão com dados reais. O binário do MongoDB não se
-descarrega deste ambiente, mas a imagem Docker sim — medido em 24/09/2026:
+`e2e-bd/`, o painel e a compra com dados reais. Precisam também do simulador
+da Stripe e de um servidor de correio que se deixa ler (Mailpit). Os binários
+não se descarregam deste ambiente, mas as imagens Docker sim — medido em
+24 e 25/09/2026:
 
 ```
 dockerd &                                   # se o daemon não estiver a correr
 docker run -d --name pds-mongo -p 27017:27017 mongo:7
-MONGODB_URI=mongodb://127.0.0.1:27017 npm test
+docker run -d --name pds-stripe -p 12111:12111 stripe/stripe-mock:latest
+docker run -d --name pds-mail -p 1025:1025 -p 8025:8025 axllent/mailpit:latest
+MONGODB_URI=mongodb://127.0.0.1:27017 STRIPE_API_HOST=127.0.0.1 \
+  SMTP_HOST=127.0.0.1 SMTP_PORT=1025 SMTP_FROM=loja@exemplo.pt \
+  MAILPIT_API=http://127.0.0.1:8025 npm test
 MONGODB_URI=mongodb://127.0.0.1:27017/pds-e2e npm run test:e2e:bd
 ```
 

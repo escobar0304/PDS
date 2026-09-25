@@ -1,6 +1,30 @@
 import { hash, verify } from 'argon2';
 import mongoose from 'mongoose';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+/**
+ * O correio: cada mensagem fica registada aqui, e so sai a serio se houver
+ * um servidor (`SMTP_HOST`, o Mailpit no CI). `falhar` simula o servidor em
+ * baixo na proxima mensagem.
+ */
+const correio = vi.hoisted(() => ({
+  enviados: [] as { para: string; assunto: string; texto: string }[],
+  falhar: false,
+}));
+vi.mock('@/services/mailer', async (original) => {
+  const real = await original<typeof import('@/services/mailer')>();
+  return {
+    ...real,
+    enviar: async (m: { para: string; assunto: string; texto: string }) => {
+      if (correio.falhar) {
+        correio.falhar = false;
+        throw new Error('servidor de correio em baixo (simulado)');
+      }
+      correio.enviados.push(m);
+      if (process.env.SMTP_HOST) await real.enviar(m);
+    },
+  };
+});
 import { Category, Contador, MovimentoStock, Order, Product, Token, User } from '../models';
 import { moverStock } from '../stock';
 import { criarProduto, editarCategoria, editarProduto, listarProdutos, movimentar, mudarPapel } from '../gestao';
@@ -938,6 +962,7 @@ executar('pagamentos, contra a base de dados', () => {
     }
     process.env.STRIPE_SECRET_KEY ??= 'sk_test_123';
     process.env.STRIPE_WEBHOOK_SECRET = SEGREDO;
+    process.env.ADMIN_EMAIL = 'loja@exemplo.pt';
     (await import('../pagamento')).esquecerCliente();
   }, 30_000);
 
@@ -950,6 +975,8 @@ executar('pagamentos, contra a base de dados', () => {
       Contador.deleteMany({}),
       mongoose.connection.collection('avisopagamentos').deleteMany({}),
     ]);
+    correio.enviados.length = 0;
+    correio.falhar = false;
   });
 
   async function encomendaPorPagar(stock = 1) {
@@ -1028,6 +1055,74 @@ executar('pagamentos, contra a base de dados', () => {
     expect((await estado(e.id)).status).toBe('PROCESSING');
   });
 
+  const para = (quem: string) => correio.enviados.filter((m) => m.para === quem);
+
+  it('pago: a confirmação sai uma vez para quem comprou, e o aviso uma vez para a loja', async () => {
+    const e = await encomendaPorPagar();
+    const pago = { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total };
+
+    await aviso('checkout.session.completed', pago, 'evt_a');
+    // A Stripe entrega o mesmo evento outra vez, e outro evento da mesma sessao.
+    await aviso('checkout.session.completed', pago, 'evt_a');
+    await aviso('checkout.session.async_payment_succeeded', pago, 'evt_b');
+
+    expect(para('marta@exemplo.pt')).toHaveLength(1);
+    expect(para('marta@exemplo.pt')[0].assunto).toContain('confirmada');
+    expect(para('loja@exemplo.pt')).toHaveLength(1);
+    expect(para('loja@exemplo.pt')[0].assunto).toMatch(/^Encomenda paga/);
+    expect((await estado(e.id)).confirmacaoEnviadaEm).toBeInstanceOf(Date);
+  });
+
+  it('a ligação só vai no email se a chave for a desta encomenda', async () => {
+    const a = await encomendaPorPagar();
+    const b = await encomendaPorPagar();
+    await aviso('checkout.session.completed', {
+      client_reference_id: a.id, payment_status: 'paid', amount_total: a.total, metadata: { chave: a.chave },
+    });
+    await aviso('checkout.session.completed', {
+      client_reference_id: b.id, payment_status: 'paid', amount_total: b.total, metadata: { chave: a.chave },
+    });
+
+    const [paraA, paraB] = para('marta@exemplo.pt');
+    expect(paraA.texto).toContain(`/encomenda/${a.id}?chave=${a.chave}`);
+    expect(paraB.texto).not.toContain('/encomenda/');
+  });
+
+  it('se o email falhar, a Stripe volta a entregar o aviso, e é então que sai', async () => {
+    const e = await encomendaPorPagar();
+    const pago = { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total };
+
+    correio.falhar = true;
+    await expect(aviso('checkout.session.completed', pago, 'evt_falha')).rejects.toThrow(/correio/);
+    // O pagamento conta na mesma; so a confirmacao ficou por enviar.
+    const depois = await estado(e.id);
+    expect(depois.status).toBe('PROCESSING');
+    expect(depois.confirmacaoEnviadaEm).toBeUndefined();
+
+    expect(await aviso('checkout.session.completed', pago, 'evt_falha')).toBe('processado');
+    expect(para('marta@exemplo.pt')).toHaveLength(1);
+    expect((await estado(e.id)).historico).toHaveLength(2);
+  });
+
+  it('pago depois de cancelada: só a loja é avisada, e o assunto diz que há que resolver', async () => {
+    const e = await encomendaPorPagar();
+    await mudarEstado(e.id, 'CANCELLED', 'sistema', 'reserva expirada');
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total });
+
+    expect(para('marta@exemplo.pt')).toHaveLength(0);
+    expect(para('loja@exemplo.pt')[0].assunto).toMatch(/^A resolver: .* paga depois de cancelada/);
+  });
+
+  const comMailpit = process.env.SMTP_HOST && process.env.MAILPIT_API ? it : it.skip;
+  comMailpit('a confirmação chega mesmo a um servidor de correio', async () => {
+    const e = await encomendaPorPagar();
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total });
+    const numero = (await estado(e.id)).numero;
+    const r = await fetch(`${process.env.MAILPIT_API}/api/v1/search?query=${encodeURIComponent(`subject:"${numero} confirmada"`)}`);
+    const { messages } = (await r.json()) as { messages: { To: { Address: string }[] }[] };
+    expect(messages.map((m) => m.To[0].Address)).toContain('marta@exemplo.pt');
+  });
+
   const comStripeMock = process.env.STRIPE_API_HOST ? it : it.skip;
   comStripeMock('a sessão de pagamento abre-se, e a reserva passa a durar mais do que ela', async () => {
     const { DURACAO_SESSAO_S, MARGEM_RESERVA_MS, iniciarPagamento } = await import('../pagamento');
@@ -1085,6 +1180,10 @@ executar('pagamentos, contra a base de dados', () => {
 });
 
 describe('o simulador da Stripe no CI', () => {
+  it('o servidor de correio também', () => {
+    if (process.env.CI && URI) expect(process.env.MAILPIT_API, 'MAILPIT_API em falta no CI').toBeTruthy();
+  });
+
   it('corre onde a base de dados corre', () => {
     // Sem isto, o teste da sessao de pagamento era saltado em silencio no CI
     // e continuavamos a dizer que estava verificado.
