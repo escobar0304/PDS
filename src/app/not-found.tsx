@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Compass } from '@phosphor-icons/react/dist/ssr';
+import { ICONE } from '@/components/ui/icone';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Container } from '@/components/ui';
@@ -22,7 +23,7 @@ export default function NotFound() {
       <main id="conteudo" className="min-h-[60vh] bg-surface py-20">
         <Container>
           <div className="mx-auto max-w-lg text-center">
-            <Compass className="mx-auto mb-6 h-10 w-10 text-ink-muted" aria-hidden />
+            <Compass {...ICONE} className="mx-auto mb-6 h-10 w-10 text-ink-muted" aria-hidden />
 
             <h1 className="mb-4 font-serif text-3xl text-ink md:text-4xl">
               Não encontrámos esta página

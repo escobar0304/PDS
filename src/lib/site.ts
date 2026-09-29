@@ -23,6 +23,8 @@ export const ROTAS_PRIVADAS = [
   '/area-pessoal',
   '/auth/',
   '/carrinho',
+  '/checkout',
+  '/encomenda/',
 ] as const;
 
 export function privada(caminho: string): boolean {

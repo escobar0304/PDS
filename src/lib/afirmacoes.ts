@@ -55,6 +55,17 @@ export const AVISO_TRADICAO =
   'As propriedades atribuídas aos cristais vêm da tradição e de práticas de ' +
   'bem-estar. Não substituem aconselhamento, diagnóstico ou tratamento médico.';
 
+/**
+ * O stock e um so, na loja fisica e aqui. Dito pelo negocio em 24/09/2026
+ * ("tudo que se vende esta em stock na loja fisica"), e verdade no codigo:
+ * uma venda ao balcao e um movimento no mesmo stock (`lib/stock.ts`).
+ */
+export const MESMO_STOCK = {
+  titulo: 'O que vê aqui está na prateleira da loja.',
+  detalhe:
+    'A loja online e a loja física têm o mesmo stock. Quando uma peça se vende ao balcão, deixa de estar à venda aqui.',
+};
+
 /** Descricao curta do sitio, para metadados e rodape. */
 export const DESCRICAO_SITIO =
   'Cristais e pedras para ter por perto. Cada peça é diferente da outra.';

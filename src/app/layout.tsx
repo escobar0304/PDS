@@ -1,12 +1,26 @@
 import type { Metadata } from 'next';
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Cormorant_Garamond, Figtree, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
 import ClientProviders from '@/components/ClientProviders';
 import { DESCRICAO_SITIO } from '@/lib/afirmacoes';
 import { SITE_URL } from '@/lib/site';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' });
+/**
+ * Tres letras, cada uma com um trabalho (docs/MARCA.md):
+ * - exposicao: os titulos, como as etiquetas de um gabinete de mineralogia;
+ * - corpo: tudo o que se le, incluindo o texto legal;
+ * - etiqueta: os dados de cada peca (familia, peso, medida), em monoespaco.
+ * So os pesos que se usam, para nao pesar no carregamento.
+ */
+const exposicao = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-exposicao',
+  display: 'swap',
+});
+const corpo = Figtree({ subsets: ['latin'], variable: '--font-corpo', display: 'swap' });
+const etiqueta = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-etiqueta', display: 'swap' });
 
 /**
  * O `template` e o que faz cada pagina ter titulo proprio. Ate aqui todas as
@@ -35,7 +49,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-PT" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="pt-PT" className={`${exposicao.variable} ${corpo.variable} ${etiqueta.variable}`}>
       <head>
         {/* O icone vem de app/icon.svg pela convencao de ficheiro do Next. */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />

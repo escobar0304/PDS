@@ -21,9 +21,10 @@
  *   transforma uma injeccao de texto em execucao de codigo — nao se deixa
  *   ligada por omissao
  *
- * Quando houver pagamentos, a rota de pagamento precisa de `script-src` e
- * `frame-src` para o fornecedor de pagamento (por escolher, ROADMAP-V2 E4) — e
- * so essa rota, nunca o sitio todo. Ver F7b.
+ * Os pagamentos nao mudam nada aqui: a pessoa paga na pagina da Stripe, e o
+ * `stripe.js` nunca carrega neste sitio (ROADMAP-V2, E4). O checkout so
+ * fala com o proprio sitio (`connect-src 'self'`) e depois muda de pagina
+ * para a da Stripe, o que a CSP nao restringe.
  */
 const csp = [
   "default-src 'self'",

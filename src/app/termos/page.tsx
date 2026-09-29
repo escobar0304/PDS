@@ -7,6 +7,7 @@ import { AVISO_TRADICAO } from '@/lib/afirmacoes';
 import { CONDICOES, PRAZOS_LEGAIS } from '@/lib/condicoes';
 import { camposEmFalta, EMPRESA, moradaFormatada } from '@/lib/empresa';
 import { LIVRO_RECLAMACOES } from '@/lib/paginas';
+import { DURACAO_SESSAO_S } from '@/lib/pagamento';
 
 export const metadata: Metadata = {
   title: 'Termos e condições',
@@ -19,16 +20,16 @@ export const metadata: Metadata = {
  * Termos e condicoes.
  *
  * Estruturado a partir do que o sitio faz e do que o negocio decidiu (ver
- * `src/lib/condicoes.ts`). Nao inventa o que ninguem decidiu: os meios de
- * pagamento nao existem nesta versao e aparecem "por preencher", e o momento
- * em que o contrato fica celebrado nao se escreve ate haver checkout que o
- * defina.
+ * `src/lib/condicoes.ts`). Nao inventa o que ninguem decidiu. O momento em
+ * que o contrato fica celebrado e o que o checkout faz (ROADMAP-V2, E5): a
+ * encomenda nasce com o botao, e so avanca com o pagamento confirmado pela
+ * Stripe (`lib/pagamento.ts`).
  *
  * **Nao sou jurista.** Tem de ser validado por quem o seja antes de publicar.
  */
 
 /** Data da versao em vigor. Muda sempre que o texto mudar. */
-const VERSAO = '23 de setembro de 2026';
+const VERSAO = '25 de setembro de 2026';
 
 const ligacao =
   'text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700';
@@ -115,7 +116,19 @@ export default function TermosPage() {
                 )}
                 <p>
                   Meios de pagamento:{' '}
-                  {CONDICOES.meiosPagamento ? CONDICOES.meiosPagamento.join(', ') : <Falta />}.
+                  {CONDICOES.meiosPagamento ? CONDICOES.meiosPagamento.join(', ') : <Falta />}. O
+                  pagamento faz-se na página da Stripe, que o processa por nossa conta: os dados
+                  do cartão não passam por este sítio.
+                </p>
+                <p>
+                  A encomenda faz-se no último passo, com o botão «Encomenda com obrigação de
+                  pagar», depois de ver o total com os portes. Fica à espera do pagamento durante{' '}
+                  {Math.floor(DURACAO_SESSAO_S / 60) - 1} minutos, com as peças reservadas; se não
+                  for paga nesse tempo, é cancelada, e nada é cobrado.
+                </p>
+                <p>
+                  O contrato fica celebrado quando o pagamento é confirmado. Nessa altura
+                  enviamos-lhe por email a confirmação da encomenda, com estas condições.
                 </p>
               </Seccao>
 

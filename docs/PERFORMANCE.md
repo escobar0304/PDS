@@ -167,3 +167,20 @@ fica pior. O Turbopack, que passou a ser o de omissão, é o mais leve dos dois.
 Fica, porque é o preço de fechar uma vulnerabilidade alta que não fechava de
 outra forma. Não é uma melhoria e não se escreve como tal. A suite de ponta a
 ponta passou de 1,4 min para 53 s, o que ajuda o trabalho mas não quem visita.
+
+## As letras do redesenho — 29/09/2026
+
+Três famílias em vez de duas (ver `MARCA.md`). Medido no que cada página
+descarrega de facto, com o browser dos testes:
+
+| | ficheiros | peso |
+|---|---|---|
+| antes (Inter, Playfair Display) | 2 | 85 kB |
+| agora (Figtree, Cormorant Garamond, IBM Plex Mono) | 5 | **115 kB** |
+
+Mais 30 kB, e é o custo do redesenho que mais se sente numa ligação lenta.
+Ficam porque cada família tem um trabalho que as outras não fazem, e porque o
+`next/font` as serve do próprio sítio, com `font-display: swap`: o texto
+aparece logo na letra do sistema e troca quando a letra chega. Só se
+declararam os pesos que se usam. Se for preciso cortar, a primeira a sair é a
+monoespaçada, que passa para a Figtree com algarismos tabulares.

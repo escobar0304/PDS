@@ -42,16 +42,20 @@ export async function enviar({
   para,
   assunto,
   texto,
+  responderPara,
 }: {
   para: string;
   assunto: string;
   texto: string;
+  /** Para onde vai a resposta, se nao for o remetente. Nunca vem de um pedido. */
+  responderPara?: string;
 }): Promise<void> {
   await transporte().sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: para,
     subject: umaLinha(assunto),
     text: texto,
+    ...(responderPara ? { replyTo: responderPara } : {}),
   });
 }
 

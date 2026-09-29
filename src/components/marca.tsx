@@ -123,9 +123,16 @@ export function Wordmark({
 export default function Logotipo({
   className = '',
   titulo = 'Pétalas de Sonho',
+  lettering = 'creme',
 }: {
   className?: string;
   titulo?: string;
+  /**
+   * `creme` e o do logotipo, para fundos escuros. `tinta` e a versao de uma
+   * cor para fundos claros: o creme sobre o creme da pagina nao se ve. Em
+   * modo escuro, `tinta` volta ao creme, que e o original.
+   */
+  lettering?: 'creme' | 'tinta';
 }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`} role="img" aria-label={titulo}>
@@ -133,7 +140,9 @@ export default function Logotipo({
       {/* O creme e do logotipo, nao do tema: a marca nao muda de cor com o
           fundo. Passe text-* no className do lettering so para os casos de
           uma cor so, como o favicon monocromatico. */}
-      <Wordmark className="h-[0.95em] text-[#fdf9db]" />
+      <Wordmark
+        className={`h-[0.95em] ${lettering === 'creme' ? 'text-[#fdf9db]' : 'text-rose-900 dark:text-[#fdf9db]'}`}
+      />
     </span>
   );
 }

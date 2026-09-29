@@ -1,6 +1,30 @@
 import { hash, verify } from 'argon2';
 import mongoose from 'mongoose';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+/**
+ * O correio: cada mensagem fica registada aqui, e so sai a serio se houver
+ * um servidor (`SMTP_HOST`, o Mailpit no CI). `falhar` simula o servidor em
+ * baixo na proxima mensagem.
+ */
+const correio = vi.hoisted(() => ({
+  enviados: [] as { para: string; assunto: string; texto: string }[],
+  falhar: false,
+}));
+vi.mock('@/services/mailer', async (original) => {
+  const real = await original<typeof import('@/services/mailer')>();
+  return {
+    ...real,
+    enviar: async (m: { para: string; assunto: string; texto: string }) => {
+      if (correio.falhar) {
+        correio.falhar = false;
+        throw new Error('servidor de correio em baixo (simulado)');
+      }
+      correio.enviados.push(m);
+      if (process.env.SMTP_HOST) await real.enviar(m);
+    },
+  };
+});
 import { Category, Contador, MovimentoStock, Order, Product, Token, User } from '../models';
 import { moverStock } from '../stock';
 import { criarProduto, editarCategoria, editarProduto, listarProdutos, movimentar, mudarPapel } from '../gestao';
@@ -718,6 +742,19 @@ executar('encomendas, contra a base de dados', () => {
     expect(e.items[0].varianteId).toBeDefined();
   });
 
+  it('com um total diferente do que a pessoa viu, não se reserva nada', async () => {
+    const p = await peca({ stock: 3 });
+    const pedido = [{ id: p._id.toString(), quantidade: 2 }];
+
+    const r = await criarEncomenda(pedido, CLIENTE, TABELA, new Date(), 3980);
+
+    // O total real inclui os portes: 3980 era so o das pecas.
+    expect(r).toEqual({ ok: false, problemas: [{ tipo: 'total-mudou', totalCents: 3980 + 450 }] });
+    expect(await stock(p._id)).toBe(3);
+    expect(await Order.countDocuments()).toBe(0);
+    expect(await criarEncomenda(pedido, CLIENTE, TABELA, new Date(), 3980 + 450)).toMatchObject({ ok: true });
+  });
+
   it('os números nunca se repetem, mesmo pedidos ao mesmo tempo', async () => {
     const numeros = await Promise.all(Array.from({ length: 10 }, () => proximoNumero()));
     expect(new Set(numeros).size).toBe(10);
@@ -925,6 +962,7 @@ executar('pagamentos, contra a base de dados', () => {
     }
     process.env.STRIPE_SECRET_KEY ??= 'sk_test_123';
     process.env.STRIPE_WEBHOOK_SECRET = SEGREDO;
+    process.env.ADMIN_EMAIL = 'loja@exemplo.pt';
     (await import('../pagamento')).esquecerCliente();
   }, 30_000);
 
@@ -937,6 +975,8 @@ executar('pagamentos, contra a base de dados', () => {
       Contador.deleteMany({}),
       mongoose.connection.collection('avisopagamentos').deleteMany({}),
     ]);
+    correio.enviados.length = 0;
+    correio.falhar = false;
   });
 
   async function encomendaPorPagar(stock = 1) {
@@ -956,7 +996,7 @@ executar('pagamentos, contra a base de dados', () => {
       deliveryType: 'SHIPPING',
     }, TABELA);
     if (!r.ok) throw new Error(JSON.stringify(r));
-    return { id: r.id, total: r.totalCents, produto: p._id };
+    return { id: r.id, total: r.totalCents, produto: p._id, chave: r.chave };
   }
 
   async function aviso(tipo: string, sessao: Record<string, unknown>, id = `evt_${new mongoose.Types.ObjectId()}`) {
@@ -1015,13 +1055,81 @@ executar('pagamentos, contra a base de dados', () => {
     expect((await estado(e.id)).status).toBe('PROCESSING');
   });
 
+  const para = (quem: string) => correio.enviados.filter((m) => m.para === quem);
+
+  it('pago: a confirmação sai uma vez para quem comprou, e o aviso uma vez para a loja', async () => {
+    const e = await encomendaPorPagar();
+    const pago = { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total };
+
+    await aviso('checkout.session.completed', pago, 'evt_a');
+    // A Stripe entrega o mesmo evento outra vez, e outro evento da mesma sessao.
+    await aviso('checkout.session.completed', pago, 'evt_a');
+    await aviso('checkout.session.async_payment_succeeded', pago, 'evt_b');
+
+    expect(para('marta@exemplo.pt')).toHaveLength(1);
+    expect(para('marta@exemplo.pt')[0].assunto).toContain('confirmada');
+    expect(para('loja@exemplo.pt')).toHaveLength(1);
+    expect(para('loja@exemplo.pt')[0].assunto).toMatch(/^Encomenda paga/);
+    expect((await estado(e.id)).confirmacaoEnviadaEm).toBeInstanceOf(Date);
+  });
+
+  it('a ligação só vai no email se a chave for a desta encomenda', async () => {
+    const a = await encomendaPorPagar();
+    const b = await encomendaPorPagar();
+    await aviso('checkout.session.completed', {
+      client_reference_id: a.id, payment_status: 'paid', amount_total: a.total, metadata: { chave: a.chave },
+    });
+    await aviso('checkout.session.completed', {
+      client_reference_id: b.id, payment_status: 'paid', amount_total: b.total, metadata: { chave: a.chave },
+    });
+
+    const [paraA, paraB] = para('marta@exemplo.pt');
+    expect(paraA.texto).toContain(`/encomenda/${a.id}?chave=${a.chave}`);
+    expect(paraB.texto).not.toContain('/encomenda/');
+  });
+
+  it('se o email falhar, a Stripe volta a entregar o aviso, e é então que sai', async () => {
+    const e = await encomendaPorPagar();
+    const pago = { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total };
+
+    correio.falhar = true;
+    await expect(aviso('checkout.session.completed', pago, 'evt_falha')).rejects.toThrow(/correio/);
+    // O pagamento conta na mesma; so a confirmacao ficou por enviar.
+    const depois = await estado(e.id);
+    expect(depois.status).toBe('PROCESSING');
+    expect(depois.confirmacaoEnviadaEm).toBeUndefined();
+
+    expect(await aviso('checkout.session.completed', pago, 'evt_falha')).toBe('processado');
+    expect(para('marta@exemplo.pt')).toHaveLength(1);
+    expect((await estado(e.id)).historico).toHaveLength(2);
+  });
+
+  it('pago depois de cancelada: só a loja é avisada, e o assunto diz que há que resolver', async () => {
+    const e = await encomendaPorPagar();
+    await mudarEstado(e.id, 'CANCELLED', 'sistema', 'reserva expirada');
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total });
+
+    expect(para('marta@exemplo.pt')).toHaveLength(0);
+    expect(para('loja@exemplo.pt')[0].assunto).toMatch(/^A resolver: .* paga depois de cancelada/);
+  });
+
+  const comMailpit = process.env.SMTP_HOST && process.env.MAILPIT_API ? it : it.skip;
+  comMailpit('a confirmação chega mesmo a um servidor de correio', async () => {
+    const e = await encomendaPorPagar();
+    await aviso('checkout.session.completed', { client_reference_id: e.id, payment_status: 'paid', amount_total: e.total });
+    const numero = (await estado(e.id)).numero;
+    const r = await fetch(`${process.env.MAILPIT_API}/api/v1/search?query=${encodeURIComponent(`subject:"${numero} confirmada"`)}`);
+    const { messages } = (await r.json()) as { messages: { To: { Address: string }[] }[] };
+    expect(messages.map((m) => m.To[0].Address)).toContain('marta@exemplo.pt');
+  });
+
   const comStripeMock = process.env.STRIPE_API_HOST ? it : it.skip;
   comStripeMock('a sessão de pagamento abre-se, e a reserva passa a durar mais do que ela', async () => {
     const { DURACAO_SESSAO_S, MARGEM_RESERVA_MS, iniciarPagamento } = await import('../pagamento');
     const e = await encomendaPorPagar();
     const agora = new Date();
 
-    const r = await iniciarPagamento(e.id, 'http://127.0.0.1:3100', agora);
+    const r = await iniciarPagamento(e.id, e.chave, 'http://127.0.0.1:3100', agora);
 
     expect(r.ok).toBe(true);
     const depois = await estado(e.id);
@@ -1034,11 +1142,201 @@ executar('pagamentos, contra a base de dados', () => {
     const { iniciarPagamento } = await import('../pagamento');
     const e = await encomendaPorPagar();
     await mudarEstado(e.id, 'CANCELLED', 'cliente');
-    expect(await iniciarPagamento(e.id, 'http://x')).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+    expect(await iniciarPagamento(e.id, e.chave, 'http://x')).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+  });
+
+  it('a chave da encomenda: a certa passa, uma errada ou de outra encomenda não', async () => {
+    const { chaveDaEncomenda } = await import('../encomenda');
+    const a = await encomendaPorPagar();
+    const b = await encomendaPorPagar();
+    expect(a.chave).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(await chaveDaEncomenda(a.id, a.chave)).toBe(true);
+    expect(await chaveDaEncomenda(a.id, b.chave)).toBe(false);
+    expect(await chaveDaEncomenda(a.id, 'x'.repeat(43))).toBe(false);
+    expect(await chaveDaEncomenda('nao-e-um-id', a.chave)).toBe(false);
+    // Na base de dados fica o resumo, e nunca a chave.
+    const guardada = await Order.findById(a.id).select('+chaveHash').lean();
+    expect(guardada!.chaveHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(JSON.stringify(guardada)).not.toContain(a.chave);
+  });
+
+  comStripeMock('quem volta atrás do pagamento desiste, e o stock volta já', async () => {
+    const { desistirDoPagamento, iniciarPagamento } = await import('../pagamento');
+    const e = await encomendaPorPagar();
+    await iniciarPagamento(e.id, e.chave, 'http://127.0.0.1:3100');
+    expect((await Product.findById(e.produto).lean())!.variantes[0].stock).toBe(0);
+
+    // Sem a chave, nada acontece.
+    expect(await desistirDoPagamento(e.id, 'x'.repeat(43))).toEqual({ ok: false, motivo: 'nao-existe' });
+    expect((await estado(e.id)).status).toBe('PENDING');
+
+    expect(await desistirDoPagamento(e.id, e.chave)).toEqual({ ok: true });
+    expect((await estado(e.id)).status).toBe('CANCELLED');
+    expect((await Product.findById(e.produto).lean())!.variantes[0].stock).toBe(1);
+    // Duas vezes nao devolve o stock duas vezes.
+    expect(await desistirDoPagamento(e.id, e.chave)).toEqual({ ok: false, motivo: 'ja-nao-esta-por-pagar' });
+    expect((await Product.findById(e.produto).lean())!.variantes[0].stock).toBe(1);
   });
 });
 
+/**
+ * O painel de encomendas (P3), contra a base de dados. O reembolso fala com a
+ * Stripe: esses correm contra o `stripe-mock`.
+ */
+executar('o painel de encomendas', () => {
+  const TABELA = [{ ateGramas: 1000, precoCents: 450 }];
+  const SEGREDO = 'whsec_apenas_para_testes';
+  const comStripeMock = process.env.STRIPE_API_HOST ? it : it.skip;
+
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+    process.env.STRIPE_SECRET_KEY ??= 'sk_test_123';
+    process.env.STRIPE_WEBHOOK_SECRET = SEGREDO;
+    process.env.ADMIN_EMAIL = 'loja@exemplo.pt';
+    (await import('../pagamento')).esquecerCliente();
+  }, 30_000);
+
+  beforeEach(async () => {
+    await Promise.all([
+      Product.deleteMany({}),
+      Category.deleteMany({}),
+      Order.deleteMany({}),
+      MovimentoStock.deleteMany({}),
+      Contador.deleteMany({}),
+      mongoose.connection.collection('avisopagamentos').deleteMany({}),
+    ]);
+    correio.enviados.length = 0;
+    correio.falhar = false;
+  });
+
+  /** Uma encomenda paga, com a sessao de pagamento a serio no `stripe-mock` se houver. */
+  async function paga() {
+    const c = await Category.create({ name: `C ${new mongoose.Types.ObjectId()}`, slug: `c-${new mongoose.Types.ObjectId()}` });
+    const p = await Product.create({
+      name: 'Drusa',
+      slug: `drusa-${new mongoose.Types.ObjectId()}`,
+      priceCents: 4500,
+      weightGrams: 300,
+      categoryId: c._id,
+      variantes: [{ stock: 1 }],
+    });
+    const r = await criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], {
+      customerName: 'Marta',
+      customerEmail: 'marta@exemplo.pt',
+      customerPhone: '910000000',
+      deliveryType: 'SHIPPING',
+    }, TABELA);
+    if (!r.ok) throw new Error(JSON.stringify(r));
+    const { stripe, tratarAviso } = await import('../pagamento');
+    const corpo = JSON.stringify({
+      id: `evt_${new mongoose.Types.ObjectId()}`,
+      object: 'event',
+      type: 'checkout.session.completed',
+      data: { object: { object: 'checkout.session', id: 'cs_test_123', currency: 'eur', client_reference_id: r.id, payment_status: 'paid', amount_total: r.totalCents } },
+    });
+    await tratarAviso(corpo, stripe().webhooks.generateTestHeaderString({ payload: corpo, secret: SEGREDO }));
+    correio.enviados.length = 0;
+    return { id: r.id, produto: p._id };
+  }
+
+  const estado = async (id: string) => (await Order.findById(id).lean())!;
+  const stock = async (id: unknown) => (await Product.findById(id).lean())!.variantes[0].stock;
+
+  it('expedir: passa a enviada, guarda o seguimento, e quem comprou recebe-o', async () => {
+    const { expedir, concluir } = await import('../gestao-encomendas');
+    const e = await paga();
+
+    expect(await expedir(e.id, 'RR123456789PT', 'admin:x')).toEqual({ ok: true });
+    const depois = await estado(e.id);
+    expect(depois).toMatchObject({ status: 'SHIPPED', seguimento: 'RR123456789PT' });
+    expect(depois.historico.at(-1)).toMatchObject({ para: 'SHIPPED', por: 'admin:x', nota: 'CTT: RR123456789PT' });
+    expect(correio.enviados).toHaveLength(1);
+    expect(correio.enviados[0]).toMatchObject({ para: 'marta@exemplo.pt' });
+    expect(correio.enviados[0].texto).toContain('RR123456789PT');
+
+    // Duas vezes nao: ja esta enviada.
+    expect(await expedir(e.id, 'RR000000000PT', 'admin:x')).toEqual({ ok: false, motivo: 'estado-errado' });
+    expect(await concluir(e.id, 'admin:x')).toEqual({ ok: true });
+    expect((await estado(e.id)).status).toBe('COMPLETED');
+  });
+
+  it('uma por pagar não se expede', async () => {
+    const { expedir } = await import('../gestao-encomendas');
+    const e = await encomendaPorPagarSimples();
+    expect(await expedir(e, 'RR123456789PT', 'admin:x')).toEqual({ ok: false, motivo: 'estado-errado' });
+  });
+
+  it('o email da expedição falha: a encomenda fica enviada, e reenvia-se', async () => {
+    const { expedir, reenviarAviso } = await import('../gestao-encomendas');
+    const e = await paga();
+    correio.falhar = true;
+    expect(await expedir(e.id, 'RR123456789PT', 'admin:x')).toEqual({ ok: true, avisoFalhou: true });
+    expect((await estado(e.id)).status).toBe('SHIPPED');
+    expect((await estado(e.id)).avisoExpedicaoEm).toBeUndefined();
+
+    expect(await reenviarAviso(e.id)).toEqual({ ok: true });
+    expect(correio.enviados).toHaveLength(1);
+    // E outra vez ja nao envia.
+    await reenviarAviso(e.id);
+    expect(correio.enviados).toHaveLength(1);
+  });
+
+  comStripeMock('cancelar e reembolsar: o stock volta, o valor volta, e uma vez só', async () => {
+    const { reembolsar } = await import('../gestao-encomendas');
+    const e = await paga();
+    expect(await stock(e.produto)).toBe(0);
+
+    expect(await reembolsar(e.id, 'admin:x')).toEqual({ ok: true });
+    const depois = await estado(e.id);
+    expect(depois).toMatchObject({ status: 'CANCELLED', paymentStatus: 'REFUNDED' });
+    expect(depois.reembolsoId).toMatch(/^re_/);
+    expect(await stock(e.produto)).toBe(1);
+    expect(correio.enviados.map((m) => m.assunto)).toEqual([expect.stringContaining('valor devolvido')]);
+
+    expect(await reembolsar(e.id, 'admin:x')).toEqual({ ok: false, motivo: 'estado-errado' });
+    expect(await stock(e.produto)).toBe(1);
+  });
+
+  comStripeMock('paga depois de cancelada: aparece em "a resolver", e o reembolso tira-a de lá', async () => {
+    const { listarEncomendas, reembolsar } = await import('../gestao-encomendas');
+    const e = await paga();
+    // Como se tivesse chegado tarde: cancelada, e paga.
+    await Order.updateOne({ _id: e.id }, { $set: { status: 'CANCELLED', pagoDepoisDeCancelada: true } });
+
+    expect((await listarEncomendas('a-resolver')).map((x) => String(x._id))).toEqual([e.id]);
+    expect(await listarEncomendas('por-preparar')).toHaveLength(0);
+
+    expect(await reembolsar(e.id, 'admin:x')).toEqual({ ok: true });
+    expect(await listarEncomendas('a-resolver')).toHaveLength(0);
+  });
+
+  it('uma enviada não se reembolsa aqui: isso é a desistência', async () => {
+    const { expedir, reembolsar } = await import('../gestao-encomendas');
+    const e = await paga();
+    await expedir(e.id, 'RR123456789PT', 'admin:x');
+    expect(await reembolsar(e.id, 'admin:x')).toEqual({ ok: false, motivo: 'estado-errado' });
+  });
+
+  async function encomendaPorPagarSimples() {
+    const c = await Category.create({ name: `C ${new mongoose.Types.ObjectId()}`, slug: `c-${new mongoose.Types.ObjectId()}` });
+    const p = await Product.create({
+      name: 'Drusa', slug: `d-${new mongoose.Types.ObjectId()}`, priceCents: 100, weightGrams: 10, categoryId: c._id, variantes: [{ stock: 1 }],
+    });
+    const r = await criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], {
+      customerName: 'M', customerEmail: 'm@exemplo.pt', customerPhone: '910000000', deliveryType: 'SHIPPING',
+    }, TABELA);
+    if (!r.ok) throw new Error('devia ter criado');
+    return r.id;
+  }
+});
+
 describe('o simulador da Stripe no CI', () => {
+  it('o servidor de correio também', () => {
+    if (process.env.CI && URI) expect(process.env.MAILPIT_API, 'MAILPIT_API em falta no CI').toBeTruthy();
+  });
+
   it('corre onde a base de dados corre', () => {
     // Sem isto, o teste da sessao de pagamento era saltado em silencio no CI
     // e continuavamos a dizer que estava verificado.

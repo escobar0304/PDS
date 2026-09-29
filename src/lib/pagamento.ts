@@ -1,8 +1,9 @@
 import mongoose from 'mongoose';
 import Stripe from 'stripe';
+import { enviarAvisos } from '@/lib/avisos';
 import connectDB from '@/lib/db';
 import { requireEnv } from '@/lib/env';
-import { mudarEstado } from '@/lib/encomenda';
+import { chaveDaEncomenda, mudarEstado } from '@/lib/encomenda';
 import { AvisoPagamento, Order } from '@/lib/models';
 
 /**
@@ -80,9 +81,16 @@ export type Inicio =
  * O preco de cada linha vem da encomenda, que o calculou a partir da base de
  * dados (`lib/encomenda.ts`), e nunca do pedido do browser. A chave de
  * idempotencia e a encomenda: pedir duas vezes da a mesma sessao, e nao duas.
+ *
+ * `chave` e a da encomenda (`criarEncomenda`), e vai nos dois enderecos de
+ * volta: e ela que deixa quem comprou sem conta ver a encomenda, ou desistir
+ * dela. `baseUrl` vem do `SITE_URL`, e nunca do cabecalho `Host` do pedido —
+ * esse escreve-o quem pede, e mandava a pessoa, depois de pagar, para onde
+ * ele quisesse.
  */
 export async function iniciarPagamento(
   encomendaId: string,
+  chave: string,
   baseUrl: string,
   agora = new Date()
 ): Promise<Inicio> {
@@ -116,11 +124,13 @@ export async function iniciarPagamento(
       payment_method_types: [...MEIOS_DE_PAGAMENTO],
       customer_email: e.customerEmail,
       client_reference_id: encomendaId,
-      metadata: { encomendaId, numero: e.numero },
+      // A chave volta no aviso de pagamento, para o email de confirmacao
+      // levar a ligacao da encomenda: na base de dados so ha o resumo.
+      metadata: { encomendaId, numero: e.numero, chave },
       expires_at: expira,
       locale: 'pt',
-      success_url: `${baseUrl}/encomenda/${encomendaId}?estado=pago`,
-      cancel_url: `${baseUrl}/carrinho`,
+      success_url: `${baseUrl}/encomenda/${encomendaId}?chave=${chave}`,
+      cancel_url: `${baseUrl}/carrinho?desistir=${encomendaId}&chave=${chave}`,
     },
     { idempotencyKey: `sessao-${encomendaId}` }
   );
@@ -132,6 +142,56 @@ export async function iniciarPagamento(
 
   if (!sessao.url) throw new Error('A Stripe não devolveu o endereço da sessão.');
   return { ok: true, url: sessao.url };
+}
+
+export type Desistencia =
+  | { ok: true }
+  | { ok: false; motivo: 'nao-existe' | 'ja-nao-esta-por-pagar' | 'ja-pago' };
+
+/**
+ * Quem estava a pagar voltou atras. Cancela a encomenda e devolve o stock
+ * **ja**, em vez de daqui a 40 minutos.
+ *
+ * Sem isto, uma peca unica ficava presa pela reserva da propria pessoa: quem
+ * voltasse ao carrinho para mudar a morada nao a conseguia comprar outra vez.
+ *
+ * A sessao da Stripe fecha-se primeiro. Pela ordem contraria, havia um
+ * instante em que a encomenda estava cancelada e a pagina de pagamento ainda
+ * aceitava o cartao. Se ja nao se conseguir fechar porque foi paga, nao se
+ * cancela nada: o aviso da Stripe esta a caminho.
+ */
+export async function desistirDoPagamento(id: string, chave: string): Promise<Desistencia> {
+  if (!(await chaveDaEncomenda(id, chave))) return { ok: false, motivo: 'nao-existe' };
+
+  const e = await Order.findById(id).select('status pagamentoId').lean();
+  if (!e || e.status !== 'PENDING') return { ok: false, motivo: 'ja-nao-esta-por-pagar' };
+
+  if (e.pagamentoId) {
+    try {
+      await stripe().checkout.sessions.expire(e.pagamentoId);
+    } catch (erro) {
+      // Ja nao estava aberta: ou expirou, ou foi paga entretanto.
+      const sessao = await stripe().checkout.sessions.retrieve(e.pagamentoId);
+      if (sessao.status === 'complete') return { ok: false, motivo: 'ja-pago' };
+      if (sessao.status === 'open') throw erro;
+    }
+  }
+
+  const r = await mudarEstado(id, 'CANCELLED', 'cliente', 'desistiu antes de pagar');
+  return r.ok ? { ok: true } : { ok: false, motivo: 'ja-nao-esta-por-pagar' };
+}
+
+/**
+ * Devolve tudo o que foi pago numa sessao. A chave de idempotencia e a
+ * encomenda: carregar duas vezes no botao, ou tentar outra vez depois de uma
+ * falha de rede, nunca devolve duas vezes. Devolve o id do reembolso.
+ */
+export async function reembolsarPagamento(pagamentoId: string, encomendaId: string): Promise<string> {
+  const sessao = await stripe().checkout.sessions.retrieve(pagamentoId);
+  const intencao = typeof sessao.payment_intent === 'string' ? sessao.payment_intent : sessao.payment_intent?.id;
+  if (!intencao) throw new Error(`A sessão ${pagamentoId} não tem pagamento para devolver.`);
+  const r = await stripe().refunds.create({ payment_intent: intencao }, { idempotencyKey: `reembolso-${encomendaId}` });
+  return r.id;
 }
 
 export type ResultadoAviso = 'processado' | 'repetido' | 'ignorado';
@@ -212,33 +272,41 @@ function idDaEncomenda(sessao: Stripe.Checkout.Session): string | null {
 /**
  * Pago. Antes de avancar, confere o valor: um pagamento que nao bate com o
  * total da encomenda nao a faz avancar — fica marcado para o painel.
+ *
+ * Os emails saem no fim, em todos os casos (`lib/avisos.ts`). Se falharem, o
+ * erro sobe e a Stripe volta a entregar este aviso: da segunda vez o estado
+ * ja nao muda, mas o que ficou por enviar envia-se.
  */
 async function confirmar(sessao: Stripe.Checkout.Session) {
   const id = idDaEncomenda(sessao);
   if (!id) return;
   const e = await Order.findById(id).select('status totalCents').lean();
   if (!e) return;
+  const avisos = { chave: sessao.metadata?.chave, pagoCents: sessao.amount_total };
 
   if (sessao.amount_total !== e.totalCents || sessao.currency !== 'eur') {
     await Order.updateOne({ _id: id }, { $set: { pagamentoDivergente: true, pagamentoId: sessao.id } });
     console.error(`Pagamento divergente na encomenda ${id}: ${sessao.amount_total} ${sessao.currency}.`);
+    await enviarAvisos(id, avisos);
     return;
   }
 
   const r = await mudarEstado(id, 'PROCESSING', 'sistema', 'pagamento confirmado pela Stripe');
   if (r.ok) {
     await Order.updateOne({ _id: id }, { $set: { paymentStatus: 'PAID', pagamentoId: sessao.id } });
-    return;
+  } else {
+    // Pago depois de a reserva expirar: a encomenda ja foi cancelada e a peca
+    // pode ja ter sido vendida. Nao se reabre sozinha — decide a loja, que e
+    // avisada por email.
+    const depois = await Order.findById(id).select('status').lean();
+    if (depois?.status === 'CANCELLED') {
+      await Order.updateOne(
+        { _id: id },
+        { $set: { paymentStatus: 'PAID', pagamentoId: sessao.id, pagoDepoisDeCancelada: true } }
+      );
+    }
   }
-  // Pago depois de a reserva expirar: a encomenda ja foi cancelada e a peca
-  // pode ja ter sido vendida. Nao se reabre sozinha — decide o painel.
-  const depois = await Order.findById(id).select('status').lean();
-  if (depois?.status === 'CANCELLED') {
-    await Order.updateOne(
-      { _id: id },
-      { $set: { paymentStatus: 'PAID', pagamentoId: sessao.id, pagoDepoisDeCancelada: true } }
-    );
-  }
+  await enviarAvisos(id, avisos);
 }
 
 /** Expirou ou falhou: cancela a encomenda por pagar, e o stock volta. */

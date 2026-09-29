@@ -1,40 +1,14 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight, ArrowCounterClockwise, Truck } from '@phosphor-icons/react/dist/ssr';
+import { ICONE } from '@/components/ui/icone';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
+import Destaques from '@/components/destaques';
 import { botaoClasses } from '@/components/ui/Button';
-import { AVISO_TRADICAO } from '@/lib/afirmacoes';
-
-/**
- * Texto geral, sem promessas (F9). Esta seccao descrevia um servico de
- * avaliacao gemologica — "gemologistas certificados", "avaliacoes
- * detalhadas", "garantimos a integridade de cada avaliacao" — que ninguem
- * confirmou existir. Quando houver informacao do negocio, muda-se aqui.
- */
-const PILARES = [
-  {
-    titulo: 'Cada peça é única',
-    imagem: '/images/expertise.png',
-    alt: 'Mão com anéis pousada sobre pedras roxas em bruto',
-    texto: 'Nenhuma pedra é igual a outra: a cor, a forma e o brilho mudam de peça para peça.',
-    detalhe: 'Na página de cada produto encontra a descrição e os cuidados a ter.',
-  },
-  {
-    titulo: 'Escolher com tempo',
-    imagem: '/images/personalizacao.png',
-    alt: 'Agregados de cristais cor-de-rosa, lilás e brancos sobre bases, numa mesa junto à janela',
-    texto: 'Explore o catálogo por família de pedra e compare antes de decidir.',
-    detalhe: 'Se tiver uma dúvida sobre alguma peça, pode escrever-nos.',
-  },
-  {
-    titulo: 'Tradição, não medicina',
-    imagem: '/images/confianca.png',
-    alt: 'Brincos com pendentes de cristal roxo num expositor dourado',
-    texto: 'Os cristais acompanham muitas tradições, e é nesse campo que falamos deles.',
-    detalhe: AVISO_TRADICAO,
-  },
-];
+import { LIGACAO_EM_TEXTO } from '@/components/ui';
+import { AVISO_TRADICAO, INFORMACAO_COMPRA, MESMO_STOCK } from '@/lib/afirmacoes';
 
 // Era 'use client' sem usar nada do cliente, e por isso nao podia declarar
 // metadados. O titulo fica o de omissao, que aqui e o certo: e a pagina da marca.
@@ -42,122 +16,150 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
 
+/**
+ * A entrada, como a porta de um gabinete de mineralogia (docs/MARCA.md): uma
+ * vitrine em arco com uma peca, e por baixo as gavetas.
+ *
+ * Texto geral, sem promessas (F9). As frases que dizem alguma coisa sobre o
+ * negocio vem de `lib/afirmacoes.ts`, e so dizem o que o negocio confirmou.
+ */
 export default function Home() {
   return (
     <>
       <Header />
 
       <main id="conteudo">
-        {/* Hero */}
-        <section className="on-plum relative min-h-[70svh] md:min-h-[100dvh]">
-          <Image
-            src="/images/hero-bg.png"
-            alt="Pedra em bruto iluminada de lado"
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          {/* Escurecimento vertical: a base fica mais densa para o texto assentar */}
-          <div
-            className="absolute inset-0 bg-gradient-to-b from-plum/25 via-plum/40 to-plum/75"
-            aria-hidden
-          />
+        {/* A vitrine: a mensagem a esquerda, a peca a direita, num arco. */}
+        <section className="container-custom grid items-center gap-10 pb-16 pt-10 md:grid-cols-12 md:gap-8 md:pb-24 md:pt-16">
+          <div className="fade-in md:col-span-7 lg:col-span-6">
+            <h1 className="pb-1 text-5xl leading-[1.05] text-ink sm:text-6xl lg:text-7xl">
+              Cristais e pedras, <em className="font-medium italic text-rose-700">uma a uma.</em>
+            </h1>
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted">
+              Cada peça tem a sua página e a sua etiqueta: a família, o peso e o preço. O resto
+              vê-se com calma.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <Link href="/loja" className={botaoClasses()}>
+                Ver a loja
+              </Link>
+              <Link href="/catalogo" className={`${LIGACAO_EM_TEXTO} inline-flex items-center gap-2 py-2 font-medium`}>
+                Ou procurar por família <ArrowRight {...ICONE} className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
 
-          <div className="relative flex min-h-[70svh] items-end md:min-h-[100dvh]">
-            <div className="container-custom pb-16 md:pb-24">
-              <div className="fade-in max-w-2xl">
-                <h1 className="mb-5 font-serif text-4xl leading-[1.05] tracking-display text-surface sm:text-5xl md:text-6xl">
-                  Explore os Nossos Produtos
-                </h1>
-                <p className="mb-8 max-w-xl text-lg leading-relaxed text-rose-100 md:text-xl">
-                  Cristais e pedras, para ver com calma e escolher com tempo
-                </p>
-                <Link href="/loja" className={botaoClasses()}>
-                  Descobrir Mais
-                </Link>
-              </div>
+          <div className="md:col-span-5 lg:col-span-5 lg:col-start-8">
+            {/* O arco e a forma da vitrine; o anel desviado e o vidro. */}
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-b-lg rounded-t-full ring-1 ring-line ring-offset-[10px] ring-offset-surface">
+              <Image
+                src="/images/hero-bg.png"
+                alt="Pedra em bruto iluminada de lado"
+                fill
+                priority
+                sizes="(min-width: 768px) 40vw, 100vw"
+                className="object-cover object-[40%_50%]"
+              />
             </div>
           </div>
         </section>
 
-        {/* As peças */}
-        <section className="py-20 md:py-28">
-          <div className="container-custom">
-            <div className="mb-14 max-w-2xl">
-              <h2 className="mb-4 font-serif text-3xl leading-tight tracking-display text-ink sm:text-4xl md:text-5xl">
-                As Nossas Peças
-              </h2>
-              <p className="text-lg leading-relaxed text-ink-muted">
-                Cristais e pedras, cada um com a sua cor e a sua forma
-              </p>
-            </div>
+        <Destaques />
 
-            <div className="mb-20 grid items-center gap-10 md:grid-cols-2 md:gap-14">
-              <div className="overflow-hidden rounded-lg">
+        {/* A frase que distingue esta loja, sozinha, em largura inteira. */}
+        <section className="revelar bg-rose-100 py-20 md:py-28">
+          <div className="container-custom grid gap-8 md:grid-cols-12">
+            <h2 className="text-4xl leading-tight text-rose-900 sm:text-5xl md:col-span-8 lg:text-6xl">
+              {MESMO_STOCK.titulo}
+            </h2>
+            <p className="max-w-md self-end text-lg leading-relaxed text-rose-900 md:col-span-4">
+              {MESMO_STOCK.detalhe}
+            </p>
+          </div>
+        </section>
+
+        {/* Antes de escolher: uma peca grande e duas pequenas, nao tres iguais. */}
+        <section aria-labelledby="antes" className="container-custom py-20 md:py-28">
+          <h2 id="antes" className="max-w-2xl text-4xl leading-tight text-ink md:text-5xl">
+            Antes de escolher
+          </h2>
+          <p className="mt-5 max-w-[60ch] text-lg leading-relaxed text-ink-muted">
+            Reunimos cristais e pedras pela cor, pela forma e pelo que representam para quem os
+            escolhe: como objeto, como presente ou como parte de um ritual pessoal.
+          </p>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-12 md:grid-rows-2">
+            <article className="revelar flex flex-col md:col-span-7 md:row-span-2">
+              <div className="relative min-h-[18rem] flex-1 overflow-hidden rounded-lg md:min-h-[26rem]">
                 <Image
-                  src="/images/pedras-especiais.png"
-                  alt="Cinco pedras em bruto, roxas, brancas e cinzentas, num prato dourado"
-                  width={960}
-                  height={720}
-                  className="h-72 w-full object-cover md:h-96"
-                  sizes="(min-width: 768px) 50vw, 100vw"
+                  src="/images/expertise.png"
+                  alt="Mão com anéis pousada sobre pedras roxas em bruto"
+                  fill
+                  sizes="(min-width: 768px) 58vw, 100vw"
+                  className="object-cover"
                 />
               </div>
-              <div className="space-y-5">
-                <p className="text-lg leading-relaxed text-ink">
-                  Reunimos cristais e pedras pela cor, pela forma e pelo que representam
-                  para quem os escolhe — como objeto, como presente ou como parte de um
-                  ritual pessoal.
-                </p>
-                <p className="leading-relaxed text-ink-muted">
-                  Cada peça tem a sua página, com a descrição e os cuidados a ter. Se
-                  quiser saber mais antes de escolher, escreva-nos.
+              <h3 className="mt-5 font-serif text-3xl text-ink">Cada peça é única</h3>
+              <p className="mt-2 max-w-[55ch] leading-relaxed text-ink-muted">
+                Nenhuma pedra é igual a outra: a cor, a forma e o brilho mudam de peça para peça. Na
+                página de cada produto encontra a descrição e os cuidados a ter.
+              </p>
+            </article>
+
+            <article className="revelar grid gap-6 sm:grid-cols-2 md:col-span-5 md:grid-cols-5 md:items-center">
+              <div className="relative min-h-[12rem] overflow-hidden rounded-lg md:col-span-2 md:h-full">
+                <Image
+                  src="/images/personalizacao.png"
+                  alt="Agregados de cristais cor-de-rosa, lilás e brancos sobre bases, numa mesa junto à janela"
+                  fill
+                  sizes="(min-width: 1024px) 20vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="md:col-span-3">
+                <h3 className="font-serif text-3xl text-ink">Escolher com tempo</h3>
+                <p className="mt-2 leading-relaxed text-ink-muted">
+                  Explore o catálogo por família de pedra e compare antes de decidir.
                 </p>
               </div>
-            </div>
+            </article>
 
-            <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-              {PILARES.map((pilar) => (
-                <article key={pilar.titulo}>
-                  <div className="mb-5 overflow-hidden rounded-lg">
-                    <Image
-                      src={pilar.imagem}
-                      alt={pilar.alt}
-                      width={640}
-                      height={480}
-                      className="h-60 w-full object-cover"
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                    />
-                  </div>
-                  <h3 className="mb-3 font-serif text-2xl text-ink">{pilar.titulo}</h3>
-                  <p className="mb-2 leading-relaxed text-ink">{pilar.texto}</p>
-                  <p className="text-sm leading-relaxed text-ink-muted">{pilar.detalhe}</p>
-                </article>
-              ))}
-            </div>
+            <article className="revelar rounded-lg bg-surface-sunken p-8 md:col-span-5">
+              <h3 className="font-serif text-3xl text-ink">Tradição, não medicina</h3>
+              <p className="mt-2 leading-relaxed text-ink">
+                Os cristais acompanham muitas tradições, e é nesse campo que falamos deles.
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-ink-muted">{AVISO_TRADICAO}</p>
+            </article>
           </div>
         </section>
 
-        {/* Faixa de marca */}
-        <section className="on-plum bg-plum py-20 md:py-24">
-          <div className="container-custom">
-            <div className="max-w-2xl">
-              <h2 className="mb-5 font-serif text-3xl leading-tight tracking-display text-surface sm:text-4xl md:text-5xl">
-                Pronto para Descobrir a Sua Pedra Especial?
-              </h2>
-              <p className="mb-9 text-lg leading-relaxed text-rose-200">
-                Explore a coleção e encontre o cristal que procura.
+        {/* O fim: uma pergunta e o que se sabe antes de comprar. */}
+        <section className="revelar border-t border-line">
+          <div className="container-custom grid gap-12 py-20 md:grid-cols-12 md:py-24">
+            <div className="md:col-span-6">
+              <h2 className="text-4xl leading-tight text-ink md:text-5xl">Uma dúvida sobre uma peça?</h2>
+              <p className="mt-4 max-w-md text-lg leading-relaxed text-ink-muted">
+                {INFORMACAO_COMPRA.duvidas.detalhe}.
               </p>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/loja" className={botaoClasses()}>
-                  Ver Loja
-                </Link>
-                <Link href="/catalogo" className={botaoClasses({ variant: 'secondary' })}>
-                  Catálogo
-                </Link>
-              </div>
+              <Link href="/contacto" className={botaoClasses({ variant: 'secondary', className: 'mt-8' })}>
+                Falar connosco
+              </Link>
             </div>
+            <dl className="grid gap-8 self-end sm:grid-cols-2 md:col-span-6">
+              {[
+                { Icone: Truck, ...INFORMACAO_COMPRA.envios },
+                { Icone: ArrowCounterClockwise, ...INFORMACAO_COMPRA.livreResolucao },
+              ].map(({ Icone, titulo, detalhe }) => (
+                <div key={titulo} className="border-t border-line pt-5">
+                  <dt className="flex items-center gap-2 font-medium text-ink">
+                    <Icone {...ICONE} className="h-5 w-5 text-rose-700" />
+                    {titulo}
+                  </dt>
+                  <dd className="mt-2 text-sm leading-relaxed text-ink-muted">{detalhe}.</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
       </main>

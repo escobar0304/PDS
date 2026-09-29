@@ -20,6 +20,7 @@ module.exports = {
           muted: 'var(--ink-muted)',
         },
         plum: 'var(--plum)',
+        paper: 'var(--paper)',
         rose: {
           100: 'var(--rose-100)',
           200: 'var(--rose-200)',
@@ -38,8 +39,9 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-playfair)', 'Georgia', 'serif'],
+        sans: ['var(--font-corpo)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-exposicao)', 'Georgia', 'serif'],
+        mono: ['var(--font-etiqueta)', 'ui-monospace', 'monospace'],
       },
       // Uma escala de forma: controlos 4px, cartoes 8px, paineis 12px.
       borderRadius: {

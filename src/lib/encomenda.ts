@@ -4,6 +4,7 @@ import { CONDICOES, type Escalao } from '@/lib/condicoes';
 import { Contador, Order, Product } from '@/lib/models';
 import { portesPara } from '@/lib/portes';
 import { moverStock, stockDe } from '@/lib/stock';
+import { gerarToken, resumir, resumosIguais } from '@/lib/tokens';
 import { formatarNumero, podePassar, type Autor, type Estado } from '@/lib/transicoes';
 
 /**
@@ -59,7 +60,9 @@ export type Problema =
   /** Sem peso nao ha portes: e dado em falta do lado do negocio, nao do cliente. */
   | { tipo: 'sem-peso'; id: string }
   | { tipo: 'acima-do-ultimo-escalao'; gramas: number }
-  | { tipo: 'sem-tabela' };
+  | { tipo: 'sem-tabela' }
+  /** O total mudou desde que a pessoa o viu: ver `esquemaCheckout`. */
+  | { tipo: 'total-mudou'; totalCents: number };
 
 export type Calculo =
   | {
@@ -282,8 +285,8 @@ export async function proximoNumero(agora = new Date()): Promise<string> {
 }
 
 /**
- * Os dados de quem compra. A validacao do que chega do formulario entra com o
- * checkout (E5); aqui chegam ja validados.
+ * Os dados de quem compra, ja validados pelo `esquemaCliente` e traduzidos
+ * para os nomes do modelo (`app/api/encomendas/route.ts`).
  */
 export interface DadosCliente {
   userId?: string;
@@ -297,7 +300,17 @@ export interface DadosCliente {
 }
 
 export type Criacao =
-  | { ok: true; id: string; numero: string; totalCents: number }
+  | {
+      ok: true;
+      id: string;
+      numero: string;
+      totalCents: number;
+      /**
+       * A chave da encomenda, para quem a fez a poder ver e desistir dela sem
+       * conta. So existe aqui: na base de dados fica o resumo.
+       */
+      chave: string;
+    }
   | { ok: false; problemas: Problema[] };
 
 /**
@@ -305,12 +318,16 @@ export type Criacao =
  *
  * Por esta ordem, e cada passo desfaz os anteriores se falhar: sem stock nao
  * ha encomenda, e uma encomenda que nao se consegue gravar devolve o stock.
+ *
+ * Com `totalEsperadoCents`, o calculo tem de dar esse total, ou nada se
+ * reserva: e o total que a pessoa viu antes do botao (`esquemaCheckout`).
  */
 export async function criarEncomenda(
   pedido: readonly LinhaPedida[],
   cliente: DadosCliente,
   tabela: readonly Escalao[] | null = CONDICOES.tabelaPortes,
-  agora = new Date()
+  agora = new Date(),
+  totalEsperadoCents?: number
 ): Promise<Criacao> {
   await connectDB();
   // As reservas que expiraram libertam-se aqui, antes de reservar outra vez.
@@ -319,6 +336,9 @@ export async function criarEncomenda(
 
   const calculo = await calcularEncomenda(pedido, tabela);
   if (!calculo.ok) return calculo;
+  if (totalEsperadoCents !== undefined && calculo.totalCents !== totalEsperadoCents) {
+    return { ok: false, problemas: [{ tipo: 'total-mudou', totalCents: calculo.totalCents }] };
+  }
 
   // O id da encomenda existe antes dela, para os movimentos de stock o
   // poderem registar.
@@ -334,11 +354,13 @@ export async function criarEncomenda(
     };
   }
 
+  const chave = gerarToken();
   try {
     const encomenda = await Order.create({
       _id: encomendaId,
       numero: await proximoNumero(agora),
       ...cliente,
+      chaveHash: resumir(chave),
       items: calculo.linhas,
       subtotalCents: calculo.subtotalCents,
       shippingCents: calculo.shippingCents,
@@ -352,6 +374,7 @@ export async function criarEncomenda(
       id: encomenda._id.toString(),
       numero: encomenda.numero,
       totalCents: encomenda.totalCents,
+      chave,
     };
   } catch (erro) {
     await devolverStock(calculo.linhas, encomendaId.toString());
@@ -416,4 +439,78 @@ export async function libertarReservasExpiradas(agora = new Date()): Promise<num
     if (r.ok) libertadas++;
   }
   return libertadas;
+}
+
+/**
+ * Se a chave e a desta encomenda. Em tempo constante, e sem dizer porque
+ * falhou: para quem nao a tem, uma encomenda que nao existe e uma chave
+ * errada sao a mesma resposta.
+ */
+export async function chaveDaEncomenda(id: string, chave: string): Promise<boolean> {
+  if (!mongoose.Types.ObjectId.isValid(id)) return false;
+  await connectDB();
+  const e = await Order.findById(id).select('+chaveHash').lean();
+  return Boolean(e?.chaveHash && resumosIguais(e.chaveHash, resumir(chave)));
+}
+
+/** O que a pagina da encomenda mostra a quem tem a chave. Nada mais sai. */
+export interface EncomendaVista {
+  id: string;
+  numero: string;
+  criadaEm: string;
+  status: Estado;
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  pagoDepoisDeCancelada: boolean;
+  pagamentoDivergente: boolean;
+  confirmacaoEnviada: boolean;
+  seguimento?: string;
+  customerName: string;
+  customerEmail: string;
+  shippingAddress?: string;
+  shippingPostal?: string;
+  shippingCity?: string;
+  items: { productId: string; varianteId: string; name: string; medida?: string; priceCents: number; quantity: number }[];
+  subtotalCents: number;
+  shippingCents: number;
+  totalCents: number;
+}
+
+/**
+ * A encomenda, se a chave for a dela; `null` em tudo o resto — uma encomenda
+ * que nao existe e uma chave errada dao o mesmo, como em `chaveDaEncomenda`.
+ * Sem o historico, o telefone nem o identificador do pagamento: a pagina nao
+ * precisa deles, e o que nao sai nao se perde.
+ */
+export async function lerEncomenda(id: string, chave: string): Promise<EncomendaVista | null> {
+  if (!mongoose.Types.ObjectId.isValid(id)) return null;
+  await connectDB();
+  const e = await Order.findById(id).select('+chaveHash').lean();
+  if (!e?.chaveHash || !resumosIguais(e.chaveHash, resumir(chave))) return null;
+  return {
+    id: String(e._id),
+    numero: e.numero,
+    criadaEm: e.createdAt.toISOString(),
+    status: e.status,
+    paymentStatus: e.paymentStatus,
+    pagoDepoisDeCancelada: Boolean(e.pagoDepoisDeCancelada),
+    pagamentoDivergente: Boolean(e.pagamentoDivergente),
+    confirmacaoEnviada: Boolean(e.confirmacaoEnviadaEm),
+    ...(e.seguimento ? { seguimento: e.seguimento } : {}),
+    customerName: e.customerName,
+    customerEmail: e.customerEmail,
+    shippingAddress: e.shippingAddress,
+    shippingPostal: e.shippingPostal,
+    shippingCity: e.shippingCity,
+    items: e.items.map((l) => ({
+      productId: String(l.productId),
+      varianteId: String(l.varianteId),
+      name: l.name,
+      ...(l.medida ? { medida: l.medida } : {}),
+      priceCents: l.priceCents,
+      quantity: l.quantity,
+    })),
+    subtotalCents: e.subtotalCents,
+    shippingCents: e.shippingCents,
+    totalCents: e.totalCents,
+  };
 }

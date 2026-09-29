@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import Hero from '@/components/Hero';
 import ContactForm from '@/components/contactForm';
 import { Clock, Diamond, Envelope, MagnifyingGlass, MapPin, Phone, Sparkle } from '@phosphor-icons/react';
 import MapaLocalizacao from '@/components/mapaLocalizacao';
@@ -20,120 +19,88 @@ export default function SobreNos() {
       <Header />
       
       <main id="conteudo">
-        {/* Hero Section */}
-        <Hero
-          title="Sobre Nós"
-          subtitle="Conheça a nossa história e o gosto por cristais"
-          imageSrc="/images/sobre-nos-hero.png"
-          imageAlt="Pedras roxas, cinzentas e brancas dispostas em círculos sobre madeira"
-          height="medium"
-          showCta={false}
-        />
-
-        {/* Nossa História */}
-        <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
-          <div className="container-custom">
-            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-              <div className="order-2 md:order-1">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-4 md:mb-6">
-                  Nossa História
-                </h2>
-                <div className="space-y-4 text-base md:text-lg text-ink leading-relaxed">
-                  {/*
-                    Texto geral (F9). O anterior afirmava "ha mais de uma decada" e
-                    "cristais autenticos" sem ninguem o ter confirmado. A historia a
-                    serio vem do negocio, quando a quiser contar.
-                  */}
-                  <p>
-                    Pétalas de Sonho nasceu do gosto por cristais e pedras, e pelas
-                    tradições que os acompanham em tantas culturas.
-                  </p>
-                  <p>
-                    Reunimos aqui peças escolhidas pela cor, pela forma e pela beleza,
-                    para quem as quer ter por perto — como objeto, como presente ou como
-                    parte de um ritual pessoal.
-                  </p>
-                  <p>
-                    Acreditamos que cada pedra tem a sua história. Se quiser saber mais
-                    sobre alguma peça, escreva-nos.
-                  </p>
-                </div>
-              </div>
-              <div className="order-1 md:order-2">
-                <div className="relative h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden shadow-medium">
-                  <Image
-                    src="/images/nossa-historia.png"
-                    alt="Pedra roxa lapidada sobre uma almofada, à luz do fim de tarde"
-                    fill
-                    sizes="(min-width: 768px) 50vw, 100vw"
-                    className="object-cover"
-                  />
-                </div>
-              </div>
+        {/* A historia, ao lado da peca na vitrine em arco. */}
+        <section className="container-custom grid items-center gap-12 pb-16 pt-10 md:grid-cols-12 md:pb-24 md:pt-16">
+          <div className="md:col-span-7 lg:col-span-6">
+            <h1 className="text-5xl text-ink md:text-7xl">Sobre Nós</h1>
+            <div className="mt-8 max-w-[58ch] space-y-5 text-lg leading-relaxed text-ink">
+              {/*
+                Texto geral (F9). O anterior afirmava "ha mais de uma decada" e
+                "cristais autenticos" sem ninguem o ter confirmado. A historia a
+                serio vem do negocio, quando a quiser contar.
+              */}
+              <p>
+                Pétalas de Sonho nasceu do gosto por cristais e pedras, e pelas tradições que os
+                acompanham em tantas culturas.
+              </p>
+              <p className="text-ink-muted">
+                Reunimos aqui peças escolhidas pela cor, pela forma e pela beleza, para quem as quer
+                ter por perto: como objeto, como presente ou como parte de um ritual pessoal.
+              </p>
+              <p className="text-ink-muted">
+                Acreditamos que cada pedra tem a sua história. Se quiser saber mais sobre alguma
+                peça, escreva-nos.
+              </p>
+            </div>
+          </div>
+          <div className="md:col-span-5 lg:col-start-8">
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-b-lg rounded-t-full ring-1 ring-line ring-offset-[10px] ring-offset-surface">
+              <Image
+                src="/images/nossa-historia.png"
+                alt="Pedra roxa lapidada sobre uma almofada, à luz do fim de tarde"
+                fill
+                priority
+                sizes="(min-width: 768px) 40vw, 100vw"
+                className="object-cover"
+              />
             </div>
           </div>
         </section>
 
-        {/* Nossos Valores */}
-        <section className="py-12 md:py-16 lg:py-20 bg-surface">
-          <div className="container-custom">
-            <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3 md:mb-4">
-                Nossos Valores
-              </h2>
-              <p className="text-base sm:text-lg md:text-xl text-ink-muted max-w-3xl mx-auto">
-                Princípios que guiam o nosso trabalho diário
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-              {/* Autenticidade */}
-              <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
-                <Diamond className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
-                <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
-                  Cada peça, a sua
-                </h3>
-                <p className="text-sm md:text-base text-ink-muted leading-relaxed">
-                  Nenhuma pedra é igual a outra. Descrevemos cada uma como é.
-                </p>
-              </div>
-
-              {/* Transparência */}
-              <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center">
-                <MagnifyingGlass className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
-                <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
-                  Transparência
-                </h3>
-                <p className="text-sm md:text-base text-ink-muted leading-relaxed">
-                  Informação clara sobre cada produto e os cuidados que pede,
-                  sem exageros.
-                </p>
-              </div>
-
-              {/* Sustentabilidade */}
-              <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft text-center sm:col-span-2 lg:col-span-1">
-                <Sparkle className="mx-auto mb-4 h-7 w-7 text-rose-700" aria-hidden />
-                <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-3">
-                  Tradição, não medicina
-                </h3>
-                <p className="text-sm md:text-base text-ink-muted leading-relaxed">
-                  {AVISO_TRADICAO}
-                </p>
-              </div>
-            </div>
+        <div className="container-custom">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-lg md:aspect-[21/8]">
+            <Image
+              src="/images/sobre-nos-hero.png"
+              alt="Pedras roxas, cinzentas e brancas dispostas em círculos sobre madeira"
+              fill
+              sizes="(min-width: 1280px) 1216px, 100vw"
+              className="object-cover"
+            />
           </div>
+        </div>
+
+        {/* O que nos guia: tres frases, em lista, e nao tres cartoes iguais. */}
+        <section aria-labelledby="valores" className="container-custom py-20 md:py-28">
+          <h2 id="valores" className="text-4xl text-ink md:text-5xl">
+            O que nos guia
+          </h2>
+          <dl className="mt-10 divide-y divide-line border-y border-line">
+            {[
+              { Icone: Diamond, t: 'Cada peça, a sua', d: 'Nenhuma pedra é igual a outra. Descrevemos cada uma como é.' },
+              {
+                Icone: MagnifyingGlass,
+                t: 'Transparência',
+                d: 'Informação clara sobre cada produto e os cuidados que pede, sem exageros.',
+              },
+              { Icone: Sparkle, t: 'Tradição, não medicina', d: AVISO_TRADICAO },
+            ].map(({ Icone, t, d }) => (
+              <div key={t} className="revelar grid gap-3 py-8 md:grid-cols-12 md:items-baseline md:gap-8">
+                <dt className="flex items-center gap-3 font-serif text-3xl text-ink md:col-span-5 md:text-4xl">
+                  <Icone className="h-6 w-6 shrink-0 text-rose-700" aria-hidden />
+                  {t}
+                </dt>
+                <dd className="max-w-[55ch] text-lg leading-relaxed text-ink-muted md:col-span-7">{d}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
 
         {/* Contacto Section */}
-        <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
+        <section className="border-t border-line bg-surface-sunken py-20 md:py-28">
           <div className="container-custom">
-            <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3 md:mb-4">
-                Entre em Contacto
-              </h2>
-              <p className="text-base sm:text-lg md:text-xl text-ink-muted max-w-3xl mx-auto">
-                Tem uma pergunta sobre uma peça? Escreva-nos.
-              </p>
+            <div className="mb-12 max-w-2xl">
+              <h2 className="text-4xl text-ink md:text-5xl">Entre em contacto</h2>
+              <p className="mt-4 text-lg text-ink-muted">Tem uma pergunta sobre uma peça? Escreva-nos.</p>
             </div>
 
             <div className="grid lg:grid-cols-2 gap-8 md:gap-12">
@@ -145,10 +112,8 @@ export default function SobreNos() {
               {/* Informações e Mapa */}
               <div className="space-y-6">
                 {/* Informações */}
-                <div className="bg-surface p-6 md:p-8 rounded-lg">
-                  <h3 className="text-xl md:text-2xl font-serif text-rose-700 mb-6">
-                    Informações
-                  </h3>
+                <div className="rounded-lg border border-line bg-surface-raised p-6 md:p-8">
+                  <h3 className="mb-6 font-serif text-3xl text-ink">Informações</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />

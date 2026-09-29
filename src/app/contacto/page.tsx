@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Clock, Envelope, MapPin, Phone } from '@phosphor-icons/react/dist/ssr';
+import { ICONE } from '@/components/ui/icone';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import ContactForm from '@/components/contactForm';
@@ -39,7 +40,7 @@ function Contacto({
 }) {
   return (
     <div className="flex gap-3">
-      <Icone className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" aria-hidden />
+      <Icone {...ICONE} className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" />
       <div>
         <p className="font-medium text-ink">{rotulo}</p>
         {valor ? (

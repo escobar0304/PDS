@@ -354,7 +354,7 @@ desde o início.
 nos testes. A conta de testes normalmente só pede email; a conta real pede NIF
 e IBAN.
 
-## E5. Checkout
+## E5. Checkout — feito, com a loja fechada
 
 Dados, entrega, resumo com portes e total, pagar. Com o que a lei pede e que
 não é opcional:
@@ -374,18 +374,85 @@ minimização do RGPD —, e é a razão mais comum de desistência a meio do
 checkout. A encomenda precisa de nome, email, morada e telefone de qualquer
 maneira; a palavra-passe não acrescenta nada à venda.
 
+**Feito em 25/09/2026.** O `/checkout`, as rotas `/api/encomendas` (e
+`/orcamento`, e `/[id]/desistir`), e o carrinho a ligar para lá. O que
+ficou decidido pelo caminho:
+
+- **Uma fonte só decide se a loja abre** (`src/lib/loja.ts`), e junta tudo o
+  que falta: a decisão de abrir, os portes, o prazo, a identificação do
+  prestador (que o art. 4.º pede também antes da compra), a confirmação por
+  email (P1) e as chaves da Stripe. Fechada, `/checkout` dá 404 e as rotas
+  dão 503; o painel mostra a lista do que falta. **Sem correio, a loja
+  fecha, de propósito:** vender sem a confirmação em suporte duradouro era
+  cumprir o art. 4.º e falhar o 6.º no minuto seguinte
+- **O total que a pessoa viu vai com o pedido, e o servidor recusa se não
+  bater** (`totalVistoCents`). Não entra em conta nenhuma: sem isto, um preço
+  mudado no painel entre o orçamento e o botão cobrava um total que não
+  tinha sido mostrado
+- **Só o continente**, pelo código postal: os da Madeira e dos Açores
+  começam por 9. Os portes da tabela são do continente
+- **Só envio.** O levantamento na loja continua por decidir, e o esquema
+  recusa-o até lá
+- **Sem caixa "li e aceito".** Os termos, os envios e a privacidade estão em
+  ligação imediatamente antes do botão, com a frase "ao encomendar, aceita".
+  É a leitura que faço do DL 446/85 (comunicar as cláusulas antes), **a
+  validar pelo jurista**
+- **O contrato fica celebrado com o pagamento confirmado** — está nos termos.
+  Antes disso a encomenda existe, com as peças reservadas, mas pode cair
+  sozinha
+- **Voltar atrás na Stripe desiste, e o stock volta na hora.** Sem isto, uma
+  peça única ficava presa pela reserva da própria pessoa: quem voltasse para
+  corrigir a morada não a conseguia comprar
+- **Uma chave por encomenda**, para quem compra sem conta a poder ver e
+  desistir dela (`docs/SEGURANCA.md`). É a mesma chave que a página da P1 vai
+  pedir
+
+**O ensaio.** Com os portes e o prazo a `null`, a loja fica fechada, e o
+checkout ficava sem teste de ponta a ponta até ao dia de abrir — o pior dia
+para encontrar um erro. `LOJA_ENSAIO=1`, só com uma chave de testes da
+Stripe, abre-a com portes e prazo inventados que a página diz serem
+inventados. `e2e-bd/checkout.spec.ts` compra com ele contra o `stripe-mock`:
+o total com portes, os erros campo a campo, a Madeira recusada, a encomenda
+gravada com a peça reservada, a mesma peça em dois carrinhos, e o preço que
+muda antes do botão.
+
 ---
 
 # Fase 4 - Depois do pagamento
 
-## P1. Confirmação
+## P1. Confirmação — feito
 
 Email com o resumo da encomenda, as condições e o formulário de livre
 resolução: **obrigatório**, em "suporte duradouro" (DL 24/2014, art. 6.º). E
 as páginas de sucesso e de falha, de volta, a ler o estado real.
 
-O código faz-se agora. **O envio depende do fornecedor de email**, por decidir
-(`REGISTO-TRATAMENTOS.md`).
+**Email: a Gmail da loja, decidido em 25/09/2026.** O código não sabe quem é
+o fornecedor (`services/mailer.ts`, SMTP); troca-se pelas variáveis. O que a
+escolha traz está no `REGISTO-TRATAMENTOS.md`.
+
+**Feito em 25/09/2026:**
+
+- **`/encomenda/<id>?chave=…`**, para onde a Stripe devolve a pessoa depois
+  de pagar, e a ligação que vai no email. Uma página só, em vez de sucesso e
+  falha: o estado lê-se da base de dados a cada pedido, e enquanto o aviso da
+  Stripe não chega a página volta a perguntar sozinha — e diz para não pagar
+  outra vez. Paga, as peças compradas saem do carrinho
+- **A confirmação por email** (`lib/confirmacao.ts`) leva tudo no próprio
+  texto: as peças, os portes, o total, a entrega e o prazo, o direito de
+  desistir, o formulário do anexo do DL 24/2014 já com o número da
+  encomenda, a garantia e quem vende. Uma ligação para /termos não chegava: a
+  página muda, e o email tem de dizer o que valia no dia
+- **Um aviso à loja** por cada encomenda paga. Sem painel de encomendas (P3),
+  é por ele que a loja sabe que tem uma encomenda para preparar, e é por ele
+  que sabe de um pagamento que chegou depois de a encomenda ter sido
+  cancelada, ou com outro valor
+- **Cada email sai uma vez, e um que falhe volta a tentar-se** pela própria
+  Stripe: o aviso de pagamento responde 500, e ela reentrega-o (`lib/avisos.ts`)
+- **Sem correio configurado, a loja não abre** (`SMTP_HOST`, `ADMIN_EMAIL`
+  em `lib/loja.ts`) — nem em ensaio
+
+**A validar pelo jurista:** o texto da confirmação, e o formulário, que
+segue o modelo do anexo.
 
 ## P2. Faturação certificada
 
@@ -404,10 +471,34 @@ realista para uma loja. Preciso de saber:
    política de privacidade no dia da primeira venda (`src/lib/conta.ts` já
    deixou isto escrito)
 
-## P3. Painel de encomendas
+## P3. Painel de encomendas — feito
 
 Ver, mudar de estado, marcar como expedida com o número de seguimento dos CTT,
 reembolsar. Depende da E3. O código faz-se agora.
+
+**Feito em 25/09/2026** (`/admin/encomendas`, `lib/gestao-encomendas.ts`):
+
+- **Filtros pelo trabalho que pedem:** por preparar (pagas), a resolver
+  (dinheiro por resolver: paga depois de cancelada, valor diferente, ou um
+  reembolso que falhou a meio), enviadas, por pagar, todas. O início do
+  painel conta as duas primeiras
+- **Expedir** pede o número de seguimento, que vai por email a quem comprou
+  e aparece na página da encomenda. É o email que diz desde quando contam os
+  14 dias
+- **Cancelar e reembolsar** em dois cliques, porque devolver dinheiro não se
+  desfaz. **Primeiro cancela, depois devolve:** se o reembolso falhar, a
+  encomenda fica cancelada e paga, em "a resolver", e tenta-se outra vez — a
+  Stripe nunca devolve duas vezes a mesma encomenda
+- **Um email que falha não desfaz a ação.** O painel diz que ficou por
+  enviar, e oferece enviá-lo outra vez
+- **Uma encomenda enviada não se reembolsa aqui.** Isso é a desistência (P4),
+  que tem prazos e regras de portes próprios
+
+**Fica de fora, de propósito:** reabrir uma encomenda paga depois de
+cancelada, quando as peças ainda existem. Pedia voltar a reservar o stock e
+uma transição que hoje não existe (`CANCELLED` não volta atrás); para já, a
+loja fala com quem comprou ou reembolsa. Se acontecer mais do que uma vez,
+faz-se.
 
 ## P4. Desistência e reembolso
 
@@ -494,7 +585,7 @@ L1  /sucesso e /falha saem                feito
 L2  a dependência stripe sai              feito
 L3  /admin protegido, com teste           feito
 C1  preços em cêntimos                    feito
-E1  cálculo de total e portes no servidor  feito; a rota entra com a E5
+E1  cálculo de total e portes no servidor  feito; a rota é a da E5
 E2  reserva de stock atómica              feito, verificado no CI
 E3  estados, histórico, numeração         feito
     CSP sem 'unsafe-inline'               medido; fica, e o Checkout alojado dispensa-o
@@ -509,7 +600,7 @@ C2  categorias com peças únicas ou com medidas; stock por movimentos   feito
 C3  painel: produtos, medidas, stock, categorias (API, depois páginas)
     promoção a administrador por script, nunca pela web
 E4  Stripe: sessão de pagamento, aviso assinado e idempotente
-E5  checkout sem conta, fechado enquanto faltarem condições
+E5  checkout sem conta, fechado enquanto faltarem condições   feito, ensaiado
 ```
 
 ## Código agora, ligar depois
@@ -518,9 +609,9 @@ E5  checkout sem conta, fechado enquanto faltarem condições
 |---|---|
 | C3 painel de produtos | onde ficam as imagens (alojamento) |
 | E4 pagamento | as chaves de teste da Stripe para o ensaio real; as de produção pedem NIF e IBAN |
-| E5 checkout | tabela de portes, prazo de entrega, levantamento na loja |
-| P1 email de confirmação | fornecedor de email |
-| P3 painel de encomendas | nada além da E3 |
+| E5 checkout | tabela de portes, prazo de entrega, identificação do prestador (F4), as chaves da Stripe e as do email; o levantamento na loja, se o houver |
+| P1 email de confirmação | a conta Gmail e a palavra-passe de aplicação, nas variáveis `SMTP_*` |
+| P3 painel de encomendas | nada: feito |
 
 ## Espera por ti
 
@@ -552,8 +643,10 @@ v1.0.0 publicada
   ├─ L1 L2 L3 C1 E1 E2 E3      feito
   ├─ S1 C2                      feito
   ├─ C3 C4                      feito, ensaiado com dados reais
-  ├─ E4 ── E5                   Stripe; ligar pede portes, prazo e chaves
-  ├─ P1 ── P3 ── P4             depois da E5
+  ├─ E4 ── E5                   feito; abrir pede portes, prazo, F4 e chaves
+  ├─ P1                         feito
+  ├─ P3                         feito
+  ├─ P4                         desistência e reembolso parcial
   ├─ P2                         contabilista
   └─ Conta                      depois da P1
 ```

@@ -7,6 +7,12 @@ import { EMPRESA, moradaFormatada } from '@/lib/empresa';
 import { DESCRICAO_SITIO } from '@/lib/afirmacoes';
 import { Envelope, FacebookLogo, InstagramLogo, MapPin, Phone } from '@phosphor-icons/react';
 
+const ligacao = 'inline-block py-1 text-sm text-ink-muted transition-smooth hover:text-rose-700';
+
+/**
+ * O rodape. Na mesma superficie da pagina, um tom abaixo: uma pagina tem um
+ * so tema, e uma faixa escura no fim era a pagina a mudar de casa.
+ */
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -24,120 +30,100 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="on-plum bg-plum text-surface">
-      <div className="container-custom py-8 md:py-12">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Brand Section */}
-          <div>
-            <Logotipo className="mb-5 text-[26px] text-rose-200" />
-            <p className="text-sm text-rose-200 leading-relaxed">
-              {DESCRICAO_SITIO}
-            </p>
+    <footer className="border-t border-line bg-surface-sunken">
+      <div className="container-custom py-14 md:py-20">
+        <div className="grid gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <Logotipo lettering="tinta" className="text-[28px]" />
+            <p className="mt-6 max-w-sm font-serif text-2xl leading-snug text-ink">{DESCRICAO_SITIO}</p>
           </div>
 
-          {/* Legal Links */}
-          <div>
-            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
-              Informações Legais
-            </h3>
-            <ul className="space-y-2">
-              {legalLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    target={link.href.startsWith('http') ? '_blank' : undefined}
-                    rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                    className="block py-1 text-sm text-rose-200 transition-smooth hover:text-surface"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <div className="grid gap-10 sm:grid-cols-3 lg:col-span-7">
+            <div className="sm:col-span-2">
+              <h2 className="mb-3 font-sans text-sm font-semibold tracking-normal text-ink">Informações legais</h2>
+              <ul className="grid gap-x-8 sm:grid-cols-2">
+                {legalLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      target={link.href.startsWith('http') ? '_blank' : undefined}
+                      rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                      className={ligacao}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          {/* Contact Info */}
-          <div>
-            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
-              Contacto
-            </h3>
-            {/*
-              Le de `src/lib/empresa.ts`, como a pagina de contactos. Tinha
-              aqui `+351 xxx xxx xxx` e `tel:+351000000000` escritos a mao —
-              um numero a fingir que chegou a producao. O que falta diz que
-              falta; nao se inventa.
-            */}
-            <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-rose-200">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
-                <span>{moradaFormatada() ?? 'Morada por preencher'}</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm text-rose-200">
-                <Phone className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
-                {EMPRESA.telefone ? (
+            <div className="space-y-8">
+              <div>
+                <h2 className="mb-3 font-sans text-sm font-semibold tracking-normal text-ink">Contacto</h2>
+                {/*
+                  Le de `src/lib/empresa.ts`, como a pagina de contactos. Tinha
+                  aqui `+351 xxx xxx xxx` e `tel:+351000000000` escritos a mao —
+                  um numero a fingir que chegou a producao. O que falta diz que
+                  falta; nao se inventa.
+                */}
+                <ul className="space-y-1 text-sm text-ink-muted">
+                  <li className="flex items-start gap-2">
+                    <MapPin className="mt-1.5 h-4 w-4 flex-shrink-0" aria-hidden />
+                    <span className="py-1">{moradaFormatada() ?? 'Morada por preencher'}</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Phone className="mt-1.5 h-4 w-4 flex-shrink-0" aria-hidden />
+                    {EMPRESA.telefone ? (
+                      <a href={`tel:${EMPRESA.telefone.replace(/\s/g, '')}`} className={ligacao}>
+                        {EMPRESA.telefone}
+                      </a>
+                    ) : (
+                      <span className="py-1">Telefone por preencher</span>
+                    )}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Envelope className="mt-1.5 h-4 w-4 flex-shrink-0" aria-hidden />
+                    {EMPRESA.email ? (
+                      <a href={`mailto:${EMPRESA.email}`} className={`${ligacao} break-all`}>
+                        {EMPRESA.email}
+                      </a>
+                    ) : (
+                      <span className="py-1">Email por preencher</span>
+                    )}
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h2 className="mb-3 font-sans text-sm font-semibold tracking-normal text-ink">Siga-nos</h2>
+                <div className="flex gap-2">
                   <a
-                    href={`tel:${EMPRESA.telefone.replace(/\s/g, '')}`}
-                    className="inline-block py-1 transition-smooth hover:text-surface"
+                    href="https://www.instagram.com/petalasdesonho/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-11 w-11 items-center justify-center rounded border border-line text-ink transition-smooth hover:border-rose-700 hover:text-rose-700"
+                    aria-label="Instagram"
                   >
-                    {EMPRESA.telefone}
+                    <InstagramLogo className="h-5 w-5" />
                   </a>
-                ) : (
-                  <span className="py-1">Telefone por preencher</span>
-                )}
-              </li>
-              <li className="flex items-start gap-2 text-sm text-rose-200">
-                <Envelope className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden />
-                {EMPRESA.email ? (
                   <a
-                    href={`mailto:${EMPRESA.email}`}
-                    className="inline-block break-all py-1 transition-smooth hover:text-surface"
+                    href="https://www.facebook.com/PetalasDeSonho"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex h-11 w-11 items-center justify-center rounded border border-line text-ink transition-smooth hover:border-rose-700 hover:text-rose-700"
+                    aria-label="Facebook"
                   >
-                    {EMPRESA.email}
+                    <FacebookLogo className="h-5 w-5" />
                   </a>
-                ) : (
-                  <span className="py-1">Email por preencher</span>
-                )}
-              </li>
-            </ul>
-          </div>
-
-          {/* Social Media */}
-          <div>
-            <h3 className="mb-4 text-sm font-medium uppercase tracking-wide text-rose-300">
-              Siga-nos
-            </h3>
-            <div className="flex gap-4">
-              <a
-                href="https://www.instagram.com/petalasdesonho/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-rose-200 hover:text-surface transition-smooth"
-                aria-label="Instagram"
-              >
-                <InstagramLogo className="w-6 h-6" />
-              </a>
-              <a
-                href="https://www.facebook.com/PetalasDeSonho"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-rose-200 hover:text-surface transition-smooth"
-                aria-label="Facebook"
-              >
-                <FacebookLogo className="w-6 h-6" />
-              </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Footer */}
-        <div className="border-t border-line-plum pt-6">
-          <div className="flex justify-center items-center">
-            <p className="text-xs md:text-sm text-rose-200 text-center">
-              © {currentYear} Pétalas de Sonho. Todos os direitos reservados.
-            </p>
-          </div>
-        </div>
+        <p className="mt-14 border-t border-line pt-6 text-xs text-ink-muted">
+          © {currentYear} Pétalas de Sonho. Todos os direitos reservados.
+        </p>
       </div>
     </footer>
   );

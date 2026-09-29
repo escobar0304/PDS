@@ -71,11 +71,11 @@ export const CONDICOES = {
   /** Se se pode levantar a encomenda na loja. Nao perguntado ainda. */
   levantamentoNaLoja: null as boolean | PorPreencher,
   /**
-   * Como se paga. Nao ha checkout nesta versao: entra na v2 (ROADMAP-V2, E4). E
-   * por isso que "pagamento seguro" nao se escreve ainda — seria afirmar a
-   * seguranca de uma coisa que nao existe.
+   * Como se paga: um por cada meio em `MEIOS_DE_PAGAMENTO` (`lib/pagamento.ts`),
+   * pela mesma ordem — ha um teste que os mantem juntos. Pela Stripe, decidido
+   * em 24/09/2026; o Multibanco esta por decidir (ver la porque).
    */
-  meiosPagamento: null as string[] | PorPreencher,
+  meiosPagamento: ['cartão de débito ou de crédito', 'MB WAY'] as string[] | PorPreencher,
   /** A loja online ainda nao aceita encomendas. */
   encomendasOnline: false,
 } as const;

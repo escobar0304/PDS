@@ -13,7 +13,7 @@ export type SectionTone = 'surface' | 'sunken' | 'plum';
 const TONS: Record<SectionTone, string> = {
   surface: 'bg-surface',
   sunken: 'bg-surface-sunken',
-  plum: 'on-plum bg-plum text-surface',
+  plum: 'on-plum bg-plum text-paper',
 };
 
 /**
@@ -55,7 +55,7 @@ export function PageHeader({
 }) {
   return (
     <div className={`${align === 'center' ? 'text-center' : ''} ${className}`}>
-      <h1 className="font-serif text-3xl text-rose-700 md:text-4xl">{title}</h1>
+      <h1 className="text-4xl text-ink md:text-5xl">{title}</h1>
       {lead && (
         <p className={`mt-3 text-ink-muted ${align === 'center' ? 'mx-auto max-w-xl' : 'max-w-xl'}`}>
           {lead}

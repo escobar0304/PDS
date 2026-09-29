@@ -112,6 +112,25 @@ export interface IOrder extends Document {
   status: Estado;
   /** Ate quando o stock fica reservado a espera do pagamento. */
   reservaAte?: Date;
+  /**
+   * O resumo da chave que so quem fez a encomenda tem, para a ver e desistir
+   * dela sem conta. Nunca a chave: ver `lib/tokens.ts`.
+   */
+  chaveHash?: string;
+  /**
+   * Quando saiu o email de confirmacao para quem comprou (DL 24/2014,
+   * art. 6.º), e o aviso para a loja. Sem data, esta por enviar: ver
+   * `lib/avisos.ts`.
+   */
+  confirmacaoEnviadaEm?: Date;
+  avisoLojaEnviadoEm?: Date;
+  /** O numero de seguimento dos CTT, quando sai (P3). */
+  seguimento?: string;
+  /** O reembolso na Stripe, quando o houve. */
+  reembolsoId?: string;
+  /** Os emails de expedicao e de reembolso: como os de cima, sem data e por enviar. */
+  avisoExpedicaoEm?: Date;
+  avisoReembolsoEm?: Date;
   /** Cada mudanca de estado, com data e autor. Nunca se reescreve. */
   historico: Array<{ de?: Estado; para: Estado; em: Date; por: string; nota?: string }>;
   notes?: string;
@@ -405,6 +424,14 @@ const orderSchema = new Schema<IOrder>(
     reservaAte: {
       type: Date,
     },
+    // Fora das consultas por omissao: so quem verifica a chave a pede.
+    chaveHash: { type: String, select: false },
+    confirmacaoEnviadaEm: { type: Date },
+    avisoLojaEnviadoEm: { type: Date },
+    seguimento: { type: String, trim: true },
+    reembolsoId: { type: String },
+    avisoExpedicaoEm: { type: Date },
+    avisoReembolsoEm: { type: Date },
     historico: [
       {
         _id: false,

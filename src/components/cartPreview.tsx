@@ -3,6 +3,7 @@
 import { useCart } from '../contexts/CartContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import { SemFotografia } from '@/components/ui';
 import { botaoClasses } from '@/components/ui/Button';
 import { Minus, Plus, ShoppingBag, Trash, X } from '@phosphor-icons/react';
 import { useEffect, useRef } from 'react';
@@ -113,15 +114,16 @@ export default function CartPreview() {
                   <Link
                     href={`/produto/${item.slug}`}
                     onClick={closeCart}
+                    aria-label={item.name}
                     className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden"
                   >
-                    <Image
-                      src={item.image || '/images/placeholder.jpg'}
-                      alt={item.name}
-                      fill
-                      sizes="80px"
-                      className="object-cover"
-                    />
+                    {/* `/images/placeholder.jpg` nunca existiu: uma peca sem fotografia
+                        dava um 404 e um erro do otimizador de imagens em cada carrinho. */}
+                    {item.image ? (
+                      <Image src={item.image} alt={item.name} fill sizes="80px" className="object-cover" />
+                    ) : (
+                      <SemFotografia />
+                    )}
                   </Link>
 
                   {/* Info */}

@@ -3,11 +3,10 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowCounterClockwise, ChatCircle, SquaresFour, Truck } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ArrowRight, ChatCircle, SquaresFour, Truck } from '@phosphor-icons/react';
 import { Alert, AnuncioEstado, botaoClasses, Button, EmptyState, Skeleton } from '@/components/ui';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import Hero from '@/components/Hero';
 import { fetchList } from '@/lib/api';
 import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
 
@@ -55,143 +54,122 @@ export default function Catalogo() {
       <Header />
       
       <main id="conteudo">
-        {/* Hero Section */}
-        <Hero
-          title="Catálogo"
-          subtitle="As famílias de cristais e pedras"
-          imageSrc="/images/hero-catalogo.png"
-          imageAlt="Catálogo de produtos"
-          height="medium"
-          showCta={false}
-        />
-
-        {/* Categorias Section */}
-        <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
-          <div className="container-custom">
-            <div className="text-center mb-10 md:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3 md:mb-4">
-                Nossas Categorias
-              </h2>
-              <p className="text-base sm:text-lg md:text-xl text-ink-muted max-w-3xl mx-auto">
-                Descubra a categoria perfeita para encontrar o seu cristal ideal
-              </p>
-            </div>
-
-            {!loading && erro && (
-              <Alert
-                tone="erro"
-                action={
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setLoading(true);
-                      setErro(null);
-                      setTentativa((t) => t + 1);
-                    }}
-                  >
-                    Tentar novamente
-                  </Button>
-                }
-              >
-                {erro}
-              </Alert>
-            )}
-
-            {/*
-              Os esqueletos sao `aria-hidden`. Sem isto a pagina nao dizia
-              nada a quem nao os ve — nem que estava a carregar, nem que
-              tinha acabado.
-            */}
-            <AnuncioEstado>
-              {loading
-                ? 'A carregar as categorias'
-                : erro
-                  ? 'Não foi possível carregar as categorias'
-                  : `${categories.length} categoria${categories.length !== 1 ? 's' : ''}`}
-            </AnuncioEstado>
-
-            {loading ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-80 rounded-lg" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                {categories.map((category) => (
-                  <Link
-                    key={category._id}
-                    href={`/loja?categoria=${category.slug}`}
-                    className="group relative overflow-hidden rounded-lg border border-line transition-smooth hover:border-rose-300"
-                  >
-                    <div className="relative h-80">
-                      <Image
-                        src={category.image || '/images/pedras-especiais.png'}
-                        alt={category.name}
-                        fill
-                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-plum/85 via-plum/35 to-transparent" aria-hidden />
-                      
-                      <div className="absolute inset-0 flex flex-col justify-end p-6">
-                        <h3 className="text-2xl md:text-3xl font-serif text-surface mb-2 group-hover:text-rose-200 transition-colors">
-                          {category.name}
-                        </h3>
-                        {category.description && (
-                          <p className="text-sm text-rose-100 line-clamp-2">
-                            {category.description}
-                          </p>
-                        )}
-                        <div className="mt-4 flex items-center gap-2 text-surface group-hover:text-rose-200 transition-colors">
-                          <span className="text-sm font-medium">Ver produtos</span>
-                          <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {!loading && !erro && categories.length === 0 && (
-              <EmptyState
-                icon={<SquaresFour className="h-10 w-10" />}
-                title="Ainda não há categorias"
-                description="Estamos a preparar o catálogo. Entretanto pode ver a loja."
-                action={
-                  <Link href="/loja" className={botaoClasses({ variant: 'secondary' })}>
-                    Ir à loja
-                  </Link>
-                }
-              />
-            )}
+        <section className="container-custom pb-10 pt-10 md:pt-16">
+          <h1 className="text-5xl text-ink md:text-7xl">Catálogo</h1>
+          <p className="mt-3 max-w-xl text-lg text-ink-muted">
+            As famílias de cristais e pedras. Cada família reúne pedras parecidas na composição, mas
+            nenhuma peça é igual a outra.
+          </p>
+          <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded-lg md:aspect-[21/8]">
+            <Image
+              src="/images/hero-catalogo.png"
+              alt="Pedras roladas de ametista sobre um pano de linho"
+              fill
+              priority
+              sizes="(min-width: 1280px) 1216px, 100vw"
+              className="object-cover"
+            />
           </div>
         </section>
 
-        {/* Info Section */}
-        <section className="py-12 md:py-16 lg:py-20 bg-surface">
-          <div className="container-custom">
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-6">
-                Encontre o Cristal Perfeito
-              </h2>
-              <p className="text-base md:text-lg text-ink-muted leading-relaxed mb-8">
-                Cada família reúne pedras parecidas na composição, mas nenhuma peça é
-                igual a outra. Explore as coleções e escolha com tempo.
-              </p>
-              <Link href="/loja" className={botaoClasses()}>
-                Ver Todos os Produtos
-              </Link>
+        {/*
+          O indice das gavetas: uma familia por linha, o nome grande, e a
+          fotografia ao lado quando a categoria a tem. Nada escrito por cima
+          da fotografia, onde o contraste dependia de onde calhava a pedra.
+        */}
+        <section aria-labelledby="familias" className="container-custom pb-20 md:pb-28">
+          <h2 id="familias" className="sr-only">
+            Famílias
+          </h2>
+
+          {!loading && erro && (
+            <Alert
+              tone="erro"
+              action={
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setLoading(true);
+                    setErro(null);
+                    setTentativa((t) => t + 1);
+                  }}
+                >
+                  Tentar novamente
+                </Button>
+              }
+            >
+              {erro}
+            </Alert>
+          )}
+
+          {/*
+            Os esqueletos sao `aria-hidden`. Sem isto a pagina nao dizia
+            nada a quem nao os ve — nem que estava a carregar, nem que
+            tinha acabado.
+          */}
+          <AnuncioEstado>
+            {loading
+              ? 'A carregar as categorias'
+              : erro
+                ? 'Não foi possível carregar as categorias'
+                : `${categories.length} categoria${categories.length !== 1 ? 's' : ''}`}
+          </AnuncioEstado>
+
+          {loading ? (
+            <div className="divide-y divide-line border-y border-line">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="py-8">
+                  <Skeleton className="h-12 w-2/5" />
+                </div>
+              ))}
             </div>
-          </div>
+          ) : (
+            categories.length > 0 && (
+              <ul className="divide-y divide-line border-y border-line">
+                {categories.map((category) => (
+                  <li key={category._id} className="revelar">
+                    <Link
+                      href={`/loja?categoria=${category.slug}`}
+                      className="group grid items-center gap-4 py-8 md:grid-cols-12 md:gap-8"
+                    >
+                      <h3 className="font-serif text-4xl font-semibold text-ink transition-smooth group-hover:text-rose-700 md:col-span-5 md:text-5xl">
+                        {category.name}
+                      </h3>
+                      <p className="max-w-[50ch] text-ink-muted md:col-span-5">{category.description}</p>
+                      <span className="flex items-center gap-2 text-sm font-medium text-rose-700 md:col-span-2 md:justify-end">
+                        Ver produtos
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )
+          )}
+
+          {!loading && !erro && categories.length === 0 && (
+            <EmptyState
+              icon={<SquaresFour className="h-10 w-10" />}
+              title="Ainda não há categorias"
+              description="Estamos a preparar o catálogo. Entretanto pode ver a loja."
+              action={
+                <Link href="/loja" className={botaoClasses({ variant: 'secondary' })}>
+                  Ir à loja
+                </Link>
+              }
+            />
+          )}
+
+          {!loading && !erro && categories.length > 0 && (
+            <Link href="/loja" className={botaoClasses({ className: 'mt-12' })}>
+              Ver todas as peças
+            </Link>
+          )}
         </section>
 
         {/* Características */}
-        <section className="py-12 md:py-16 lg:py-20 bg-surface-raised">
+        <section className="border-t border-line bg-surface-sunken py-12 md:py-16">
           <div className="container-custom">
             <ul className="grid gap-8 sm:grid-cols-3">
               {CARACTERISTICAS.map(({ Icone, titulo, detalhe }) => (

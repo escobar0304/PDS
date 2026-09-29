@@ -66,6 +66,22 @@ test.describe('controlo de acesso', () => {
     expect(res.status()).toBe(503);
   });
 
+  test('com a loja fechada, não se encomenda nem pela API', async ({ request }) => {
+    // A pagina de checkout da 404, mas a rota nao conta com isso: fecha por
+    // si, antes de ler o pedido.
+    const linhas = [{ id: 'a'.repeat(24), quantidade: 1 }];
+    const encomenda = await request.post('/api/encomendas', {
+      data: { linhas, cliente: {}, entrega: 'SHIPPING', totalVistoCents: 0 },
+      failOnStatusCode: false,
+    });
+    expect(encomenda.status()).toBe(503);
+    const orcamento = await request.post('/api/encomendas/orcamento', {
+      data: { linhas },
+      failOnStatusCode: false,
+    });
+    expect(orcamento.status()).toBe(503);
+  });
+
   const ID = 'a'.repeat(24);
   for (const [metodo, caminho] of [
     ['GET', '/api/admin/produtos'],
@@ -75,6 +91,7 @@ test.describe('controlo de acesso', () => {
     ['POST', `/api/admin/produtos/${ID}/stock`],
     ['POST', '/api/admin/categorias'],
     ['PATCH', `/api/admin/categorias/${ID}`],
+    ['PATCH', `/api/admin/encomendas/${ID}`],
   ] as const) {
     test(`${metodo} ${caminho} exige administrador`, async ({ request }) => {
       const res = await request.fetch(caminho, {
@@ -92,7 +109,7 @@ test.describe('controlo de acesso', () => {
     expect([200, 500]).toContain(res.status());
   });
 
-  for (const caminho of ['/admin', '/admin/produtos', '/admin/produtos/novo', '/admin/categorias']) {
+  for (const caminho of ['/admin', '/admin/produtos', '/admin/produtos/novo', '/admin/categorias', '/admin/encomendas', `/admin/encomendas/${ID}`]) {
     test(`${caminho} não existe para quem não é administrador`, async ({ request }) => {
       const res = await request.get(caminho);
       expect(res.status()).toBe(404);

@@ -201,7 +201,7 @@ export default function ProdutoPage() {
         <Header />
         <main id="conteudo" className="min-h-screen bg-surface py-12">
           <div className="container-custom text-center">
-            <h1 className="text-3xl font-serif text-rose-700 mb-4">
+            <h1 className="mb-6 text-5xl text-ink">
               Produto não encontrado
             </h1>
             <Link href="/loja" className={botaoClasses()}>
@@ -220,166 +220,164 @@ export default function ProdutoPage() {
     <>
       <Header />
       
-      <main id="conteudo" className="min-h-screen bg-surface py-8 md:py-12">
+      <main id="conteudo" className="min-h-screen bg-surface pb-20 pt-6 md:pt-10">
         <div className="container-custom">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-ink-muted mb-8">
-            <Link href="/" className="hover:text-rose-700 transition-smooth">
+          <nav aria-label="Caminho" className="mb-8 flex flex-wrap items-center gap-2 font-mono text-xs text-ink-muted">
+            <Link href="/" className="py-1 transition-smooth hover:text-rose-700">
               Início
             </Link>
-            <span>/</span>
-            <Link href="/loja" className="hover:text-rose-700 transition-smooth">
+            <span aria-hidden>/</span>
+            <Link href="/loja" className="py-1 transition-smooth hover:text-rose-700">
               Loja
             </Link>
-            <span>/</span>
+            <span aria-hidden>/</span>
             {product.categoryId && (
               <>
-                <Link 
+                <Link
                   href={`/loja?categoria=${product.categoryId.slug}`}
-                  className="hover:text-rose-700 transition-smooth"
+                  className="py-1 transition-smooth hover:text-rose-700"
                 >
                   {product.categoryId.name}
                 </Link>
-                <span>/</span>
+                <span aria-hidden>/</span>
               </>
             )}
-            <span className="text-ink">{product.name}</span>
+            <span aria-current="page" className="text-ink">
+              {product.name}
+            </span>
           </nav>
 
-          {/* Produto */}
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 mb-16">
-            {/* Galeria de Imagens */}
-            <div className="space-y-4">
-              {/* Imagem Principal */}
-              <div className="relative bg-surface-raised rounded-lg overflow-hidden shadow-soft aspect-square">
+          <div className="mb-24 grid gap-10 md:grid-cols-12 md:gap-12">
+            {/* A peca, na vitrine em arco da entrada. Nada escrito por cima. */}
+            <div className="space-y-4 md:col-span-7">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-b-lg rounded-t-full bg-surface-sunken">
                 {currentImage ? (
                   <Image
                     src={currentImage}
                     alt={product.name}
                     fill
-                    sizes="(min-width: 768px) 50vw, 100vw"
+                    sizes="(min-width: 768px) 58vw, 100vw"
                     className="object-cover"
                     priority
                   />
                 ) : (
                   <SemFotografia />
                 )}
-                
-                {product.featured && (
-                  <div className="absolute left-4 top-4 rounded-sm bg-rose-200 px-3 py-1.5 text-sm font-medium text-rose-900">
-                    Destaque
-                  </div>
-                )}
 
-                {/* Navegação de Imagens */}
                 {product.images.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-2 text-ink shadow-soft transition-smooth hover:bg-surface"
+                      className="absolute bottom-4 left-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface/90 text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Imagem anterior"
                     >
-                      <CaretLeft className="w-6 h-6" />
+                      <CaretLeft className="h-6 w-6" />
                     </button>
                     <button
                       onClick={nextImage}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-2 text-ink shadow-soft transition-smooth hover:bg-surface"
+                      className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface/90 text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Próxima imagem"
                     >
-                      <CaretRight className="w-6 h-6" />
+                      <CaretRight className="h-6 w-6" />
                     </button>
                   </>
                 )}
               </div>
 
-              {/* Thumbnails */}
               {product.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {product.images.map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-smooth ${
-                        currentImageIndex === index
-                          ? 'border-rose-700'
-                          : 'border-transparent hover:border-line'
+                      aria-label={`Ver a imagem ${index + 1}`}
+                      aria-pressed={currentImageIndex === index}
+                      className={`relative aspect-square overflow-hidden rounded border-2 transition-smooth ${
+                        currentImageIndex === index ? 'border-rose-700' : 'border-transparent hover:border-line'
                       }`}
                     >
-                      <Image
-                        src={image}
-                        alt={`${product.name} - ${index + 1}`}
-                        fill
-                        sizes="96px"
-                        className="object-cover"
-                      />
+                      <Image src={image} alt={`${product.name} - ${index + 1}`} fill sizes="96px" className="object-cover" />
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Informações do Produto */}
-            <div>
-              <h1 className="text-3xl md:text-4xl font-serif text-rose-700 mb-4">
-                {product.name}
-              </h1>
-
-              {product.categoryId && (
-                <Link
-                  href={`/loja?categoria=${product.categoryId.slug}`}
-                  className="inline-block text-sm text-ink-muted hover:text-rose-700 transition-smooth mb-4"
-                >
-                  {product.categoryId.name}
-                </Link>
-              )}
-
-              <div className="flex items-baseline gap-4 mb-6">
-                <span className="tabular text-4xl font-semibold text-rose-700">
-                  {formatarPreco(product.priceCents)}
-                </span>
-                {product.stock > 0 ? (
-                  <span className="text-sm font-medium text-sage-600">
-                    Em Stock
-                  </span>
-                ) : (
-                  <span className="text-sm font-medium text-danger-700">
-                    Esgotado
-                  </span>
+            {/* A etiqueta: fica a vista enquanto a fotografia corre. */}
+            <div className="md:col-span-5">
+              <div className="md:sticky md:top-28">
+                {product.categoryId && (
+                  <Link
+                    href={`/loja?categoria=${product.categoryId.slug}`}
+                    className="inline-block py-1 font-mono text-xs text-ink-muted transition-smooth hover:text-rose-700"
+                  >
+                    {product.categoryId.name}
+                  </Link>
                 )}
-              </div>
+                <h1 className="mt-2 pb-1 text-5xl leading-[1.05] text-ink lg:text-6xl">{product.name}</h1>
 
-              {product.description && (
-                <p className="text-base text-ink leading-relaxed mb-6">
-                  {product.description}
-                </p>
-              )}
-
-              {/* Propriedades Especiais */}
-              {product.properties && (
-                <div className="bg-surface-sunken p-4 rounded-lg mb-6 space-y-2">
-                  {product.properties.chakra && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-rose-700 font-medium">Chakra:</span>
-                      <span className="text-ink">{product.properties.chakra}</span>
-                    </div>
-                  )}
-                  {product.properties.elemento && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-rose-700 font-medium">Elemento:</span>
-                      <span className="text-ink">{product.properties.elemento}</span>
-                    </div>
-                  )}
-                  {product.properties.signo && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-rose-700 font-medium">Signo:</span>
-                      <span className="text-ink">{product.properties.signo}</span>
-                    </div>
+                <div className="mt-6 flex items-baseline gap-4">
+                  <span className="tabular text-3xl font-semibold text-ink">{formatarPreco(product.priceCents)}</span>
+                  {product.stock > 0 ? (
+                    <span className="text-sm font-medium text-sage-600">Em Stock</span>
+                  ) : (
+                    <span className="text-sm font-medium text-danger-700">Esgotado</span>
                   )}
                 </div>
-              )}
+
+                {product.description && (
+                  <p className="mt-6 max-w-[55ch] text-base leading-relaxed text-ink">{product.description}</p>
+                )}
+
+                {/*
+                  A ficha da peca: so o que o painel gravou. Um campo que nao
+                  existe nao aparece, e nada aqui se inventa.
+                */}
+                {(product.weightGrams || product.dimensions) && (
+                  <dl className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
+                    {[
+                      product.categoryId ? { t: 'Família', v: product.categoryId.name } : null,
+                      product.weightGrams
+                        ? {
+                            t: 'Peso',
+                            v:
+                              product.weightGrams >= 1000
+                                ? `${(product.weightGrams / 1000).toLocaleString('pt-PT', { maximumFractionDigits: 2 })} kg`
+                                : `${product.weightGrams} g`,
+                          }
+                        : null,
+                      product.dimensions ? { t: 'Dimensões', v: product.dimensions } : null,
+                    ]
+                      .filter((x): x is { t: string; v: string } => x !== null)
+                      .map(({ t, v }) => (
+                        // Um numero impar de dados: o ultimo ocupa a linha toda, e nao fica uma celula vazia.
+                        <div key={t} className="bg-surface-raised p-4 last:odd:col-span-2">
+                          <dt className="text-xs text-ink-muted">{t}</dt>
+                          <dd className="mt-1 font-mono text-sm text-ink">{v}</dd>
+                        </div>
+                      ))}
+                  </dl>
+                )}
+
+                {product.properties && (product.properties.chakra || product.properties.elemento || product.properties.signo) && (
+                  <dl className="mt-6 space-y-1 text-sm">
+                    {[
+                      ['Chakra', product.properties.chakra],
+                      ['Elemento', product.properties.elemento],
+                      ['Signo', product.properties.signo],
+                    ]
+                      .filter(([, v]) => v)
+                      .map(([t, v]) => (
+                        <div key={t} className="flex gap-2">
+                          <dt className="font-medium text-rose-700">{t}:</dt>
+                          <dd className="text-ink">{v}</dd>
+                        </div>
+                      ))}
+                  </dl>
+                )}
 
               {/* Quantidade e Add to Cart */}
-              <div className="space-y-4 mb-6">
+              <div className="mb-6 mt-8 space-y-4">
                 {escolher && (
                   <Escolha
                     legenda="Medida"
@@ -455,7 +453,7 @@ export default function ProdutoPage() {
               </div>
 
               {/* Informações Adicionais */}
-              <div className="border-t pt-6 space-y-3">
+              <div className="space-y-3 border-t border-line pt-6">
                 {/*
                   Texto em `src/lib/afirmacoes.ts`. Aqui prometia-se entrega em
                   2-3 dias uteis e "certificado de autenticidade incluido", sem
@@ -474,6 +472,7 @@ export default function ProdutoPage() {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
           </div>
 
@@ -481,8 +480,8 @@ export default function ProdutoPage() {
           {product.properties && (product.properties.beneficios || product.properties.cuidados) && (
             <div className="grid md:grid-cols-2 gap-8 mb-16">
               {product.properties.beneficios && product.properties.beneficios.length > 0 && (
-                <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft">
-                  <h3 className="text-2xl font-serif text-rose-700 mb-4">
+                <div className="rounded-lg border border-line bg-surface-raised p-6 md:p-8">
+                  <h3 className="mb-4 font-serif text-3xl text-ink">
                     Segundo a tradição
                   </h3>
                   <ul className="space-y-2">
@@ -505,8 +504,8 @@ export default function ProdutoPage() {
               )}
 
               {product.properties.cuidados && product.properties.cuidados.length > 0 && (
-                <div className="bg-surface-raised p-6 md:p-8 rounded-lg shadow-soft">
-                  <h3 className="text-2xl font-serif text-rose-700 mb-4">
+                <div className="rounded-lg border border-line bg-surface-raised p-6 md:p-8">
+                  <h3 className="mb-4 font-serif text-3xl text-ink">
                     Cuidados
                   </h3>
                   <ul className="space-y-2">
@@ -525,10 +524,8 @@ export default function ProdutoPage() {
           {/* Produtos Relacionados */}
           {relatedProducts.length > 0 && (
             <div>
-              <h2 className="text-3xl font-serif text-rose-700 mb-8">
-                Produtos Relacionados
-              </h2>
-              <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              <h2 className="mb-10 text-4xl text-ink md:text-5xl">Da mesma família</h2>
+              <div className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
                 {relatedProducts.slice(0, 4).map((relatedProduct) => (
                   <ProductCard key={relatedProduct._id} product={relatedProduct} />
                 ))}

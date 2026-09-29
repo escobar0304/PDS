@@ -6,12 +6,15 @@ import Link from 'next/link';
  */
 export default function AdminHeader() {
   return (
-    <header className="on-plum bg-plum text-surface">
+    <header className="on-plum bg-plum text-paper">
       <div className="container-custom flex flex-wrap items-center justify-between gap-4 py-4">
         <Link href="/admin" className="font-serif text-lg transition-smooth hover:text-rose-200">
           Painel · Pétalas de Sonho
         </Link>
         <nav aria-label="Painel" className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <Link href="/admin/encomendas" className="py-1 transition-smooth hover:text-rose-200">
+            Encomendas
+          </Link>
           <Link href="/admin/produtos" className="py-1 transition-smooth hover:text-rose-200">
             Produtos
           </Link>
