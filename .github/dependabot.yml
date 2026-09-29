@@ -72,6 +72,24 @@ updates:
       # visual seja visivel.
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]
+      # O ESLint 10 e o TypeScript 7 partem o `npm run lint`, e a culpa nao e
+      # nossa: o `eslint-config-next` traz o `eslint-plugin-react`, que so
+      # aceita o ESLint ate ao 9, e o `typescript-eslint`, que so aceita o
+      # TypeScript abaixo do 6.1. Medido a 29/09/2026 com as ultimas versoes
+      # de ambos (7.37.5 e 8.71.0). Os PRs #41 e #42 falharam exactamente
+      # ai. Levantar estas regras quando `npm view eslint-plugin-react
+      # peerDependencies` e `npm view typescript-eslint peerDependencies` os
+      # aceitarem.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # Os tipos do Node descrevem o Node que corre o codigo, e esse e o 22
+      # (o CI; o alojamento ainda nao esta escolhido). Com os tipos do 26, o
+      # `tsc` aceitava APIs que o 22 nao tem, e o erro so aparecia em
+      # producao. Sobem quando o Node do CI subir, no mesmo PR.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
     labels:
       - "dependencias"
