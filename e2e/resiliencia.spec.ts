@@ -7,7 +7,7 @@ import { mockApi, recolherErrosDeJs } from './fixtures/api';
  */
 
 const ROTAS = [
-  { path: '/', h1: /Explore os Nossos/i },
+  { path: '/', h1: /Cristais e pedras/i },
   { path: '/loja', h1: /^Loja$/i },
   { path: '/catalogo', h1: /Catálogo/i },
   { path: '/sobre-nos', h1: /Sobre Nós/i },

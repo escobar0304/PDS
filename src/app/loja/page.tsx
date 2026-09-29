@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import ProductCard from '@/components/productCard';
+import ProductCard, { type ProdutoDoCartao } from '@/components/productCard';
 import { ArrowCounterClockwise, ChatCircle, MagnifyingGlass, Truck } from '@phosphor-icons/react';
 import { fetchList } from '@/lib/api';
 import { INFORMACAO_COMPRA } from '@/lib/afirmacoes';
@@ -19,19 +19,10 @@ const GARANTIAS = [
   { Icone: ChatCircle, ...INFORMACAO_COMPRA.duvidas },
 ];
 
-interface Product {
-  _id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  priceCents: number;
-  images: string[];
-  stock: number;
-  variantes: { _id: string; medida?: string; stock: number }[];
-  categoryId: string;
-  featured: boolean;
-  active: boolean;
-}
+type Product = ProdutoDoCartao & { active: boolean };
+
+/** Quatro colunas no ecra largo: a grelha tem a largura toda. */
+const GRELHA = 'grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
 interface Category {
   _id: string;
@@ -120,174 +111,145 @@ function LojaContent() {
       <Header />
       
       <main id="conteudo" className="min-h-screen bg-surface">
-        {/* Header da Loja */}
-        <section className="bg-surface-raised py-8 md:py-12 border-b">
-          <div className="container-custom">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3">
-              Loja
-            </h1>
-            <p className="text-base md:text-lg text-ink-muted">
-              A coleção de cristais e pedras
+        <section className="container-custom pb-8 pt-10 md:pt-16">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <h1 className="text-5xl text-ink md:text-7xl">Loja</h1>
+              <p className="mt-3 text-lg text-ink-muted">A coleção de cristais e pedras</p>
+            </div>
+            {/*
+              `role="status"` porque esta frase muda de "A carregar..."
+              para "12 produtos encontrados" sem nada mais mudar na
+              pagina para quem nao ve os esqueletos. Sem o papel, o
+              leitor de ecra ficava calado nas duas pontas.
+            */}
+            <p role="status" className="font-mono text-sm text-ink-muted">
+              {loading ? (
+                'A carregar...'
+              ) : erro ? (
+                ''
+              ) : (
+                `${filteredProducts.length} produto${filteredProducts.length !== 1 ? 's' : ''} encontrado${filteredProducts.length !== 1 ? 's' : ''}`
+              )}
             </p>
           </div>
-        </section>
 
-        {/* Filtros e Produtos */}
-        <section className="py-8 md:py-12">
-          <div className="container-custom">
-            <div className="grid lg:grid-cols-4 gap-6 md:gap-8">
-              {/* Sidebar - Filtros */}
-              <aside className="lg:col-span-1">
-                <div className="bg-surface-raised rounded-lg p-4 md:p-6 shadow-soft sticky top-24">
-                  <div className="mb-6">
-                    <Input
-                      label="Pesquisar"
-                      type="search"
-                      name="pesquisa"
-                      placeholder="Nome do produto…"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="py-2 text-sm"
-                    />
-                  </div>
-
-                  {/* Categorias */}
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-ink mb-3">
-                      Categorias
-                    </h3>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => setSelectedCategory('')}
-                        className={`flex min-h-11 w-full items-center rounded px-3 py-2 text-left text-sm transition-smooth ${
-                          selectedCategory === ''
-                            ? 'bg-rose-700 text-surface'
-                            : 'text-ink-muted hover:bg-surface-sunken'
-                        }`}
-                      >
-                        Todas
-                      </button>
-                      {categories.map((category) => (
-                        <button
-                          key={category._id}
-                          onClick={() => setSelectedCategory(category.slug)}
-                          className={`flex min-h-11 w-full items-center rounded px-3 py-2 text-left text-sm transition-smooth ${
-                            selectedCategory === category.slug
-                              ? 'bg-rose-700 text-surface'
-                              : 'text-ink-muted hover:bg-surface-sunken'
-                          }`}
-                        >
-                          {category.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Select
-                      label="Ordenar por"
-                      name="ordenar"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="py-2 text-sm"
+          {/*
+            Os filtros por cima da grelha, e nao numa coluna ao lado: a
+            grelha fica com a largura toda, e no telemovel os filtros nao
+            empurram as pecas para o fim da pagina.
+          */}
+          <div className="mt-10 grid gap-4 border-y border-line py-5 md:grid-cols-12 md:items-end">
+            <div className="md:col-span-7">
+              <p id="categorias" className="mb-3 text-sm font-semibold text-ink">
+                Categorias
+              </p>
+              <div role="group" aria-labelledby="categorias" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                {[{ _id: 'todas', name: 'Todas', slug: '' }, ...categories].map((category) => {
+                  const escolhida = selectedCategory === category.slug;
+                  return (
+                    <button
+                      key={category._id}
+                      onClick={() => setSelectedCategory(category.slug)}
+                      aria-pressed={escolhida}
+                      className={`shrink-0 rounded-full border px-4 py-2 text-sm transition-smooth ${
+                        escolhida
+                          ? 'border-rose-700 bg-rose-700 text-surface'
+                          : 'border-line text-ink hover:border-rose-700 hover:text-rose-700'
+                      }`}
                     >
-                      <option value="featured">Destaques</option>
-                      <option value="price-asc">Preço: Baixo para Alto</option>
-                      <option value="price-desc">Preço: Alto para Baixo</option>
-                      <option value="name-asc">Nome: A-Z</option>
-                      <option value="name-desc">Nome: Z-A</option>
-                      <option value="newest">Mais Recentes</option>
-                    </Select>
-                  </div>
-                </div>
-              </aside>
-
-              {/* Grid de Produtos */}
-              <div className="lg:col-span-3">
-                {/* Resultados Header */}
-                <div className="flex justify-between items-center mb-6">
-                  {/*
-                    `role="status"` porque esta frase muda de "A carregar..."
-                    para "12 produtos encontrados" sem nada mais mudar na
-                    pagina para quem nao ve os esqueletos. Sem o papel, o
-                    leitor de ecra ficava calado nas duas pontas.
-                  */}
-                  <p role="status" className="text-sm text-ink-muted">
-                    {loading ? (
-                      'A carregar...'
-                    ) : erro ? (
-                      ''
-                    ) : (
-                      `${filteredProducts.length} produto${filteredProducts.length !== 1 ? 's' : ''} encontrado${filteredProducts.length !== 1 ? 's' : ''}`
-                    )}
-                  </p>
-                </div>
-
-                {/* Erro de carregamento */}
-                {!loading && erro && (
-                  <Alert
-                    tone="erro"
-                    action={
-                      <Button variant="secondary" size="sm" onClick={() => setTentativa((t) => t + 1)}>
-                        Tentar novamente
-                      </Button>
-                    }
-                  >
-                    {erro}
-                  </Alert>
-                )}
-
-                {/* Loading State */}
-                {loading ? (
-                  <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <SkeletonCartao key={i} />
-                    ))}
-                  </div>
-                ) : erro ? null : filteredProducts.length > 0 ? (
-                  <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
-                    {filteredProducts.map((product) => (
-                      <ProductCard key={product._id} product={product} />
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    icon={<MagnifyingGlass className="h-10 w-10" />}
-                    title="Nenhum produto encontrado"
-                    description="Experimente outra categoria ou limpe a pesquisa."
-                    action={
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          setSelectedCategory('');
-                          setSearchQuery('');
-                        }}
-                      >
-                        Limpar filtros
-                      </Button>
-                    }
-                  />
-                )}
+                      {category.name}
+                    </button>
+                  );
+                })}
               </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 md:col-span-5">
+              <Input
+                label="Pesquisar"
+                type="search"
+                name="pesquisa"
+                placeholder="Nome do produto…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="py-2 text-sm"
+              />
+              <Select
+                label="Ordenar por"
+                name="ordenar"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="py-2 text-sm"
+              >
+                <option value="featured">Destaques</option>
+                <option value="price-asc">Preço: Baixo para Alto</option>
+                <option value="price-desc">Preço: Alto para Baixo</option>
+                <option value="name-asc">Nome: A-Z</option>
+                <option value="name-desc">Nome: Z-A</option>
+                <option value="newest">Mais Recentes</option>
+              </Select>
             </div>
           </div>
         </section>
 
-        {/* Info Section */}
-        <section className="py-12 md:py-16 bg-surface-raised border-t">
-          <div className="container-custom">
-            <ul className="grid gap-8 sm:grid-cols-3">
-              {GARANTIAS.map(({ Icone, titulo, detalhe }) => (
-                <li key={titulo} className="flex gap-3">
-                  <Icone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-700" aria-hidden />
-                  <div>
-                    <h3 className="mb-1 text-base font-medium text-ink">{titulo}</h3>
-                    <p className="text-sm text-ink-muted">{detalhe}</p>
-                  </div>
-                </li>
+        <section className="container-custom pb-20">
+          {!loading && erro && (
+            <Alert
+              tone="erro"
+              action={
+                <Button variant="secondary" size="sm" onClick={() => setTentativa((t) => t + 1)}>
+                  Tentar novamente
+                </Button>
+              }
+            >
+              {erro}
+            </Alert>
+          )}
+
+          {loading ? (
+            <div className={GRELHA}>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <SkeletonCartao key={i} />
               ))}
-            </ul>
-          </div>
+            </div>
+          ) : erro ? null : filteredProducts.length > 0 ? (
+            <div className={GRELHA}>
+              {filteredProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={<MagnifyingGlass className="h-10 w-10" />}
+              title="Nenhum produto encontrado"
+              description="Experimente outra categoria ou limpe a pesquisa."
+              action={
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSelectedCategory('');
+                    setSearchQuery('');
+                  }}
+                >
+                  Limpar filtros
+                </Button>
+              }
+            />
+          )}
+        </section>
+
+        <section className="border-t border-line bg-surface-sunken py-12 md:py-16">
+          <ul className="container-custom grid gap-8 sm:grid-cols-3">
+            {GARANTIAS.map(({ Icone, titulo, detalhe }) => (
+              <li key={titulo} className="flex gap-3">
+                <Icone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-700" aria-hidden />
+                <div>
+                  <h3 className="mb-1 text-base font-medium text-ink">{titulo}</h3>
+                  <p className="text-sm text-ink-muted">{detalhe}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </section>
       </main>
 
@@ -305,23 +267,15 @@ function LojaFallback() {
     <>
       <Header />
       <main id="conteudo" className="min-h-screen bg-surface">
-        <section className="bg-surface-raised py-8 md:py-12 border-b">
-          <div className="container-custom">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-rose-700 mb-3">
-              Loja
-            </h1>
-            <p className="text-base md:text-lg text-ink-muted">
-              A coleção de cristais e pedras
-            </p>
-          </div>
+        <section className="container-custom pb-8 pt-10 md:pt-16">
+          <h1 className="text-5xl text-ink md:text-7xl">Loja</h1>
+          <p className="mt-3 text-lg text-ink-muted">A coleção de cristais e pedras</p>
         </section>
-        <section className="py-8 md:py-12">
-          <div className="container-custom">
-            <div className="grid items-stretch gap-4 sm:grid-cols-2 md:gap-6 lg:grid-cols-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <SkeletonCartao key={i} />
-              ))}
-            </div>
+        <section className="container-custom pb-20">
+          <div className={GRELHA}>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <SkeletonCartao key={i} />
+            ))}
           </div>
         </section>
       </main>

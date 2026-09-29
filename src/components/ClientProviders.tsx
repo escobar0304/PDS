@@ -5,6 +5,7 @@ import { CartProvider } from '@/contexts/CartContext';
 import CartPreview from './cartPreview';
 import SessionProvider from './SessionProvider';
 import { IconContext } from '@phosphor-icons/react';
+import { ICONE } from '@/components/ui/icone';
 
 export default function ClientProviders({ children }: { children: ReactNode }) {
   // O traco fino e a decisao de desenho: os icones acompanham o peso do texto
@@ -16,7 +17,7 @@ export default function ClientProviders({ children }: { children: ReactNode }) {
   // arvore de acessibilidade como uma imagem sem nome.
   return (
     <IconContext.Provider
-      value={{ weight: 'light', mirrored: false, 'aria-hidden': true }}
+      value={{ ...ICONE, mirrored: false }}
     >
       <SessionProvider>
         <CartProvider>

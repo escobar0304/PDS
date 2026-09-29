@@ -43,6 +43,27 @@ for (const rota of ROTAS) {
   });
 }
 
+/**
+ * O modo escuro segue o do sistema (`prefers-color-scheme`), e tem o mesmo
+ * criterio: um contraste que passa em claro e falha em escuro e uma pagina
+ * partida para metade de quem a abre a noite.
+ */
+test.describe('em modo escuro', () => {
+  test.use({ colorScheme: 'dark' });
+  for (const rota of ROTAS) {
+    test(`${rota} não tem violações WCAG 2.1 AA`, async ({ page }) => {
+      await mockApi(page);
+      await page.goto(rota);
+      await page.waitForTimeout(400);
+      const r = await new AxeBuilder({ page }).withTags(NORMAS).analyze();
+      expect(
+        r.violations.map((v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`),
+        rota,
+      ).toEqual([]);
+    });
+  }
+});
+
 test('a escolha da medida não tem violações, e faz-se só com o teclado', async ({ page }) => {
   await mockApi(page, { produtos: [...PRODUTOS, ANEL] });
   await page.goto('/produto/anel-de-ametista');

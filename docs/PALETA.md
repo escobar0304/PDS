@@ -157,6 +157,28 @@ a **2.10:1**. Falha AA por larga margem.
 
 ---
 
+## Modo escuro — 29/09/2026
+
+O sítio passa a seguir o modo do sistema (`prefers-color-scheme`). Mesma
+família de matiz, luminosidade invertida: a superfície é a ameixa quase preta
+(`#171012`), a tinta é o creme (`#f4ece4`). Os pares foram medidos antes de
+escritos; o mais baixo dá 7,0:1 (texto secundário sobre o rosa claro).
+
+| | claro | escuro |
+|---|---|---|
+| superfície | `#fbfaf4` | `#171012` |
+| tinta | `#24191c` | `#f4ece4` |
+| tinta secundária | `#705c61` | `#c2adb3` |
+| rosa de acento | `#853243` | `#f0a0ae` |
+
+**Os acentos passam a claros, e os botões invertem sozinhos.** Um botão é
+`bg-rose-700 text-surface`: em claro, rosa escuro com creme; em escuro, rosa
+claro com ameixa. O contraste mantém-se sem cada componente saber em que modo
+está. Só o texto sobre fundos que não mudam (ameixa, fotografia) precisa de
+cor fixa: é o `paper`.
+
+`e2e/acessibilidade.spec.ts` corre o axe em todas as rotas nos dois modos.
+
 ## O que falta decidir
 
 - **Tema escuro.** A paleta está construída para tema claro, que é o que combina com

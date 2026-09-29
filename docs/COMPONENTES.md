@@ -26,6 +26,7 @@ acrescenta-se aqui.
 | `Caixa` | Caixa de seleção com etiqueta e dica. A caixa tem 24×24 e a etiqueta inteira é alvo |
 | `SemFotografia` | No lugar de uma fotografia que falta. Nunca uma fotografia de banco de imagens: numa loja de peças únicas, seria mostrar outra pedra como se fosse aquela |
 | `Alert` | Mensagens de erro, sucesso e informação, com ação de recuperação opcional |
+| `ICONE` | O que o `IconContext` dá aos ícones (traço fino, `aria-hidden`), para as páginas de servidor, onde o contexto não chega: `<Truck {...ICONE} />` |
 | `LIGACAO_EM_TEXTO` | As classes de uma ligação no meio de texto corrido: sublinhada em repouso, porque só a cor não a distingue (WCAG 1.4.1) |
 | `Spinner`, `Skeleton`, `SkeletonCartao` | Estados de espera |
 | `EmptyState` | Estados vazios com ícone, explicação e saída |
@@ -34,6 +35,20 @@ acrescenta-se aqui.
 | `AuthShell`, `Separador`, `GoogleButton` | Chrome partilhado pelo login e pelo registo |
 
 ## Decisões
+
+**Uma escala de forma, com três regras (29/09/2026).** Controlos a 4 px,
+cartões e fotografias a 8 px, e duas exceções com razão: a **vitrine em arco**
+(`rounded-t-full rounded-b-lg`) só para a peça principal de uma página — a
+entrada, o "Sobre nós", o produto —, e a **pílula** (`rounded-full`) só para
+filtros que se escolhem, como as categorias da loja. Um arco em cada cartão
+deixava de dizer "esta é a peça".
+
+**Nada escrito por cima de uma fotografia.** Nem "destaque", nem "esgotado",
+nem o nome da categoria. O contraste dependia de onde calhava a pedra (no
+catálogo, "Quartzos" ficava sobre uma pedra branca), e a peça deve ver-se
+inteira. O estado diz-se na etiqueta, em texto; esgotada, a fotografia perde
+a cor.
+
 
 **Os campos geram o `id` a partir do `name`.** Sem isso, metade dos campos
 do site não tinha etiqueta associada — o `<label>` estava lá mas não

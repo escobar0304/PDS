@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Question } from '@phosphor-icons/react/dist/ssr';
+import { ICONE } from '@/components/ui/icone';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { Container, EmptyState, PageHeader } from '@/components/ui';
@@ -45,7 +46,7 @@ export default function FaqPage() {
             <div className="mt-10">
               {PERGUNTAS.length === 0 ? (
                 <EmptyState
-                  icon={<Question className="h-10 w-10" />}
+                  icon={<Question {...ICONE} className="h-10 w-10" />}
                   title="Ainda não temos perguntas para aqui pôr"
                   description="Esta página enche-se com o que nos perguntarem de facto, e não com o que imaginámos que perguntariam. Se tem uma dúvida, faça-a — é assim que a primeira aparece."
                   action={

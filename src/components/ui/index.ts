@@ -6,3 +6,4 @@ export { Alert, AnuncioEstado, EmptyState, SemFotografia, Skeleton, SkeletonCart
 export { Badge, Card, Container, PageHeader, Section } from './Layout';
 export { default as AuthShell, GoogleButton, Separador } from './AuthShell';
 export { LIGACAO_EM_TEXTO } from './texto';
+export { ICONE } from './icone';

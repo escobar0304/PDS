@@ -43,6 +43,56 @@
   --shadow-soft: 0 1px 2px rgb(36 25 28 / 0.04), 0 8px 24px rgb(36 25 28 / 0.06);
   --shadow-medium: 0 2px 4px rgb(36 25 28 / 0.05), 0 12px 32px rgb(36 25 28 / 0.08);
   --shadow-strong: 0 4px 8px rgb(36 25 28 / 0.06), 0 24px 48px rgb(36 25 28 / 0.12);
+
+  /* Papel: o creme, fixo nos dois modos. Para texto sobre ameixa ou sobre
+     fotografia, onde o fundo nao muda com o modo. */
+  --paper: #fbfaf4;
+
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   Modo escuro
+   A mesma familia de matiz (344 a 357), com a luminosidade invertida: a
+   superficie e a ameixa quase preta, a tinta e o creme. Os pares foram
+   medidos antes de escritos (docs/PALETA.md): o mais baixo da 7:1.
+
+   Os acentos (rosa, salvia, erro) passam a claros. Como os botoes sao
+   `bg-rose-700 text-surface`, e a superficie passa a escura, o botao inverte
+   sozinho para rosa claro com texto escuro, e o contraste mantem-se.
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #171012;
+    --surface-raised: #201619;
+    --surface-sunken: #110c0d;
+    --line: #3b2a30;
+
+    --rose-100: #3a2028;
+    --rose-200: #51303a;
+    --rose-300: #ffb4c0;
+    --rose-600: #f6bcc6;
+    --rose-700: #f0a0ae;
+    --rose-900: #fbd9df;
+
+    --ink: #f4ece4;
+    --ink-muted: #c2adb3;
+
+    --plum: #0d0809;
+    --plum-line: #2e2125;
+
+    --sage-100: #1c2c24;
+    --sage-600: #93c9ab;
+    --danger-100: #3b1c17;
+    --danger-700: #f4a696;
+
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-medium: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
+    --shadow-strong: 0 4px 8px rgb(0 0 0 / 0.4), 0 24px 48px rgb(0 0 0 / 0.5);
+
+    color-scheme: dark;
+  }
 }
 
 /* ==========================================================================
@@ -56,15 +106,25 @@ html {
 body {
   background: var(--surface);
   color: var(--ink);
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI',
+  font-family: var(--font-corpo), -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-playfair), Georgia, serif;
+/* Os titulos grandes sao da letra de etiqueta de museu (docs/MARCA.md). Os
+   pequenos, de h3 para baixo, ficam na letra do corpo: a Cormorant tem o
+   olho baixo e abaixo dos 20 px perde-se. Quem quiser um h3 de exposicao
+   pede `font-serif`. */
+h1, h2 {
+  font-family: var(--font-exposicao), Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h3, h4, h5, h6 {
   font-weight: 600;
   text-wrap: balance;
 }
@@ -175,6 +235,29 @@ img {
 
 .fade-in {
   animation: fadeIn 500ms ease-out both;
+}
+
+/* A entrada das seccoes, presa ao deslocamento e nao ao relogio: so quem
+   percorre a pagina a ve, e so onde o browser a sabe fazer. Mexe so na
+   posicao, nunca na opacidade: um texto a meio de aparecer tem menos
+   contraste do que o que foi medido. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revelar {
+      animation: subir linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}
+
+@keyframes subir {
+  from {
+    transform: translateY(40px);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {

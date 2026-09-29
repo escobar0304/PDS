@@ -93,8 +93,43 @@ pinta o desenho.
   cada pedido, porque não muda entre pedidos. Sem assinatura por baixo da marca:
   qualquer frase ali é uma afirmação comercial, e isso decide-se na F9
 
-## Tipografia
+## Tipografia — decidida em 29/09/2026, com o redesenho
 
-Continua Playfair Display e Inter. **Ainda não é a decisão final.** O par
-definitivo escolhe-se contra o lettering depois de resolvido o ponto acima —
-escolher agora seria escolher contra um desenho que pode mudar.
+Até aqui era Playfair Display e Inter, "ainda não a decisão final". O par
+Inter + um serifado de exposição é exatamente o que todos os geradores de
+sítios escolhem, e o sítio lia-se como um modelo. Passa a três letras, cada
+uma com um trabalho:
+
+| | letra | para quê |
+|---|---|---|
+| exposição | **Cormorant Garamond** 500/600, com itálico | os títulos grandes (h1, h2) e os nomes das peças |
+| corpo | **Figtree** | tudo o que se lê, do texto legal aos botões |
+| etiqueta | **IBM Plex Mono** 400/500 | os dados de cada peça: família, peso, medida |
+
+**Porquê um serifado.** A linguagem do redesenho é a de um gabinete de
+mineralogia: cada peça apresentada como um espécime, com a sua etiqueta. As
+etiquetas e as pranchas de mineralogia são, historicamente, serifadas, e os
+remates finos e afiados da Cormorant lêem-se como facetas. Contra o lettering
+da marca, que é um *script* redondo e monolinear, um serifado de alto
+contraste separa-se em vez de competir.
+
+**Abaixo de 20 px a Cormorant perde-se** (tem o olho baixo). Por isso só h1 e
+h2 a usam por omissão; de h3 para baixo é a Figtree, e quem quiser um h3 de
+exposição pede `font-serif`.
+
+**A etiqueta em monoespaço é para dados, não para decoração.** Aparece onde
+há um valor verdadeiro gravado no painel (a família, o peso em gramas, as
+dimensões), e nunca como rótulo por cima de um título.
+
+A decisão sobre o lettering (manter o traçado ou redesenhá-lo) continua em
+aberto e não depende desta.
+
+## O lettering sobre fundo claro
+
+O redesenho tirou a faixa escura do cabeçalho e do rodapé, e o creme do
+lettering sobre o creme da página não se via. O `Logotipo` ganhou
+`lettering="tinta"`: a versão de uma cor, na tinta escura da família do rosa
+(`rose-900`), para fundos claros. **O desenho não muda, e o símbolo mantém as
+suas cores**; em modo escuro, `tinta` volta ao creme original. Por omissão
+continua `creme`. Se o negócio preferir o lettering sempre em creme, a
+alternativa é voltar a pôr o cabeçalho sobre ameixa.

@@ -2,56 +2,73 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import Logotipo from '@/components/marca';
 import { List, ShoppingCart, User, X } from '@phosphor-icons/react';
 import { useCart } from '@/contexts/CartContext';
 
-export default function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { itemCount, openCart } = useCart();
+const LIGACOES = [
+  { href: '/', label: 'Início' },
+  { href: '/sobre-nos', label: 'Sobre Nós' },
+  { href: '/catalogo', label: 'Catálogo' },
+  { href: '/loja', label: 'Loja' },
+];
 
-  const navLinks = [
-    { href: '/', label: 'Início' },
-    { href: '/sobre-nos', label: 'Sobre Nós' },
-    { href: '/catalogo', label: 'Catálogo' },
-    { href: '/loja', label: 'Loja' },
-  ];
+/** A pagina onde se esta: `/produto/...` conta como loja. */
+function atual(caminho: string, href: string): boolean {
+  if (href === '/') return caminho === '/';
+  if (href === '/loja') return caminho.startsWith('/loja') || caminho.startsWith('/produto');
+  return caminho.startsWith(href);
+}
+
+/**
+ * O cabecalho. Claro, fino e sem faixa escura: numa loja de pecas, o que se
+ * ve primeiro tem de ser a peca, nao a moldura. A linha por baixo separa-o
+ * do conteudo quando a pagina corre por baixo dele.
+ */
+export default function Header() {
+  const [aberto, setAberto] = useState(false);
+  const { itemCount, openCart } = useCart();
+  const caminho = usePathname() ?? '/';
+
+  const icone =
+    'flex h-11 w-11 items-center justify-center rounded text-ink transition-smooth hover:bg-surface-sunken hover:text-rose-700';
 
   return (
-    <header className="on-plum sticky top-0 z-50 border-b border-line-plum bg-plum">
-      <div className="container-custom px-2 md:px-6">
-        <div className="flex justify-between items-center h-16 md:h-20">
-          {/* Logo maior e menos margem lateral */}
-          <Link
-            href="/"
-            className="flex items-center pl-1 text-[19px] text-rose-200 transition-smooth hover:text-rose-100 sm:text-[24px] md:pl-2 md:text-[32px]"
-          >
-            <Logotipo />
+    <header className="sticky top-0 z-50 border-b border-line bg-surface/95 backdrop-blur supports-[not(backdrop-filter:blur(0))]:bg-surface">
+      <div className="container-custom">
+        <div className="flex h-16 items-center justify-between gap-6 md:h-[72px]">
+          <Link href="/" className="flex items-center text-[20px] text-rose-700 sm:text-[24px] md:text-[28px]">
+            <Logotipo lettering="tinta" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-surface text-lg font-medium transition-smooth hover:text-rose-300"
-              >
-                {link.label}
-              </Link>
-            ))}
+          <nav aria-label="Principal" className="hidden items-center gap-1 md:flex">
+            {LIGACOES.map((l) => {
+              const aqui = atual(caminho, l.href);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  aria-current={aqui ? 'page' : undefined}
+                  className={
+                    'relative rounded px-4 py-2 text-[15px] font-medium transition-smooth hover:text-rose-700 ' +
+                    // A pagina atual diz-se com um traco, e nao so com a cor.
+                    (aqui
+                      ? 'text-rose-700 after:absolute after:inset-x-4 after:-bottom-px after:h-px after:bg-rose-700'
+                      : 'text-ink')
+                  }
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Right Icons */}
-          <div className="flex items-center gap-4 pr-1 md:pr-2">
-            <Link
-              href="/area-pessoal"
-              className="flex h-11 w-11 items-center justify-center text-surface transition-smooth hover:text-rose-300"
-              aria-label="Área Pessoal"
-            >
-              <User className="w-6 h-6 md:w-7 md:h-7" />
+          <div className="flex items-center gap-1">
+            <Link href="/area-pessoal" className={icone} aria-label="Área Pessoal">
+              <User className="h-6 w-6" />
             </Link>
-            
+
             <Link
               href="/carrinho"
               onClick={(e) => {
@@ -61,48 +78,49 @@ export default function Header() {
                 e.preventDefault();
                 openCart();
               }}
-              className="relative flex h-11 w-11 items-center justify-center text-surface transition-smooth hover:text-rose-300"
+              className={`relative ${icone}`}
               aria-label="Carrinho de Compras"
             >
-              <ShoppingCart className="w-6 h-6 md:w-7 md:h-7" />
+              <ShoppingCart className="h-6 w-6" />
               {itemCount > 0 && (
-                <span className="tabular absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-700 text-xs font-semibold text-surface">
+                <span className="tabular absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-700 px-1 text-xs font-semibold text-surface">
                   {itemCount}
                 </span>
               )}
             </Link>
 
-            {/* Botao do menu em telemovel */}
-            <button
-              className="flex h-11 w-11 items-center justify-center text-surface transition-smooth hover:text-rose-300 md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? (
-                <X className="w-7 h-7" />
-              ) : (
-                <List className="w-7 h-7" />
-              )}
+            <button className={`${icone} md:hidden`} onClick={() => setAberto(!aberto)} aria-label="Menu" aria-expanded={aberto}>
+              {aberto ? <X className="h-7 w-7" /> : <List className="h-7 w-7" />}
             </button>
           </div>
         </div>
 
-        {/* Menu em telemovel */}
-        {mobileMenuOpen && (
-          <nav className="fade-in border-t border-line-plum py-4 md:hidden">
-            <div className="flex flex-col gap-1 justify-center items-center text-center">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="w-full max-w-xs rounded px-2 py-3 text-base font-medium text-surface transition-smooth hover:text-rose-300"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <span className="block">{link.label}</span>
-                </Link>
-              ))}
-            </div>
+        {aberto && (
+          <nav aria-label="Principal, no telemóvel" className="fade-in border-t border-line py-3 md:hidden">
+            <ul>
+              {LIGACOES.map((l) => {
+                const aqui = atual(caminho, l.href);
+                return (
+                  <li key={l.href}>
+                    <Link
+                      href={l.href}
+                      aria-current={aqui ? 'page' : undefined}
+                      className={`flex items-center justify-between py-3 font-serif text-2xl transition-smooth hover:text-rose-700 ${
+                        aqui ? 'text-rose-700' : 'text-ink'
+                      }`}
+                      onClick={() => setAberto(false)}
+                    >
+                      {l.label}
+                      {aqui && (
+                        <span aria-hidden className="font-sans text-sm text-ink-muted">
+                          aqui
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
         )}
       </div>

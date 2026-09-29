@@ -6,7 +6,7 @@ import Link from 'next/link';
  */
 export default function AdminHeader() {
   return (
-    <header className="on-plum bg-plum text-surface">
+    <header className="on-plum bg-plum text-paper">
       <div className="container-custom flex flex-wrap items-center justify-between gap-4 py-4">
         <Link href="/admin" className="font-serif text-lg transition-smooth hover:text-rose-200">
           Painel · Pétalas de Sonho

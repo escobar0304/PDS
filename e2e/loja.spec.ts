@@ -72,7 +72,7 @@ test('um produto esgotado não pode ser adicionado', async ({ page }) => {
     .filter({ has: page.getByRole('heading', { name: 'Citrino Esgotado' }) })
     .last();
 
-  await expect(cartao.getByText('Esgotado')).toBeVisible();
+  await expect(cartao.getByText('Esgotado', { exact: true })).toBeVisible();
   await expect(
     cartao.getByRole('button', { name: 'Adicionar ao carrinho' })
   ).toBeDisabled();
