@@ -582,3 +582,25 @@ do token e o tamanho da escala.
 4. **Dourado:** sai da UI e fica só no logótipo, ou queres mantê-lo como acento secundário?
 
 Nada de código muda até estas quatro respostas.
+
+---
+
+## O redesenho de 29/09/2026
+
+A auditoria acima deu uma paleta e uma biblioteca de componentes, mas a
+composição continuou a de um modelo: fotografia a toda a largura com o título
+por cima, três cartões iguais, uma faixa escura com uma pergunta genérica, e
+Inter com Playfair. O redesenho troca a composição e a tipografia, e mantém a
+paleta, que vem do logótipo.
+
+**A linguagem é a de um gabinete de mineralogia.** Cada peça é apresentada
+como um espécime: a fotografia, e por baixo a etiqueta com o que se sabe
+dela (família, peso, preço), em monoespaçado. A peça principal de cada página
+fica numa vitrine em arco. As razões de cada escolha estão onde vivem:
+tipografia e lettering em `MARCA.md`, modo escuro em `PALETA.md`, forma e
+"nada escrito por cima de uma fotografia" em `COMPONENTES.md`, e o custo das
+letras em `PERFORMANCE.md`.
+
+As capturas estão em `docs/design/`: `antes-*` são o sítio antes do
+redesenho; as outras, depois, com fotografias do próprio sítio nas peças de
+exemplo (os dados de teste não têm imagens).

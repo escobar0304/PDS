@@ -46,7 +46,9 @@ export default function Destaques() {
         Desliza com o dedo ou com a roda; cada cartao para no sitio. A lista
         continua a ser uma lista, e o teclado percorre-a pelos links.
       */}
-      <ul className="container-custom flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 [scrollbar-width:thin]">
+      {/* O `scroll-px` e a margem da pagina: sem ele, o encaixe alinhava o
+          primeiro cartao a borda do ecra, fora da coluna do titulo. */}
+      <ul className="container-custom flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] sm:scroll-px-6 lg:scroll-px-8">
         {pecas === null
           ? [1, 2, 3, 4].map((i) => (
               <li key={i} className="w-[78%] shrink-0 snap-start sm:w-[300px]">
