@@ -179,6 +179,52 @@ cor fixa: é o `paper`.
 
 `e2e/acessibilidade.spec.ts` corre o axe em todas as rotas nos dois modos.
 
+## Revisão pela teoria das cores — 29/09/2026
+
+Com o redesenho, a paleta foi medida outra vez, agora em **OKLCH** (o espaço
+em que distâncias iguais são diferenças que se veem iguais; o HSL, em que o
+raciocínio de cima foi feito, não é) e contra as fotografias do sítio, que
+são o que ocupa mais cor em cada página. Cinco critérios:
+
+**1. Relação de matiz com as fotografias: certa.** As fotografias têm duas
+famílias de cor: o violeta das ametistas (H 315 a 345) e a luz quente da
+madeira e do dourado (H 45 a 75). O acento da marca está a H 10, a 45° do
+violeta: uma relação análoga, que une em vez de competir. E o creme das
+superfícies (H 99) está do lado amarelo, o complementar do violeta no
+círculo de Itten: por contraste simultâneo, as ametistas parecem mais
+saturadas sobre ele do que sobre um branco neutro. É a razão mais forte para
+o creme ficar — além de ser a cor do lettering.
+
+**2. Proporção das áreas: fica, e fica escrito porquê.** Medido na entrada:
+70% de superfície neutra, 17% de fotografia, 9% da faixa rosa clara, 4% de
+tinta, **0,3% de acento**. A regra 60-30-10 pediria mais acento. Não se pôs:
+a cor da página é a das pedras, e mais rosa em área competia com elas.
+É o princípio do "a saturação cai à medida que a área cresce", aplicado à
+fotografia.
+
+**3. O erro confundia-se com a marca: corrigido.** O raciocínio antigo dizia
+que o vermelho de erro estava afastado do rosa — mas comparava-o com o rosa
+claro do logótipo, e não com o `rose-700`, que é o que aparece ao lado dele.
+Medido em OKLab, `rose-700` e `danger-700` estavam a **0,045**, com a mesma
+luminosidade (0,439 e 0,442) e 21° de matiz: um aviso de erro e uma ligação
+liam-se como a mesma coisa. O erro passa a vermelho-tijolo (`#ae4022`,
+H 36, mais claro e mais saturado), a **0,105** do acento; em escuro,
+`#f58f5d`, a 0,096. Mais afastado do que isto ia para o ocre, que já não se
+lê como erro.
+
+**4. As superfícies mal se distinguiam: corrigido em parte.** `surface` e
+`surface-sunken` estavam a 0,026, no limite do que se nota: o rodapé e os
+blocos em destaque quase não se separavam da página. Passam a 0,039, nos dois
+modos. `surface-raised` fica a 0,011 da página, abaixo do limiar, **e isso é
+aceite**: usa-se sempre com uma linha à volta, que é quem faz a separação.
+
+**5. Contraste: sem mudança.** Todos os pares de texto passam os 4,5:1 nos
+dois modos, o mais baixo com 5,03 (erro sobre a superfície rebaixada).
+
+`src/lib/__tests__/paleta.test.ts` lê os tokens do `globals.css` e falha se
+algum destes números voltar para trás: contraste, distância do erro ao
+acento, e separação da superfície rebaixada.
+
 ## O que falta decidir
 
 - **Tema escuro.** A paleta está construída para tema claro, que é o que combina com

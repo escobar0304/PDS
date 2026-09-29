@@ -13,7 +13,7 @@
   /* Superficies, herdadas do creme do wordmark */
   --surface: #fbfaf4;
   --surface-raised: #fefdfb;
-  --surface-sunken: #f4f2e6;
+  --surface-sunken: #eeede6;
   --line: #e5e1d7;
 
   /* Marca, herdada do simbolo */
@@ -32,12 +32,14 @@
   --plum: #2a191d;
   --plum-line: #3e2b31;
 
-  /* Semanticas. O vermelho de erro esta no matiz 8 de proposito, para nao se
-     confundir com o rosa da marca, que esta no 350. */
+  /* Semanticas. O erro e um vermelho-tijolo (OKLCH H 36), afastado do rosa
+     da marca em matiz, luminosidade e saturacao: ate 29/09/2026 estava a
+     um delta E de 0,045 do rose-700, com a mesma luminosidade, e um erro lia-se
+     como uma ligacao. `paleta.test.ts` exige pelo menos 0,09. */
   --sage-100: #e4f1eb;
   --sage-600: #3e6552;
-  --danger-100: #f9e9e7;
-  --danger-700: #8b3123;
+  --danger-100: #feebe6;
+  --danger-700: #ae4022;
 
   /* Elevacao: uma so direcao de luz, de cima, e sombra tingida com a tinta */
   --shadow-soft: 0 1px 2px rgb(36 25 28 / 0.04), 0 8px 24px rgb(36 25 28 / 0.06);
@@ -66,7 +68,7 @@
   :root {
     --surface: #171012;
     --surface-raised: #201619;
-    --surface-sunken: #110c0d;
+    --surface-sunken: #0e080a;
     --line: #3b2a30;
 
     --rose-100: #3a2028;
@@ -84,8 +86,8 @@
 
     --sage-100: #1c2c24;
     --sage-600: #93c9ab;
-    --danger-100: #3b1c17;
-    --danger-700: #f4a696;
+    --danger-100: #361d10;
+    --danger-700: #f58f5d;
 
     --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
     --shadow-medium: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
