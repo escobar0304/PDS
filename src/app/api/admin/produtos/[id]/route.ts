@@ -4,6 +4,7 @@ import { editarProduto } from '@/lib/gestao';
 import { LIMITES, travar } from '@/lib/limites';
 import { respostaDeRecusa } from '@/lib/respostas';
 import { esquemaEdicaoProduto, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Editar. Nao ha DELETE, de proposito: um produto desativa-se
@@ -23,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const r = await editarProduto((await params).id, corpo.dados);
     return r.ok ? NextResponse.json({ ok: true }) : respostaDeRecusa(r);
   } catch (erro) {
-    console.error('Admin: erro ao editar produto:', erro);
+    registarErro('Admin: erro ao editar produto:', erro);
     return NextResponse.json({ error: 'Erro ao editar produto' }, { status: 500 });
   }
 }

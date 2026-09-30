@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
 import { consumir, identificar } from '@/lib/limites';
+import { ASSUNTOS_CONTACTO } from '@/lib/contacto';
 import { esquemaContacto, lerCorpo } from '@/lib/validacao';
+import { CorreioIndisponivel, enviar } from '@/services/mailer';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Formulario de contacto.
@@ -26,15 +28,14 @@ import { esquemaContacto, lerCorpo } from '@/lib/validacao';
  *    livre de voltar a esquecer-se; nao haver HTML nenhum nao deixa.
  *
  * 3. **Limite de pedidos**, por IP e por endereco indicado.
+ *
+ * E desde 30/09/2026 passa pelo `enviar` de `services/mailer.ts`, como todo o
+ * outro correio: um so sitio a criar a ligacao SMTP e a limpar o assunto.
+ * Antes tinha a sua copia de cada uma das duas coisas.
  */
 
 const LIMITE_POR_IP = { max: 5, janelaMs: 60 * 60 * 1000 };
 const LIMITE_POR_EMAIL = { max: 3, janelaMs: 60 * 60 * 1000 };
-
-/** Impede injeccao de cabecalhos: uma quebra de linha no assunto abriria um. */
-function umaLinha(valor: string): string {
-  return valor.replace(/[\r\n]+/g, ' ').trim();
-}
 
 export async function POST(request: Request) {
   const corpo = await lerCorpo(request, esquemaContacto);
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: corpo.erro }, { status: 400 });
   }
 
-  const { name, email, phone, subject, message } = corpo.dados;
+  const { name, email, phone, subject, message, sitio } = corpo.dados;
 
   const porIp = consumir(`contacto:ip:${identificar(request)}`, LIMITE_POR_IP);
   const porEmail = consumir(`contacto:email:${email}`, LIMITE_POR_EMAIL);
@@ -55,47 +56,51 @@ export async function POST(request: Request) {
     );
   }
 
+  // A armadilha: o campo `sitio` nao se ve nem se alcanca com o teclado, e so
+  // um programa o preenche. Responde-se como se tivesse corrido bem, para o
+  // programa nao aprender a evita-la; a mensagem nao sai. Depois do limite, e
+  // nao antes: um programa que a pise continua a gastar a quota.
+  if (sitio) return NextResponse.json({ success: true });
+
   const destino = process.env.ADMIN_EMAIL;
-  if (!destino || !process.env.SMTP_HOST) {
-    console.error('Contacto: SMTP_HOST ou ADMIN_EMAIL por configurar.');
+  if (!destino) {
+    registarErro('Contacto: ADMIN_EMAIL por configurar.');
     return NextResponse.json({ error: 'Erro ao enviar mensagem' }, { status: 500 });
   }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587', 10),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+  const assunto = ASSUNTOS_CONTACTO[subject];
 
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+  try {
+    await enviar({
       // Destino fixo. Nunca o endereco que veio no pedido.
-      to: destino,
-      // `replyTo` e seguro porque o esquema ja garantiu que e um endereco, e
-      // permite responder com um clique sem abrir o destino a escolha alheia.
-      replyTo: email,
-      subject: umaLinha(`Contacto do site: ${subject}`),
-      text: [
+      para: destino,
+      // `responderPara` e seguro porque o esquema ja garantiu que e um
+      // endereco, e permite responder com um clique sem abrir o destino a
+      // escolha alheia.
+      responderPara: email,
+      assunto: `Contacto do site: ${assunto}`,
+      texto: [
         `Nome: ${name}`,
         `Email: ${email}`,
         phone ? `Telefone: ${phone}` : null,
-        `Assunto: ${subject}`,
+        `Assunto: ${assunto}`,
         '',
         'Mensagem:',
         message,
       ]
         .filter((l) => l !== null)
         .join('\n'),
+      // Fica dentro da loja: a identificacao dela nao serve a quem a le.
+      rodape: false,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Erro ao enviar email de contacto:', error);
+    if (error instanceof CorreioIndisponivel) {
+      registarErro('Contacto: SMTP_HOST por configurar.');
+    } else {
+      registarErro('Erro ao enviar email de contacto:', error);
+    }
     return NextResponse.json({ error: 'Erro ao enviar mensagem' }, { status: 500 });
   }
 }

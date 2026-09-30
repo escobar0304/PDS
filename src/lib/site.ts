@@ -40,3 +40,25 @@ export function paginasDoMapa(): string[] {
     .filter((h) => h.startsWith('/'));
   return [...new Set([...PRINCIPAIS, ...institucionais])].filter((c) => !privada(c));
 }
+
+/**
+ * Para onde ir depois de entrar, a partir do `callbackUrl` do endereco.
+ *
+ * Ate 30/09/2026 a pagina de entrada fazia `router.push(callbackUrl)` com o
+ * que viesse no endereco. `/auth/login?callbackUrl=https://outro.sitio`
+ * levava a pessoa, logo a seguir a entrar, para uma pagina de outra pessoa —
+ * a meio de um gesto de confianca, que e onde o phishing funciona melhor.
+ *
+ * So caminhos deste sitio: comecam por uma `/`, e nao por `//` nem `/\`,
+ * que o browser le como "outro anfitriao". Tudo o resto cai no destino por
+ * omissao.
+ */
+export function destinoDepoisDeEntrar(pedido: string | null | undefined, porOmissao = '/area-pessoal'): string {
+  if (!pedido || !pedido.startsWith('/') || pedido.startsWith('//') || pedido.startsWith('/\\')) {
+    return porOmissao;
+  }
+  // Caracteres de controlo e espacos no inicio sao ignorados pelo browser ao
+  // ler um URL (`/\t/outro.sitio`), e servem para esconder o `//`.
+  if (/[\u0000-\u001f\u007f\s]/.test(pedido)) return porOmissao;
+  return pedido;
+}

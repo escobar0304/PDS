@@ -45,6 +45,8 @@ const CAMPOS_CONHECIDOS = [
   'emailVerified',
   // Contador que termina as sessoes da conta; declarado na linha da sessao.
   'versaoSessao',
+  // A data da declaracao dos 18 anos; declarada na linha da conta.
+  'maioridadeDeclaradaEm',
 ];
 
 function camposDoUserSchema(): string[] {

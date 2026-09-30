@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, Envelope, Lock, User } from '@phosphor-icons/react';
 import AuthShell, { EntrarComGoogle } from '@/components/ui/AuthShell';
-import { Alert, Button, Input, Spinner } from '@/components/ui';
+import { Alert, Button, Caixa, Input, Spinner } from '@/components/ui';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,6 +17,8 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
   });
+  const [maiorDeIdade, setMaiorDeIdade] = useState(false);
+  const [porConfirmar, setPorConfirmar] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [erroConfirmacao, setErroConfirmacao] = useState('');
@@ -42,6 +44,7 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          maiorDeIdade,
         }),
       });
 
@@ -53,15 +56,19 @@ export default function RegisterPage() {
 
       setSuccess(true);
 
-      // Login automatico apos o registo.
-      setTimeout(async () => {
-        await signIn('credentials', {
-          redirect: false,
-          email: formData.email,
-          password: formData.password,
-        });
+      // Entrar logo a seguir. Se nao entrar, o email ja tinha conta: o
+      // servidor responde igual nos dois casos, e quem e dono dele recebeu a
+      // explicacao por correio.
+      const entrada = await signIn('credentials', {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
+      });
+      if (entrada?.ok) {
         router.push('/area-pessoal');
-      }, 2000);
+      } else {
+        setPorConfirmar(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar conta');
     } finally {
@@ -82,6 +89,16 @@ export default function RegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
+
+  if (porConfirmar) {
+    return (
+      <AuthShell title="Veja o seu email" lead="Enviámos uma mensagem para o endereço que indicou.">
+        <p className="text-center text-sm text-ink-muted">
+          Siga as instruções que lá estão. Se não a encontrar, veja também a pasta de spam.
+        </p>
+      </AuthShell>
+    );
+  }
 
   if (success) {
     return (
@@ -156,10 +173,10 @@ export default function RegisterPage() {
           value={formData.password}
           onChange={handleChange}
           required
-          minLength={6}
+          minLength={8}
           autoComplete="new-password"
           placeholder="••••••••"
-          hint="Mínimo de 6 caracteres"
+          hint="Mínimo de 8 caracteres"
           icon={<Lock className="h-5 w-5" />}
         />
 
@@ -170,11 +187,19 @@ export default function RegisterPage() {
           value={formData.confirmPassword}
           onChange={handleChange}
           required
-          minLength={6}
+          minLength={8}
           autoComplete="new-password"
           placeholder="••••••••"
           error={erroConfirmacao}
           icon={<Lock className="h-5 w-5" />}
+        />
+
+        <Caixa
+          label="Tenho 18 anos ou mais"
+          hint="Só maiores de idade podem criar conta na loja."
+          checked={maiorDeIdade}
+          onChange={setMaiorDeIdade}
+          required
         />
 
         <Button type="submit" fullWidth loading={loading}>

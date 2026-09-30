@@ -5,6 +5,7 @@ import connectDB from '@/lib/db';
 import { requireEnv } from '@/lib/env';
 import { chaveDaEncomenda, mudarEstado } from '@/lib/encomenda';
 import { AvisoPagamento, Order } from '@/lib/models';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Pagamentos, pela Stripe, com a pagina de pagamento alojada nela
@@ -286,7 +287,7 @@ async function confirmar(sessao: Stripe.Checkout.Session) {
 
   if (sessao.amount_total !== e.totalCents || sessao.currency !== 'eur') {
     await Order.updateOne({ _id: id }, { $set: { pagamentoDivergente: true, pagamentoId: sessao.id } });
-    console.error(`Pagamento divergente na encomenda ${id}: ${sessao.amount_total} ${sessao.currency}.`);
+    registarErro(`Pagamento divergente na encomenda ${id}: ${sessao.amount_total} ${sessao.currency}.`);
     await enviarAvisos(id, avisos);
     return;
   }

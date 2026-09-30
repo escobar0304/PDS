@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { ADMIN_ID, CLIENTE_ID } from './contas';
+import { ADMIN_ID, CLIENTE_ID, SEM_IDADE_ID } from './contas';
 
 /**
  * Parte de uma base de dados vazia, com duas contas a serio: uma de
@@ -21,6 +21,7 @@ export default async function preparar() {
       emailVerified: true,
       country: 'Portugal',
       versaoSessao: 0,
+      maioridadeDeclaradaEm: agora,
       createdAt: agora,
       updatedAt: agora,
     },
@@ -28,6 +29,20 @@ export default async function preparar() {
       _id: new mongoose.Types.ObjectId(CLIENTE_ID),
       name: 'Cliente',
       email: 'cliente@exemplo.pt',
+      role: 'USER',
+      emailVerified: true,
+      country: 'Portugal',
+      versaoSessao: 0,
+      maioridadeDeclaradaEm: agora,
+      createdAt: agora,
+      updatedAt: agora,
+    },
+    {
+      // Sem `maioridadeDeclaradaEm` nem palavra-passe: como uma conta criada
+      // pela primeira entrada com a Google.
+      _id: new mongoose.Types.ObjectId(SEM_IDADE_ID),
+      name: 'Sem idade',
+      email: 'sem-idade@exemplo.pt',
       role: 'USER',
       emailVerified: true,
       country: 'Portugal',

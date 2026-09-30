@@ -496,6 +496,91 @@ destino é o email da encomenda, validado no checkout, ou o `ADMIN_EMAIL` do
 ambiente — nunca um que venha no aviso. A ligação da encomenda só vai no
 email se a chave que volta da Stripe for mesmo a dela.
 
+## Auditoria de 30/09/2026 — a lista inteira, e o sítio atacado a correr
+
+Pedido do negócio: uma lista de verificação completa, e no fim atacar o
+próprio sítio. O ataque está em `e2e-bd/ataque.spec.ts` (22 testes, contra o
+build de produção, o Mongo, o simulador da Stripe e o Mailpit). **Correu
+também contra o `master` de antes destas correções, e 11 falharam**: é a
+prova de que cada um apanha alguma coisa, e não só que passa.
+
+### O que estava mal, e foi corrigido
+
+| | O que acontecia | Agora |
+|---|---|---|
+| **Enumeração pelo registo** | "Este email já está registado": qualquer pessoa sabia, email a email, quem tinha conta. A entrada e a reposição já não o diziam; o registo dizia | A mesma resposta nos dois casos, com o argon2 corrido antes da consulta para o tempo não o dizer. Quem é dono do endereço recebe "já tem conta" por email, no máximo um por hora |
+| **Redirecionamento aberto** | `/auth/login?callbackUrl=https://outro.sitio` levava a pessoa para lá logo a seguir a entrar | `destinoDepoisDeEntrar` (`lib/site.ts`): só caminhos deste sítio. O ataque viu o browser sair para o outro sítio no código antigo |
+| **`?sort=constructor` → 500** | `SORTS[valor]` encontrava o que o objecto herda, e a consulta rebentava | `Object.hasOwn`. Achado pelo ataque, não por leitura |
+| **CSRF por `text/plain`** | `lerCorpo` lia JSON de qualquer corpo. Um formulário de outro sítio, com `enctype="text/plain"`, produz JSON válido: o código antigo aceitou `{"name":"CSRF="}` com 200 | Só `Content-Type: application/json`, que um formulário não consegue declarar sem CORS. Os cookies `SameSite=Lax` já travavam o caso com sessão; isto fecha também o contacto, que não tem sessão |
+| **A API de produtos devolvia o documento inteiro** | `__v`, `active`, datas; e um campo novo no modelo (um preço de custo) saía sem ninguém decidir | `CAMPOS_PUBLICOS_DO_PRODUTO`: uma lista do que sai, e não do que não sai |
+| **Emails de clientes nos registos do servidor** | `console.error('...', erro)` com o objecto inteiro: o índice único do Mongo repete o email na mensagem, o nodemailer traz os destinatários. Era a única cópia desses dados que o apagamento da conta não alcançava | `registarErro` (`lib/registo.ts`): tipo, código, mensagem sem emails, chaves, tokens nem credenciais. `registo.test.ts` falha se código do servidor voltar a passar um erro inteiro ao `console` |
+| **Contacto: assunto e telefone em texto livre** | O formulário oferecia quatro assuntos; o servidor aceitava qualquer texto, que ia para o assunto do email | O servidor aceita os quatro (`lib/contacto.ts`); o telefone só com algarismos e `+ ( ) . -`. E um campo-armadilha para programas: fora do ecrã, do teclado e dos leitores de ecrã |
+| **Palavra-passe de 6 caracteres no registo** | A razão escrita era que subir invalidava as contas existentes. Não invalidava: a entrada valida com outro esquema, sem mínimo | 8, como a reposição já pedia |
+
+### Pedidos do negócio que eram regras novas
+
+- **Só maiores de 18 criam conta.** Declaração, e não data de nascimento: a
+  data é um dado a mais que não prova nada que a declaração não prove
+  (minimização, RGPD art. 5.º), e verificar a sério pedia um documento. Quem
+  entra pela Google pela primeira vez não passou pela caixa: a área pessoal
+  manda-o a `/auth/maioridade`, e uma conta sem declaração não fica com
+  encomendas. A declaração vem da base de dados em cada pedido, não do token:
+  um token forjado a dizê-la não abre nada (testado).
+- **Identificação e morada em todos os emails a clientes**
+  (`rodapeDaLoja`). Não há newsletter nem correio comercial — só emails sobre
+  a conta ou a encomenda de quem os recebe —, por isso não há subscrição a
+  cancelar. Se um dia houver, é correio comercial e precisa da forma de o
+  cancelar (DL 7/2004, art. 22.º).
+
+### Verificado, e estava bem
+
+- **Tipos de letra:** o `next/font` descarrega-os no build e serve-os de
+  `/_next/static`; a CSP (`font-src 'self'`) recusa-os de qualquer outro
+  sítio. Nenhum pedido chega à Google — o caso do tribunal de Munique (LG
+  München I, 3 O 17493/20) não se aplica. Teste em `e2e/privacidade.spec.ts`.
+- **Terceiros e gravação de sessões** (as ações por *wiretapping* nos EUA
+  são contra *session replay*, *pixels* e *chats* de terceiros): não há
+  nenhum. A CSP só deixa falar com o próprio sítio (`connect-src 'self'`), e
+  o teste de terceiros passou a cobrir as 16 páginas públicas em vez de 7. O
+  mapa só carrega depois de a pessoa pedir.
+- **Stripe:** pagamento único (`mode: 'payment'`), sem subscrições, e na
+  página da Stripe. Não há renovações, logo não há termos de renovação.
+- **Segredos:** nenhuma variável que não seja `NEXT_PUBLIC_` é lida por
+  código que vá para o browser, e `fronteira.test.ts` segue os `import` de
+  cada componente de cliente para o garantir. O histórico do git (825 versões
+  de ficheiros) foi varrido com o `detect-secrets` e com padrões de chaves
+  reais: só valores de teste (`sk_test_123`, `whsec_apenas_para_testes`). O
+  `gitleaks` não se descarregou deste ambiente (Docker Hub com limite, GHCR
+  recusado).
+- **Painel, isolamento, encomendas alheias, injeção, sessões:** as guardas
+  que já existiam aguentaram o ataque — cliente com token a dizer ADMIN,
+  token com outro segredo, a chave de uma encomenda noutra, operadores do
+  Mongo nas credenciais e nos parâmetros, campos a mais no checkout e no
+  perfil, nome com marcação (texto na página e no email).
+- **Dependências:** `npm audit`, produção e desenvolvimento: 0.
+
+### O que não se aplica, e porquê
+
+- **RLS** é do Postgres. Aqui não há acesso à base de dados a partir do
+  browser: só o servidor lhe fala, e cada consulta de dados pessoais filtra
+  pelo `id` da sessão (`exigirSessao`), nunca por um do pedido. O
+  equivalente que falta é de alojamento: o utilizador do Mongo em produção
+  só com permissões na base da loja.
+- **Buckets e envio de ficheiros:** não existem. As imagens são caminhos em
+  `/images/`, com formato fixo (`esquemaNovoProduto`).
+- **Injeção de *prompts*:** o sítio não usa nenhum modelo de linguagem.
+- **SQLi:** não há SQL; a injeção equivalente é a de operadores do Mongo, e
+  está coberta acima.
+
+### O que fica
+
+- `Secure` e o prefixo `__Secure-` no cookie da sessão só aparecem com
+  `NEXTAUTH_URL` em https — é o NextAuth que decide, e em produção é https.
+  Nos testes o servidor é http.
+- A declaração de idade é isso, uma declaração. **Não sou jurista:** se a
+  compra sem conta (que o checkout permite) também deve pedi-la, é uma
+  pergunta para quem for validar os termos.
+
 ## Por fazer
 
 - ~~**Manipulação de preço**, quando o checkout existir.~~ Feito com a E5, ver

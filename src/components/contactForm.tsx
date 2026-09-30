@@ -3,15 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Alert, Button, Input, Select, Textarea } from '@/components/ui';
+import { ASSUNTOS_CONTACTO } from '@/lib/contacto';
 
-const ASSUNTOS = [
-  { value: 'informacao', label: 'Informação sobre produtos' },
-  { value: 'encomenda', label: 'Dúvida sobre encomenda' },
-  { value: 'personalizado', label: 'Pedido personalizado' },
-  { value: 'outro', label: 'Outro' },
-];
-
-const VAZIO = { name: '', email: '', phone: '', subject: '', message: '' };
+const VAZIO = { name: '', email: '', phone: '', subject: '', message: '', sitio: '' };
 
 export default function ContactForm() {
   const [formData, setFormData] = useState(VAZIO);
@@ -52,7 +46,7 @@ export default function ContactForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+    <form onSubmit={handleSubmit} className="relative space-y-4 md:space-y-6">
       {success && (
         <Alert tone="sucesso">
           Mensagem enviada. Respondemos assim que possível.
@@ -90,6 +84,8 @@ export default function ContactForm() {
         onChange={handleChange}
         autoComplete="tel"
         placeholder="+351 xxx xxx xxx"
+        pattern="\+?[\d\s\(\)\.\-]{9,20}"
+        title="Só algarismos, espaços e + ( ) . -"
       />
 
       <Select
@@ -100,9 +96,9 @@ export default function ContactForm() {
         required
       >
         <option value="">Selecione um assunto</option>
-        {ASSUNTOS.map((a) => (
-          <option key={a.value} value={a.value}>
-            {a.label}
+        {Object.entries(ASSUNTOS_CONTACTO).map(([valor, rotulo]) => (
+          <option key={valor} value={valor}>
+            {rotulo}
           </option>
         ))}
       </Select>
@@ -116,6 +112,24 @@ export default function ContactForm() {
         rows={5}
         placeholder="Escreva a sua mensagem aqui…"
       />
+
+      {/*
+        A armadilha para programas (ver `/api/contact`). Fora do ecra, fora do
+        teclado e escondida dos leitores de ecra: uma pessoa nunca a preenche,
+        e um programa que preenche todos os campos denuncia-se.
+      */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+        <label htmlFor="contacto-sitio">Não preencha este campo</label>
+        <input
+          id="contacto-sitio"
+          type="text"
+          name="sitio"
+          tabIndex={-1}
+          autoComplete="off"
+          value={formData.sitio}
+          onChange={handleChange}
+        />
+      </div>
 
       <Button type="submit" fullWidth loading={loading}>
         {loading ? 'A enviar…' : 'Enviar mensagem'}

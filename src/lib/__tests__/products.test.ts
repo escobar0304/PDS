@@ -27,6 +27,12 @@ describe('resolveSort', () => {
     expect(resolveSort('')).toBe(SORTS.featured);
   });
 
+  it('não encontra o que o objecto herda', () => {
+    for (const chave of ['__proto__', 'constructor', 'toString', 'hasOwnProperty']) {
+      expect(resolveSort(chave), chave).toBe(SORTS.featured);
+    }
+  });
+
   it('ordena o preco nos dois sentidos', () => {
     expect(resolveSort('price-asc')).toEqual({ priceCents: 1 });
     expect(resolveSort('price-desc')).toEqual({ priceCents: -1 });

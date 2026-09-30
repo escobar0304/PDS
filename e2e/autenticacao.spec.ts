@@ -67,6 +67,7 @@ test('o registo recusa passwords diferentes sem ir ao servidor', async ({ page }
   await page.getByLabel('Email').fill('marta@exemplo.pt');
   await page.getByLabel('Password', { exact: true }).fill('umapassword');
   await page.getByLabel('Confirmar password').fill('outrapassword');
+  await page.getByLabel('Tenho 18 anos ou mais').check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
 
   await expect(page.getByText('As passwords não coincidem')).toBeVisible();
@@ -87,9 +88,38 @@ test('um erro do servidor no registo é mostrado ao utilizador', async ({ page }
   await page.getByLabel('Email').fill('marta@exemplo.pt');
   await page.getByLabel('Password', { exact: true }).fill('umapassword');
   await page.getByLabel('Confirmar password').fill('umapassword');
+  await page.getByLabel('Tenho 18 anos ou mais').check();
   await page.getByRole('button', { name: 'Criar conta' }).click();
 
   await expect(page.getByText('Este email já está registado')).toBeVisible();
+});
+
+test('sem declarar os 18 anos, o registo não chega ao servidor', async ({ page }) => {
+  let chamouServidor = false;
+  await page.route('**/api/auth/register', (route) => {
+    chamouServidor = true;
+    return route.fulfill({ status: 500, body: '{}' });
+  });
+
+  await page.goto('/auth/register');
+  await page.getByLabel('Nome').fill('Marta Ferreira');
+  await page.getByLabel('Email').fill('marta@exemplo.pt');
+  await page.getByLabel('Password', { exact: true }).fill('umapassword');
+  await page.getByLabel('Confirmar password').fill('umapassword');
+  await page.getByRole('button', { name: 'Criar conta' }).click();
+
+  await expect(page.getByLabel('Tenho 18 anos ou mais')).toHaveJSProperty('validity.valueMissing', true);
+  expect(chamouServidor, 'não devia ter chamado o servidor').toBe(false);
+});
+
+test('o servidor recusa o registo sem a declaração dos 18 anos', async ({ request }) => {
+  for (const maiorDeIdade of [undefined, false, 'true']) {
+    const r = await request.post('/api/auth/register', {
+      data: { name: 'Sonda', email: 'menor@exemplo.pt', password: 'umapassword', maiorDeIdade },
+      failOnStatusCode: false,
+    });
+    expect(r.status(), `aceitou maiorDeIdade=${JSON.stringify(maiorDeIdade)}`).toBe(400);
+  }
 });
 
 test('as duas páginas ligam uma à outra', async ({ page }) => {

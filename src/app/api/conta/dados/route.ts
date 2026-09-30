@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { exigirSessao } from '@/lib/autorizacao';
 import { exportarDados } from '@/lib/conta';
 import { LIMITES, travar } from '@/lib/limites';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Direito de acesso e de portabilidade (RGPD, art. 15.º e 20.º).
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (erro) {
-    console.error('Erro ao exportar dados:', erro);
+    registarErro('Erro ao exportar dados:', erro);
     return NextResponse.json({ error: 'Não foi possível exportar os dados.' }, { status: 500 });
   }
 }

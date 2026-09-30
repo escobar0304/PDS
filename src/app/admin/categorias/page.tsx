@@ -4,6 +4,7 @@ import { Alert, Card, Container, PageHeader } from '@/components/ui';
 import { paginaDeAdmin } from '@/lib/autorizacao';
 import connectDB from '@/lib/db';
 import { Category } from '@/lib/models';
+import { registarErro } from '@/lib/registo';
 
 export const metadata = { title: 'Categorias · Painel' };
 
@@ -12,7 +13,7 @@ async function ler() {
     await connectDB();
     return await Category.find().sort({ order: 1, name: 1 }).lean();
   } catch (erro) {
-    console.error('Painel: categorias indisponíveis:', erro);
+    registarErro('Painel: categorias indisponíveis:', erro);
     return null;
   }
 }

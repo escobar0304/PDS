@@ -4,6 +4,7 @@ import { Token, User } from '@/lib/models';
 import { consumir, identificar } from '@/lib/limites';
 import { esquemaVerificacao, lerCorpo } from '@/lib/validacao';
 import { resumir } from '@/lib/tokens';
+import { registarErro } from '@/lib/registo';
 
 /** Confirmacao do endereco de email a partir do token enviado no registo. */
 
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: 'Email confirmado.' });
   } catch (erro) {
-    console.error('Erro ao verificar email:', erro);
+    registarErro('Erro ao verificar email:', erro);
     return NextResponse.json({ error: 'Erro ao confirmar o email' }, { status: 500 });
   }
 }

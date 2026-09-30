@@ -1,9 +1,10 @@
 // src/app/api/products/[slug]/route.ts
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { paraPublico } from '@/lib/catalogo';
+import { CAMPOS_PUBLICOS_DO_PRODUTO, paraPublico } from '@/lib/catalogo';
 import { LIMITES, travar } from '@/lib/limites';
 import { Product } from '@/lib/models';
+import { registarErro } from '@/lib/registo';
 
 /**
  * No Next 15 o `params` de uma rota dinamica passou a ser uma Promise.
@@ -26,6 +27,7 @@ export async function GET(
     const { slug } = await params;
     
     const product = await Product.findOne({ slug, active: true })
+      .select(CAMPOS_PUBLICOS_DO_PRODUTO)
       .populate('categoryId', 'name slug')
       .lean();
     
@@ -38,7 +40,7 @@ export async function GET(
     
     return NextResponse.json(paraPublico(product));
   } catch (error) {
-    console.error('Erro ao buscar produto:', error);
+    registarErro('Erro ao buscar produto:', error);
     return NextResponse.json(
       { error: 'Erro ao buscar produto' },
       { status: 500 }

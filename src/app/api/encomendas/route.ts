@@ -7,6 +7,7 @@ import { estadoDaLoja } from '@/lib/loja';
 import { iniciarPagamento } from '@/lib/pagamento';
 import { SITE_URL } from '@/lib/site';
 import { esquemaCheckout, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Encomendar (ROADMAP-V2, E5): cria a encomenda, reserva o stock e abre o
@@ -32,8 +33,11 @@ export async function POST(request: Request) {
 
   try {
     // Com conta, a encomenda fica ligada a ela. Sem conta, compra-se na mesma.
+    // Uma conta que ainda nao declarou os 18 anos nao fica com encomendas:
+    // compra como quem nao tem conta.
     const sessao = await getServerSession(authOptions);
-    const userId = (sessao?.user as { id?: string } | undefined)?.id;
+    const utilizador = sessao?.user as { id?: string; maior?: boolean } | undefined;
+    const userId = utilizador?.maior === true ? utilizador.id : undefined;
 
     const r = await criarEncomenda(
       linhas,
@@ -66,14 +70,14 @@ export async function POST(request: Request) {
       // Sem pagina de pagamento, a encomenda nao tem como avancar: cancela-se
       // ja, e o stock volta, em vez de ficar preso ate a reserva expirar.
       await mudarEstado(r.id, 'CANCELLED', 'sistema', 'o pagamento não abriu');
-      console.error('Encomenda: o pagamento não abriu:', erro);
+      registarErro('Encomenda: o pagamento não abriu:', erro);
       return NextResponse.json(
         { error: 'Não foi possível abrir o pagamento. Nada foi cobrado: pode tentar outra vez.' },
         { status: 502 }
       );
     }
   } catch (erro) {
-    console.error('Encomenda: erro ao criar:', erro);
+    registarErro('Encomenda: erro ao criar:', erro);
     return NextResponse.json({ error: 'Erro ao criar a encomenda.' }, { status: 500 });
   }
 }

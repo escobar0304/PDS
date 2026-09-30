@@ -131,6 +131,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           versaoSessao: user.versaoSessao ?? 0,
+          maior: Boolean(user.maioridadeDeclaradaEm),
         };
       }
     })
@@ -142,6 +143,7 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role || 'USER';
         token.userId = user.id;
         token.versao = user.versaoSessao ?? 0;
+        token.maior = user.maior ?? false;
 
         // Na Google, `user.id` e o identificador da Google, nao o nosso.
         if (account?.provider === 'google') {
@@ -151,6 +153,7 @@ export const authOptions: NextAuthOptions = {
             token.role = dbUser.role;
             token.userId = dbUser._id.toString();
             token.versao = dbUser.versaoSessao ?? 0;
+            token.maior = Boolean(dbUser.maioridadeDeclaradaEm);
           }
         }
         return token;
@@ -161,7 +164,10 @@ export const authOptions: NextAuthOptions = {
       // limpa o cookie e devolve uma sessao vazia, no browser e no servidor.
       const verificacao = await verificarSessao(token.userId, token.versao);
       if (verificacao.estado === 'revogada') throw new SessaoRevogada();
-      if (verificacao.estado === 'valida') token.role = verificacao.role;
+      if (verificacao.estado === 'valida') {
+        token.role = verificacao.role;
+        token.maior = verificacao.maior;
+      }
 
       // Depois de a pessoa mudar o nome, a interface chama `update()`. O que
       // vem nesse pedido e do cliente e nao se usa: le-se o nome da base de
@@ -185,6 +191,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.userId as string;
+        session.user.maior = token.maior === true;
       }
       return session;
     },
@@ -206,6 +213,10 @@ export const authOptions: NextAuthOptions = {
       if (!existente) {
         // Sem `password`, e nao com ela vazia: e a ausencia que diz que a
         // conta nao tem palavra-passe (`GET /api/conta` le isso).
+        //
+        // E sem `maioridadeDeclaradaEm`: quem chega pela Google nao passou
+        // pela caixa do registo. A conta existe, mas a area pessoal manda-a
+        // primeiro declarar a idade (`paginaComSessao`).
         await User.create({
           name: user.name || email.split('@')[0],
           email,

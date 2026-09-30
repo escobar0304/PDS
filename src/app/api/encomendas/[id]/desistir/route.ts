@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { LIMITES, travar } from '@/lib/limites';
 import { desistirDoPagamento } from '@/lib/pagamento';
 import { esquemaDesistencia, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Desistir de uma encomenda por pagar: o botao "voltar" da pagina da Stripe
@@ -35,7 +36,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       { status: 409 }
     );
   } catch (erro) {
-    console.error('Desistência: erro:', erro);
+    registarErro('Desistência: erro:', erro);
     return NextResponse.json({ error: 'Erro ao desistir da encomenda.' }, { status: 500 });
   }
 }

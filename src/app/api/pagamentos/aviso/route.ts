@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { LIMITES, travar } from '@/lib/limites';
 import { AssinaturaInvalida, tratarAviso } from '@/lib/pagamento';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Os avisos da Stripe sobre pagamentos (ROADMAP-V2, E4).
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     if (erro instanceof AssinaturaInvalida) {
       return NextResponse.json({ error: 'Assinatura inválida.' }, { status: 400 });
     }
-    console.error('Aviso de pagamento: erro ao processar:', erro);
+    registarErro('Aviso de pagamento: erro ao processar:', erro);
     return NextResponse.json({ error: 'Erro ao processar.' }, { status: 500 });
   }
 }

@@ -66,8 +66,8 @@ cláusulas contratuais-tipo) antes de começar.
 |---|---|
 | Finalidade | Criar e manter a conta; permitir entrar |
 | Base legal | Execução de contrato (art. 6.º, n.º 1, al. b)) |
-| Titulares | Clientes que criam conta |
-| Dados | nome, email, palavra-passe cifrada (argon2id), papel (`USER`/`ADMIN`), se o email foi confirmado, contador de sessão, datas de criação e alteração. Pela Google: nome e email, sem palavra-passe |
+| Titulares | Clientes que criam conta, com 18 anos ou mais (declarado, não verificado) |
+| Dados | nome, email, palavra-passe cifrada (argon2id), papel (`USER`/`ADMIN`), se o email foi confirmado, contador de sessão, data da declaração de maioridade (não a data de nascimento), datas de criação e alteração. Pela Google: nome e email, sem palavra-passe |
 | Campos que existem e nada preenche | telefone, morada, cidade, código postal, país — ficam da v2 |
 | Destinatários | ninguém fora dos subcontratantes acima |
 | Prazo | até a pessoa apagar a conta (`DELETE /api/conta`) |

@@ -4,6 +4,7 @@ import { criarProduto, listarProdutos } from '@/lib/gestao';
 import { LIMITES, travar } from '@/lib/limites';
 import { respostaDeRecusa } from '@/lib/respostas';
 import { esquemaNovoProduto, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 /** Todos os produtos, ativos e desativados, com o reservado online. */
 export async function GET(request: Request) {
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
       headers: { 'Cache-Control': 'no-store, max-age=0' },
     });
   } catch (erro) {
-    console.error('Admin: erro ao listar produtos:', erro);
+    registarErro('Admin: erro ao listar produtos:', erro);
     return NextResponse.json({ error: 'Erro ao listar produtos' }, { status: 500 });
   }
 }
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     const r = await criarProduto(corpo.dados, `admin:${permissao.sessao.id}`);
     return r.ok ? NextResponse.json({ id: r.id }, { status: 201 }) : respostaDeRecusa(r);
   } catch (erro) {
-    console.error('Admin: erro ao criar produto:', erro);
+    registarErro('Admin: erro ao criar produto:', erro);
     return NextResponse.json({ error: 'Erro ao criar produto' }, { status: 500 });
   }
 }

@@ -144,6 +144,8 @@ export async function enviarAvisos(
         // Desistir "respondendo a este email" so funciona se a resposta
         // chegar ao contacto da loja.
         ...resposta(),
+        // Ja traz "Quem vende", com o NIF e a entidade de litigios.
+        rodape: false,
       })
     );
   }
@@ -153,7 +155,7 @@ export async function enviarAvisos(
   if (tipo && destino) {
     const { assunto, texto } = textoParaALoja(dados, tipo, pagoCents);
     await umaVez(id, 'avisoLojaEnviadoEm', () =>
-      enviar({ para: destino, assunto, texto, responderPara: e.customerEmail })
+      enviar({ para: destino, assunto, texto, responderPara: e.customerEmail, rodape: false })
     );
   }
 }

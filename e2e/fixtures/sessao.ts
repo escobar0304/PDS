@@ -16,10 +16,13 @@ export async function iniciarSessao(
   {
     base = 'http://127.0.0.1:3100',
     userId = 'a'.repeat(24),
-  }: { base?: string; userId?: string } = {}
+    maior = true,
+  }: { base?: string; userId?: string; maior?: boolean } = {}
 ) {
+  // `maior`: se a conta ja declarou os 18 anos. Sem ela, a area pessoal
+  // manda para `/auth/maioridade` (`paginaComSessao`).
   const valor = await encode({
-    token: { userId, role: papel, versao: 0, name: 'Teste', email: 'teste@exemplo.pt' },
+    token: { userId, role: papel, versao: 0, maior, name: 'Teste', email: 'teste@exemplo.pt' },
     secret: 'segredo-apenas-para-testes-e2e',
   });
   await contexto.addCookies([

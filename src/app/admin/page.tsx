@@ -6,6 +6,7 @@ import { stockTotal } from '@/lib/catalogo';
 import { listarProdutos } from '@/lib/gestao';
 import { contarEncomendas } from '@/lib/gestao-encomendas';
 import { estadoDaLoja } from '@/lib/loja';
+import { registarErro } from '@/lib/registo';
 
 export const metadata = { title: 'Painel' };
 
@@ -23,7 +24,7 @@ async function resumo() {
       ),
     };
   } catch (erro) {
-    console.error('Painel: resumo indisponível:', erro);
+    registarErro('Painel: resumo indisponível:', erro);
     return null;
   }
 }

@@ -5,6 +5,7 @@ import { mudarEstado } from '@/lib/encomenda';
 import { Order, type IOrder } from '@/lib/models';
 import { reembolsarPagamento } from '@/lib/pagamento';
 import type { Autor } from '@/lib/transicoes';
+import { registarErro } from '@/lib/registo';
 
 /**
  * O painel de encomendas (ROADMAP-V2, P3): ver, expedir, dar por entregue,
@@ -82,7 +83,7 @@ async function comAviso(aviso: () => Promise<boolean>): Promise<Acao> {
     await aviso();
     return { ok: true };
   } catch (erro) {
-    console.error('Painel: o email não saiu:', erro);
+    registarErro('Painel: o email não saiu:', erro);
     return { ok: true, avisoFalhou: true };
   }
 }

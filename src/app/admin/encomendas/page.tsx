@@ -5,6 +5,7 @@ import { paginaDeAdmin } from '@/lib/autorizacao';
 import { formatarPreco } from '@/lib/dinheiro';
 import { eFiltro, FILTROS, listarEncomendas, type Filtro } from '@/lib/gestao-encomendas';
 import { NOMES_DOS_ESTADOS } from '@/lib/transicoes';
+import { registarErro } from '@/lib/registo';
 
 export const metadata = { title: 'Encomendas · Painel' };
 
@@ -14,7 +15,7 @@ async function ler(filtro: Filtro) {
   try {
     return await listarEncomendas(filtro);
   } catch (erro) {
-    console.error('Painel: encomendas indisponíveis:', erro);
+    registarErro('Painel: encomendas indisponíveis:', erro);
     return null;
   }
 }

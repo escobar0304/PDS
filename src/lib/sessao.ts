@@ -18,7 +18,9 @@ import { User } from '@/lib/models';
  * Tres respostas, e nao duas:
  * - `valida`       — a conta existe e a versao bate certo. Traz o `role`
  *   actual, que o token passa a usar: sem isto, quem perdesse o papel de
- *   administrador continuava administrador ate o token expirar;
+ *   administrador continuava administrador ate o token expirar. E traz se a
+ *   pessoa ja declarou ter 18 anos (`maior`), pela mesma razao: a declaracao
+ *   feita noutro separador vale logo;
  * - `revogada`     — a conta foi apagada ou a sessao revogada;
  * - `desconhecido` — nao foi possivel perguntar (base de dados em baixo).
  *
@@ -27,7 +29,7 @@ import { User } from '@/lib/models';
  * expulsava toda a gente por uma falha que nao tem nada a ver com seguranca.
  */
 export type EstadoSessao =
-  | { estado: 'valida'; role: 'USER' | 'ADMIN' }
+  | { estado: 'valida'; role: 'USER' | 'ADMIN'; maior: boolean }
   | { estado: 'revogada' }
   | { estado: 'desconhecido' };
 
@@ -41,12 +43,12 @@ export async function verificarSessao(
 
   try {
     await connectDB();
-    const conta = await User.findById(idUtilizador).select('versaoSessao role').lean();
+    const conta = await User.findById(idUtilizador).select('versaoSessao role maioridadeDeclaradaEm').lean();
     if (!conta) return { estado: 'revogada' };
     // Tokens emitidos antes de haver versao, e contas que nunca a mudaram,
     // valem 0 dos dois lados.
     if ((conta.versaoSessao ?? 0) !== (versaoDoToken ?? 0)) return { estado: 'revogada' };
-    return { estado: 'valida', role: conta.role };
+    return { estado: 'valida', role: conta.role, maior: Boolean(conta.maioridadeDeclaradaEm) };
   } catch {
     return { estado: 'desconhecido' };
   }

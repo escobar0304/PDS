@@ -78,6 +78,12 @@ export interface IUser extends Document {
   emailVerified: boolean;
   /** Muda quando todas as sessoes da conta devem acabar. Ver `lib/sessao.ts`. */
   versaoSessao: number;
+  /**
+   * Quando a pessoa declarou ter 18 anos ou mais. Sem ela, a conta nao abre a
+   * area pessoal: e o caso de quem entra pela Google pela primeira vez, que
+   * nunca passou pelo formulario de registo. Ver `paginaComSessao`.
+   */
+  maioridadeDeclaradaEm?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -333,6 +339,9 @@ const userSchema = new Schema<IUser>(
     versaoSessao: {
       type: Number,
       default: 0,
+    },
+    maioridadeDeclaradaEm: {
+      type: Date,
     },
   },
   {

@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { EMPRESA, moradaFormatada } from '@/lib/empresa';
 
 /**
  * Envio de correio.
@@ -38,23 +39,52 @@ function umaLinha(valor: string): string {
   return valor.replace(/[\r\n]+/g, ' ').trim();
 }
 
+/**
+ * Quem envia, com a morada, no fim de cada email a um cliente.
+ *
+ * O DL 7/2004 (art. 10.º) pede a identificacao e o endereco geografico de
+ * quem presta um servico em linha; o CAN-SPAM, nos EUA, pede o endereco
+ * postal em correio comercial. Este sitio nao envia correio comercial — nao
+ * ha newsletter nem publicidade, so emails sobre a conta ou a encomenda de
+ * quem os recebe, e por isso nao ha subscricao a cancelar —, mas pôr a
+ * identificacao em todos custa uma linha e nao depende de alguem se lembrar
+ * dela no email seguinte. Campo por preencher diz que falta, como no resto
+ * do sitio: a loja nao abre enquanto faltar (`estadoDaLoja`).
+ */
+export function rodapeDaLoja(): string {
+  const falta = '(por preencher)';
+  return [
+    '',
+    '--',
+    `Pétalas de Sonho · ${EMPRESA.denominacao ?? falta}`,
+    moradaFormatada() ?? `Morada: ${falta}`,
+    EMPRESA.email ?? falta,
+  ].join('\n');
+}
+
 export async function enviar({
   para,
   assunto,
   texto,
   responderPara,
+  rodape = true,
 }: {
   para: string;
   assunto: string;
   texto: string;
   /** Para onde vai a resposta, se nao for o remetente. Nunca vem de um pedido. */
   responderPara?: string;
+  /**
+   * `false` so para o correio que fica dentro da loja (o aviso de encomenda,
+   * o formulario de contacto) e para a confirmacao, que ja traz "Quem vende".
+   */
+  rodape?: boolean;
 }): Promise<void> {
   await transporte().sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to: para,
     subject: umaLinha(assunto),
-    text: texto,
+    text: rodape ? `${texto}\n${rodapeDaLoja()}` : texto,
     ...(responderPara ? { replyTo: responderPara } : {}),
   });
 }
@@ -74,6 +104,28 @@ export async function enviarVerificacao(para: string, nome: string, ligacao: str
       '',
       'Se não foi você que criou esta conta, ignore esta mensagem. Sem a',
       'confirmação, o endereço não fica associado a ninguém.',
+    ].join('\n'),
+  });
+}
+
+/**
+ * Alguem tentou criar conta com um email que ja a tem. O registo responde
+ * igual nos dois casos, para nao dizer a terceiros quem tem conta; e aqui,
+ * na caixa de correio do dono, que se diz.
+ */
+export async function enviarAvisoContaExistente(para: string, nome: string, ligacao: string) {
+  await enviar({
+    para,
+    assunto: 'Já tem conta na Pétalas de Sonho',
+    texto: [
+      `Olá ${nome},`,
+      '',
+      'Alguém tentou criar uma conta com este endereço, mas ele já tem uma.',
+      'Se foi você, pode entrar com a palavra-passe que já tem, ou repô-la aqui:',
+      '',
+      ligacao,
+      '',
+      'Se não foi você, ignore esta mensagem: nada mudou na sua conta.',
     ].join('\n'),
   });
 }

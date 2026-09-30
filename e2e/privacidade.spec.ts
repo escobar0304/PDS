@@ -9,7 +9,11 @@ import { mockApi } from './fixtures/api';
  * a pagina antes de a alteracao chegar a producao.
  */
 
-const ROTAS_PUBLICAS = ['/', '/loja', '/catalogo', '/sobre-nos', '/carrinho', '/auth/login', '/cookies'];
+const ROTAS_PUBLICAS = [
+  '/', '/loja', '/catalogo', '/produto/quartzo-rosa-bruto', '/sobre-nos', '/carrinho', '/contacto',
+  '/envios', '/faq', '/termos', '/privacidade', '/cookies', '/auth/login', '/auth/register',
+  '/auth/recuperar-password', '/rota-que-nao-existe',
+];
 
 /** Dominios que o site pode contactar sem a pessoa ter pedido nada. */
 const PERMITIDOS = ['localhost', '127.0.0.1'];
@@ -32,6 +36,28 @@ test('nenhuma página contacta terceiros sem a pessoa pedir', async ({ page, con
     [...externos],
     'um terceiro novo obriga a rever /cookies e, possivelmente, a pedir consentimento',
   ).toEqual([]);
+});
+
+test('os tipos de letra vêm do próprio sítio, e nunca da Google', async ({ page, request }) => {
+  // O tribunal de Munique (LG Muenchen I, 3 O 17493/20, 20/01/2022) condenou
+  // um sítio por carregar o Google Fonts do servidor da Google: o browser
+  // entrega o IP da pessoa sem ela ter pedido. Aqui, o `next/font` descarrega
+  // os tipos de letra durante o build e serve-os de /_next/static; a CSP
+  // (`font-src 'self'`) recusa-os de qualquer outro sitio, mesmo que alguem
+  // escreva um <link> para a Google.
+  const fontes: string[] = [];
+  page.on('request', (req) => {
+    if (req.resourceType() === 'font') fontes.push(req.url());
+  });
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  expect(fontes.length, 'a página devia carregar tipos de letra').toBeGreaterThan(0);
+  for (const url of fontes) expect(new URL(url).pathname).toMatch(/^\/_next\/static\/media\//);
+  expect(fontes.filter((u) => /googleapis|gstatic/.test(u))).toEqual([]);
+
+  const csp = (await request.get('/')).headers()['content-security-policy'];
+  expect(csp).toContain("font-src 'self' data:");
+  expect(csp).not.toMatch(/googleapis|gstatic/);
 });
 
 test('o mapa só contacta a Google depois de a pessoa pedir', async ({ page, context }) => {

@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
 import { Category, Product } from '@/lib/models';
-import { paraPublico } from '@/lib/catalogo';
+import { CAMPOS_PUBLICOS_DO_PRODUTO, paraPublico } from '@/lib/catalogo';
 import { LIMITES, travar } from '@/lib/limites';
 import { resolveLimit, resolveSort } from '@/lib/products';
+import { registarErro } from '@/lib/registo';
 
 export async function GET(request: Request) {
   const bloqueio = travar(request, 'catalogo', LIMITES.leitura);
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
     }
 
     let cursor = Product.find(query)
+      .select(CAMPOS_PUBLICOS_DO_PRODUTO)
       .populate('categoryId', 'name slug')
       .sort(resolveSort(sort));
 
@@ -48,7 +50,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(products.map(paraPublico));
   } catch (error) {
-    console.error('Erro ao buscar produtos:', error);
+    registarErro('Erro ao buscar produtos:', error);
     return NextResponse.json(
       { error: 'Erro ao buscar produtos' },
       { status: 500 }

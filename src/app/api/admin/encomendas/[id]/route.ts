@@ -3,6 +3,7 @@ import { exigirAdmin } from '@/lib/autorizacao';
 import { concluir, expedir, reembolsar, reenviarAviso, type Acao } from '@/lib/gestao-encomendas';
 import { LIMITES, travar } from '@/lib/limites';
 import { esquemaAcaoEncomenda, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 const RECUSAS = {
   'nao-existe': { estado: 404, mensagem: 'Não existe.' },
@@ -36,7 +37,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
             ? await reembolsar(id, por, d.nota)
             : await reenviarAviso(id);
   } catch (erro) {
-    console.error('Painel: erro na encomenda:', erro);
+    registarErro('Painel: erro na encomenda:', erro);
     return NextResponse.json(
       {
         error:

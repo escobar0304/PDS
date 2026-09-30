@@ -5,6 +5,7 @@ import { consumir, identificar } from '@/lib/limites';
 import { esquemaPedidoReposicao, lerCorpo } from '@/lib/validacao';
 import { expiraEm, gerarToken, ligacaoToken, resumir } from '@/lib/tokens';
 import { enviarReposicaoPassword } from '@/services/mailer';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Pedido de reposicao de palavra-passe.
@@ -71,11 +72,11 @@ export async function POST(request: Request) {
         user.email,
         user.name,
         ligacaoToken('repor-password', token),
-      ).catch((erro) => console.error('Falha ao enviar reposição:', erro));
+      ).catch((erro) => registarErro('Falha ao enviar reposição:', erro));
     }
   } catch (erro) {
     // Nem o erro pode distinguir os casos: regista-se e responde-se igual.
-    console.error('Erro no pedido de reposição:', erro);
+    registarErro('Erro no pedido de reposição:', erro);
   }
 
   return NextResponse.json(RESPOSTA);

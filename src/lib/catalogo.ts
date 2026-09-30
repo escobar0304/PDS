@@ -59,6 +59,15 @@ export function stockTotal(variantes: readonly { stock: number }[]): number {
  * as listagens ("esgotado", "apenas 2"). O stock de cada medida vai tambem,
  * porque a pagina de produto precisa dele para a escolha.
  */
+/**
+ * O que a loja publica de um produto, e mais nada. Uma lista de campos, e nao
+ * uma lista de exclusoes: um campo novo no modelo (um preco de custo, uma
+ * nota interna) fica fora da API ate alguem o acrescentar aqui de proposito.
+ * `active`, `__v` e as datas nao servem a quem compra.
+ */
+export const CAMPOS_PUBLICOS_DO_PRODUTO =
+  'name slug description priceCents images variantes categoryId featured weightGrams dimensions properties';
+
 export function paraPublico<T extends { variantes: readonly { stock: number }[] }>(
   produto: T
 ): T & { stock: number } {
