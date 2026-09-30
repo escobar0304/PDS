@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ASSUNTOS_CONTACTO, type AssuntoContacto } from '@/lib/contacto';
 
 /**
  * Validacao do corpo dos pedidos.
@@ -19,9 +20,19 @@ const texto = (max: number) => z.string().trim().min(1).max(max);
 export const esquemaContacto = z.object({
   name: texto(120),
   email: z.string().trim().toLowerCase().email().max(254),
-  phone: z.string().trim().max(40).optional().or(z.literal('')),
-  subject: texto(120),
+  // Algarismos, espacos, e os sinais de um numero escrito a mao: `+351 912
+  // 345 678`, `(22) 123-4567`. Nada que seja texto livre a entrar no email.
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[\d\s().-]{9,20}$/)
+    .optional()
+    .or(z.literal('')),
+  subject: z.enum(Object.keys(ASSUNTOS_CONTACTO) as [AssuntoContacto, ...AssuntoContacto[]]),
   message: texto(5000),
+  // A armadilha para programas: um campo que as pessoas nao veem nem
+  // alcancam com o teclado. Quem o preenche nao e uma pessoa. Ver a rota.
+  sitio: z.string().max(200).optional(),
 });
 
 export type DadosContacto = z.infer<typeof esquemaContacto>;
@@ -29,10 +40,20 @@ export type DadosContacto = z.infer<typeof esquemaContacto>;
 export const esquemaRegisto = z.object({
   name: texto(120),
   email: z.string().trim().toLowerCase().email().max(254),
-  // O minimo de 6 vem do userSchema. Curto, mas mudar isto agora invalidava
-  // as contas existentes; fica para o endurecimento de autenticacao.
-  password: z.string().min(6).max(200),
+  // 8, como a reposicao (`esquemaNovaPassword`) e o minimo da NIST SP 800-63B.
+  // Estava a 6 com a razao de que subir invalidava as contas existentes; nao
+  // invalidava: a entrada valida com `esquemaCredenciais`, que nao tem minimo.
+  password: z.string().min(8).max(200),
+  // So maiores de 18 criam conta: decisao do negocio, a 30/09/2026. E uma
+  // declaracao, e nao uma data de nascimento: a data e um dado pessoal a mais
+  // (RGPD, art. 5.º, n.º 1, al. c)) que nao prova nada que a declaracao nao
+  // prove, e verificar a serio pedia um documento de identificacao. `true` e
+  // so `true`: nem `"true"`, nem `1`, nem ausente.
+  maiorDeIdade: z.literal(true),
 });
+
+/** A mesma declaracao, para quem entrou pela Google e ainda nao a fez. */
+export const esquemaMaioridade = z.object({ maiorDeIdade: esquemaRegisto.shape.maiorDeIdade }).strict();
 
 export type DadosRegisto = z.infer<typeof esquemaRegisto>;
 
@@ -67,6 +88,17 @@ export async function lerCorpo<T extends z.ZodTypeAny>(
 ): Promise<
   { ok: true; dados: z.infer<T> } | { ok: false; erro: string }
 > {
+  // So JSON declarado como JSON. Um formulario HTML de outro sitio consegue
+  // enviar um corpo que se le como JSON (`enctype="text/plain"`), mas nao
+  // consegue declarar `application/json` sem o browser pedir autorizacao
+  // primeiro (CORS), e essa autorizacao este sitio nunca da. Os cookies da
+  // sessao sao `SameSite=Lax` e ja nao iam num pedido desses; isto fecha a
+  // porta tambem para o que nao depende de sessao, como o contacto.
+  const tipo = pedido.headers.get('content-type') ?? '';
+  if (!/^application\/json\b/i.test(tipo)) {
+    return { ok: false, erro: 'Corpo do pedido inválido.' };
+  }
+
   let bruto: unknown;
   try {
     bruto = await pedido.json();

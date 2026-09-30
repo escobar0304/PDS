@@ -155,7 +155,8 @@ export default function TermosPage() {
 
               <Seccao titulo="A sua conta">
                 <p>
-                  A conta é pessoal, e a palavra-passe é sua: não a partilhe. Pode descarregar
+                  Só pode criar conta quem tem 18 anos ou mais. A conta é pessoal, e a
+                  palavra-passe é sua: não a partilhe. Pode descarregar
                   os seus dados ou apagar a conta a qualquer momento, na área pessoal. O que
                   fazemos com os dados está na{' '}
                   <Link href="/privacidade" className={ligacao}>

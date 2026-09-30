@@ -9,6 +9,7 @@ import connectDB from '@/lib/db';
 import { movimentosDe } from '@/lib/gestao';
 import { Product } from '@/lib/models';
 import { categoriasParaFormulario } from '../dados';
+import { registarErro } from '@/lib/registo';
 
 export const metadata = { title: 'Produto · Painel' };
 
@@ -39,7 +40,7 @@ async function ler(id: string) {
     if (!produto) return 'nao-existe' as const;
     return { produto, categorias, movimentos: movimentos ?? [] };
   } catch (erro) {
-    console.error('Painel: produto indisponível:', erro);
+    registarErro('Painel: produto indisponível:', erro);
     return null;
   }
 }

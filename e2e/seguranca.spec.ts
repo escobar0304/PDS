@@ -16,7 +16,7 @@ test.describe('injeção NoSQL', () => {
   }) => {
     for (const payload of OPERADORES) {
       const res = await request.post('/api/auth/register', {
-        data: { name: 'Sonda', email: payload, password: 'umapassword' },
+        data: { name: 'Sonda', email: payload, password: 'umapassword', maiorDeIdade: true },
         failOnStatusCode: false,
       });
 
@@ -26,7 +26,7 @@ test.describe('injeção NoSQL', () => {
 
   test('o contacto recusa operadores do Mongo', async ({ request }) => {
     const res = await request.post('/api/contact', {
-      data: { name: { $ne: null }, email: 'a@b.pt', subject: 'x', message: 'olá' },
+      data: { name: { $ne: null }, email: 'a@b.pt', subject: 'outro', message: 'olá' },
       failOnStatusCode: false,
     });
 
@@ -125,8 +125,8 @@ test.describe('limite de pedidos', () => {
         data: {
           name: 'Sonda',
           email: `limite-${Date.now()}@exemplo.pt`,
-          subject: `teste ${i}`,
-          message: 'mensagem de teste',
+          subject: 'outro',
+          message: `mensagem de teste ${i}`,
         },
         failOnStatusCode: false,
       });
@@ -143,7 +143,7 @@ test.describe('limite de pedidos', () => {
     let resposta = null;
     for (let i = 0; i < 12; i += 1) {
       const r = await request.post('/api/auth/register', {
-        data: { name: 'Sonda', email: `r${i}@exemplo.pt`, password: 'umapassword' },
+        data: { name: 'Sonda', email: `r${i}@exemplo.pt`, password: 'umapassword', maiorDeIdade: true },
         failOnStatusCode: false,
       });
       if (r.status() === 429) {

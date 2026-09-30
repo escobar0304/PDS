@@ -10,6 +10,8 @@ declare module 'next-auth' {
       name?: string | null;
       image?: string | null;
       role: string;
+      /** Declarou ter 18 anos ou mais. Ver `maioridadeDeclaradaEm`. */
+      maior: boolean;
     };
   }
 
@@ -20,6 +22,7 @@ declare module 'next-auth' {
     image?: string | null;
     role: string;
     versaoSessao?: number;
+    maior?: boolean;
   }
 }
 
@@ -29,5 +32,6 @@ declare module 'next-auth/jwt' {
     role: string;
     /** A `versaoSessao` da conta quando a pessoa entrou. */
     versao?: number;
+    maior?: boolean;
   }
 }

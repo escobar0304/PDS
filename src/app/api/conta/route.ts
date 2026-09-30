@@ -8,6 +8,7 @@ import { exigirSessao } from '@/lib/autorizacao';
 import { apagarConta } from '@/lib/conta';
 import { LIMITES, consumir, identificar, travar } from '@/lib/limites';
 import { esquemaPerfil, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Direito ao apagamento (RGPD, art. 17.º).
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
       { headers: { 'Cache-Control': 'no-store, max-age=0' } },
     );
   } catch (erro) {
-    console.error('Erro ao ler a conta:', erro);
+    registarErro('Erro ao ler a conta:', erro);
     return NextResponse.json({ error: 'Não foi possível ler a conta.' }, { status: 500 });
   }
 }
@@ -127,7 +128,7 @@ export async function DELETE(pedido: Request) {
     // forma das coleccoes a quem sondar.
     return NextResponse.json({ ok: true });
   } catch (erro) {
-    console.error('Erro ao apagar conta:', erro);
+    registarErro('Erro ao apagar conta:', erro);
     return NextResponse.json({ error: 'Não foi possível apagar a conta.' }, { status: 500 });
   }
 }
@@ -173,7 +174,7 @@ export async function PATCH(pedido: Request) {
     }
     return NextResponse.json({ name: corpo.dados.name });
   } catch (erro) {
-    console.error('Erro ao atualizar o perfil:', erro);
+    registarErro('Erro ao atualizar o perfil:', erro);
     return NextResponse.json({ error: 'Não foi possível guardar.' }, { status: 500 });
   }
 }

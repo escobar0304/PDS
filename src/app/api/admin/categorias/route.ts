@@ -4,6 +4,7 @@ import connectDB from '@/lib/db';
 import { LIMITES, travar } from '@/lib/limites';
 import { Category } from '@/lib/models';
 import { esquemaNovaCategoria, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 export async function POST(request: Request) {
   const permissao = await exigirAdmin();
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     if ((erro as { code?: number })?.code === 11000) {
       return NextResponse.json({ error: 'Já existe uma categoria com este nome ou endereço.' }, { status: 409 });
     }
-    console.error('Admin: erro ao criar categoria:', erro);
+    registarErro('Admin: erro ao criar categoria:', erro);
     return NextResponse.json({ error: 'Erro ao criar categoria' }, { status: 500 });
   }
 }

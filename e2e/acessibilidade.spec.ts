@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { ANEL, PRODUTOS, mockApi } from './fixtures/api';
+import { iniciarSessao } from './fixtures/sessao';
 
 /**
  * Acessibilidade verificada contra a pagina a correr, nao contra o codigo.
@@ -40,6 +41,28 @@ for (const rota of ROTAS) {
       r.violations.map((v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`),
       rota,
     ).toEqual([]);
+  });
+}
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`/auth/maioridade não tem violações WCAG 2.1 AA (${colorScheme}), nos dois passos`, async ({ browser }) => {
+    // Precisa de sessao, de uma conta que ainda nao declarou a idade.
+    const contexto = await browser.newContext({ colorScheme });
+    await iniciarSessao(contexto, 'USER', { maior: false });
+    const page = await contexto.newPage();
+    await page.goto('/auth/maioridade');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Confirmar a idade');
+
+    const falhas = async () =>
+      (await new AxeBuilder({ page }).withTags(NORMAS).analyze()).violations.map(
+        (v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`,
+      );
+    expect(await falhas()).toEqual([]);
+
+    await page.getByRole('button', { name: 'Não tenho 18 anos' }).click();
+    await expect(page.getByRole('button', { name: 'Apagar a conta' })).toBeVisible();
+    expect(await falhas()).toEqual([]);
+    await contexto.close();
   });
 }
 

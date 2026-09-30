@@ -18,6 +18,8 @@ export interface Sessao {
   id: string;
   email: string;
   role: string;
+  /** Declarou ter 18 anos ou mais. So `paginaComSessao` o preenche. */
+  maior?: boolean;
 }
 
 /**
@@ -130,17 +132,30 @@ export async function paginaDeAdmin(): Promise<Sessao> {
  * existir. O destino e sempre um caminho fixo do sitio, nunca do pedido —
  * senao era um redirecionamento aberto.
  */
-export async function paginaComSessao(caminho: `/${string}`): Promise<Sessao> {
+export async function paginaComSessao(
+  caminho: `/${string}`,
+  { exigirMaioridade = true }: { exigirMaioridade?: boolean } = {},
+): Promise<Sessao> {
   const sessao = await getServerSession(authOptions);
-  const utilizador = sessao?.user as { id?: string; email?: string; role?: string } | undefined;
+  const utilizador = sessao?.user as
+    | { id?: string; email?: string; role?: string; maior?: boolean }
+    | undefined;
 
   if (!utilizador?.id) {
     redirect(`/auth/login?callbackUrl=${encodeURIComponent(caminho)}`);
+  }
+
+  // Só maiores de 18 têm conta. Quem entrou pela Google pela primeira vez, e
+  // as contas criadas antes desta regra, ainda nao o declararam: vao primeiro
+  // a `/auth/maioridade`. A pagina da declaracao e a unica que nao o exige.
+  if (exigirMaioridade && utilizador.maior !== true) {
+    redirect('/auth/maioridade');
   }
 
   return {
     id: utilizador.id,
     email: utilizador.email ?? '',
     role: utilizador.role ?? 'USER',
+    maior: utilizador.maior === true,
   };
 }

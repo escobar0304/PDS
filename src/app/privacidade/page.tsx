@@ -23,7 +23,7 @@ const TRATAMENTOS = [
   {
     finalidade: 'Criar e manter a sua conta',
     dados:
-      'Nome, email e palavra-passe (guardada cifrada, nunca em claro). Se entrar com a Google, o nome e o email que a Google nos dá, e não há palavra-passe',
+      'Nome, email e palavra-passe (guardada cifrada, nunca em claro). Se entrar com a Google, o nome e o email que a Google nos dá, e não há palavra-passe. E a data em que declarou ter 18 anos ou mais: não pedimos a data de nascimento',
     base: 'Execução de um contrato consigo (art. 6.º, n.º 1, al. b) do RGPD)',
     prazo: 'Enquanto mantiver a conta. Apaga-se quando a apagar.',
   },

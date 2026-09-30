@@ -5,7 +5,9 @@ import { consumir, identificar } from '@/lib/limites';
 import { esquemaRegisto, lerCorpo } from '@/lib/validacao';
 import { Token, User } from '@/lib/models';
 import { expiraEm, gerarToken, ligacaoToken, resumir } from '@/lib/tokens';
-import { enviarVerificacao } from '@/services/mailer';
+import { SITE_URL } from '@/lib/site';
+import { enviarAvisoContaExistente, enviarVerificacao } from '@/services/mailer';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Criacao de conta.
@@ -19,6 +21,8 @@ import { enviarVerificacao } from '@/services/mailer';
  */
 
 const LIMITE_POR_IP = { max: 5, janelaMs: 60 * 60 * 1000 };
+
+const MENSAGEM = 'Enviámos uma mensagem para o seu email. Siga as instruções que lá estão.';
 
 export async function POST(request: Request) {
   const corpo = await lerCorpo(request, esquemaRegisto);
@@ -39,12 +43,27 @@ export async function POST(request: Request) {
   try {
     await connectDB();
 
-    const existente = await User.findOne({ email });
-    if (existente) {
-      return NextResponse.json({ error: 'Este email já está registado' }, { status: 400 });
-    }
-
+    // Primeiro o argon2, e so depois a consulta: os dois caminhos gastam o
+    // mesmo tempo. Com a ordem inversa, "ja existe" respondia antes do hash e
+    // o relogio dizia o que a mensagem deixou de dizer.
     const passwordCifrada = await hash(password, { type: 2 }); // argon2id
+
+    const existente = await User.findOne({ email }).select('name').lean();
+    if (existente) {
+      // Um aviso por hora e por endereco: sem isto, o registo servia para
+      // encher a caixa de correio de alguem com avisos, cinco por IP.
+      const aviso = consumir(`registo:aviso:${email}`, { max: 1, janelaMs: 60 * 60 * 1000 });
+      if (!aviso.permitido) return NextResponse.json({ message: MENSAGEM }, { status: 201 });
+
+      // A mesma resposta que uma conta nova. Ate 30/09/2026 dizia "Este email
+      // ja esta registado": qualquer pessoa sabia, email a email, quem tinha
+      // conta na loja — a enumeracao que a entrada e a reposicao ja fechavam.
+      // Quem se esqueceu que tinha conta fica a saber pelo proprio correio,
+      // que so o dono le.
+      void enviarAvisoContaExistente(email, existente.name, `${SITE_URL}/auth/recuperar-password`)
+        .catch((erro) => registarErro('Falha ao avisar conta existente:', erro));
+      return NextResponse.json({ message: MENSAGEM }, { status: 201 });
+    }
 
     const user = await User.create({
       name,
@@ -52,6 +71,7 @@ export async function POST(request: Request) {
       password: passwordCifrada,
       role: 'USER',
       emailVerified: false,
+      maioridadeDeclaradaEm: new Date(),
     });
 
     // O endereco fica por confirmar ate alguem abrir a ligacao que so chega a
@@ -69,17 +89,18 @@ export async function POST(request: Request) {
     // Sem `await`: o registo nao fica refem do SMTP. Se o envio falhar, a
     // conta existe na mesma e o email pode ser pedido outra vez.
     void enviarVerificacao(user.email, user.name, ligacaoToken('verificar-email', token))
-      .catch((erro) => console.error('Falha ao enviar verificação:', erro));
+      .catch((erro) => registarErro('Falha ao enviar verificação:', erro));
 
-    return NextResponse.json(
-      {
-        user: { id: user._id, name: user.name, email: user.email },
-        message: 'Conta criada. Enviámos uma mensagem para confirmar o seu email.',
-      },
-      { status: 201 },
-    );
+    // Sem o `user`: o id nao serve a quem se regista, e a resposta tinha de
+    // ser igual a de um email ja registado.
+    return NextResponse.json({ message: MENSAGEM }, { status: 201 });
   } catch (error) {
-    console.error('Erro ao registar utilizador:', error);
+    // Dois registos do mesmo email ao mesmo tempo: o indice unico recusa o
+    // segundo. Responde-se como a qualquer email ja registado.
+    if ((error as { code?: number }).code === 11000) {
+      return NextResponse.json({ message: MENSAGEM }, { status: 201 });
+    }
+    registarErro('Erro ao registar utilizador:', error);
     return NextResponse.json({ error: 'Erro ao criar conta' }, { status: 500 });
   }
 }

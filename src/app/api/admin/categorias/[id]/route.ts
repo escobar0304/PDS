@@ -4,6 +4,7 @@ import { editarCategoria } from '@/lib/gestao';
 import { LIMITES, travar } from '@/lib/limites';
 import { respostaDeRecusa } from '@/lib/respostas';
 import { esquemaEdicaoCategoria, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const permissao = await exigirAdmin();
@@ -19,7 +20,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const r = await editarCategoria((await params).id, corpo.dados);
     return r.ok ? NextResponse.json({ ok: true }) : respostaDeRecusa(r);
   } catch (erro) {
-    console.error('Admin: erro ao editar categoria:', erro);
+    registarErro('Admin: erro ao editar categoria:', erro);
     return NextResponse.json({ error: 'Erro ao editar categoria' }, { status: 500 });
   }
 }

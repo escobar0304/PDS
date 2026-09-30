@@ -130,11 +130,11 @@ describe('rotas de API', () => {
 
     for (const caminho of ficheiros) {
       const fonte = readFileSync(caminho, 'utf8');
-      if (!fonte.includes('sendMail')) continue;
+      if (!fonte.includes('sendMail') && !/\benviar\(/.test(fonte)) continue;
 
-      // `to:` tem de sair do ambiente. Sair do corpo do pedido e o que
-      // transforma a rota num relay de correio.
-      for (const [, destino] of fonte.matchAll(/^\s*to:\s*(.+),$/gm)) {
+      // `to:` (ou o `para:` do `enviar`) tem de sair do ambiente. Sair do
+      // corpo do pedido e o que transforma a rota num relay de correio.
+      for (const [, destino] of fonte.matchAll(/^\s*(?:to|para):\s*(.+),$/gm)) {
         if (!destino.includes('process.env') && !destino.includes('destino')) {
           suspeitas.push(`${caminho.slice(RAIZ.length + 1)}: to: ${destino}`);
         }

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { paginasDisponiveis } from '../paginas';
-import { paginasDoMapa, privada, ROTAS_PRIVADAS } from '../site';
+import { destinoDepoisDeEntrar, paginasDoMapa, privada, ROTAS_PRIVADAS } from '../site';
 
 describe('o mapa do sítio e o robots.txt não discordam', () => {
   it('nada privado entra no mapa', () => {
@@ -49,5 +49,31 @@ describe('uma consulta acessória desiste cedo', () => {
 
     delete process.env.MONGODB_URI;
     vi.doUnmock('mongoose');
+  });
+});
+
+describe('para onde se vai depois de entrar', () => {
+  it('aceita caminhos deste sítio', () => {
+    for (const c of ['/area-pessoal', '/checkout', '/encomenda/abc?chave=x', '/']) {
+      expect(destinoDepoisDeEntrar(c)).toBe(c);
+    }
+  });
+
+  it('recusa tudo o que leva para outro sítio', () => {
+    for (const c of [
+      'https://outro.sitio',
+      '//outro.sitio',
+      '/\\outro.sitio',
+      '\\\\outro.sitio',
+      'javascript:alert(1)',
+      '/\t/outro.sitio',
+      ' //outro.sitio',
+      'outro.sitio',
+      '',
+      null,
+      undefined,
+    ]) {
+      expect(destinoDepoisDeEntrar(c), JSON.stringify(c)).toBe('/area-pessoal');
+    }
   });
 });

@@ -5,6 +5,7 @@ import { Alert, Badge, Card, Container, PageHeader, botaoClasses } from '@/compo
 import { paginaDeAdmin } from '@/lib/autorizacao';
 import { formatarPreco } from '@/lib/dinheiro';
 import { listarProdutos } from '@/lib/gestao';
+import { registarErro } from '@/lib/registo';
 
 export const metadata = { title: 'Produtos · Painel' };
 
@@ -12,7 +13,7 @@ async function ler() {
   try {
     return await listarProdutos();
   } catch (erro) {
-    console.error('Painel: produtos indisponíveis:', erro);
+    registarErro('Painel: produtos indisponíveis:', erro);
     return null;
   }
 }

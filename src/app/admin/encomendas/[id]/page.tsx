@@ -6,6 +6,7 @@ import { paginaDeAdmin } from '@/lib/autorizacao';
 import { formatarPreco } from '@/lib/dinheiro';
 import { encomendaDoPainel } from '@/lib/gestao-encomendas';
 import { NOMES_DOS_ESTADOS } from '@/lib/transicoes';
+import { registarErro } from '@/lib/registo';
 
 export const metadata = { title: 'Encomenda · Painel' };
 
@@ -22,7 +23,7 @@ async function ler(id: string) {
   try {
     return (await encomendaDoPainel(id)) ?? ('nao-existe' as const);
   } catch (erro) {
-    console.error('Painel: encomenda indisponível:', erro);
+    registarErro('Painel: encomenda indisponível:', erro);
     return null;
   }
 }

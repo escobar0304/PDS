@@ -7,11 +7,12 @@ import Link from 'next/link';
 import { Envelope, Lock } from '@phosphor-icons/react';
 import AuthShell, { EntrarComGoogle } from '@/components/ui/AuthShell';
 import { Alert, Button, Input, Spinner } from '@/components/ui';
+import { destinoDepoisDeEntrar } from '@/lib/site';
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/area-pessoal';
+  const callbackUrl = destinoDepoisDeEntrar(searchParams.get('callbackUrl'));
 
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);

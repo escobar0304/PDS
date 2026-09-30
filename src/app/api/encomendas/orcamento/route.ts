@@ -3,6 +3,7 @@ import { calcularEncomenda } from '@/lib/encomenda';
 import { LIMITES, travar } from '@/lib/limites';
 import { estadoDaLoja } from '@/lib/loja';
 import { esquemaOrcamento, lerCorpo } from '@/lib/validacao';
+import { registarErro } from '@/lib/registo';
 
 /**
  * O total com portes, antes de encomendar: e o que o checkout mostra
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
   try {
     return NextResponse.json(await calcularEncomenda(corpo.dados.linhas, loja.condicoes.tabelaPortes));
   } catch (erro) {
-    console.error('Orçamento: erro ao calcular:', erro);
+    registarErro('Orçamento: erro ao calcular:', erro);
     return NextResponse.json({ error: 'Erro ao calcular o total.' }, { status: 500 });
   }
 }

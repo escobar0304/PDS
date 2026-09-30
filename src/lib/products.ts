@@ -23,8 +23,13 @@ export const SORTS: Record<SortKey, Record<string, 1 | -1>> = {
   newest: { createdAt: -1 },
 };
 
+/**
+ * `Object.hasOwn`, e nao `SORTS[value] ?? ...`: `?sort=__proto__` ou
+ * `?sort=constructor` encontravam o que o objecto herda, e nao `undefined`, e
+ * esse valor ia parar a ordenacao da consulta.
+ */
 export function resolveSort(value: string | null | undefined) {
-  return SORTS[(value ?? '') as SortKey] ?? SORTS.featured;
+  return value && Object.hasOwn(SORTS, value) ? SORTS[value as SortKey] : SORTS.featured;
 }
 
 /** Normaliza o limite pedido pelo cliente. */

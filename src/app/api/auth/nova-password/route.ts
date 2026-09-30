@@ -5,6 +5,7 @@ import { Token, User } from '@/lib/models';
 import { consumir, identificar } from '@/lib/limites';
 import { esquemaNovaPassword, lerCorpo } from '@/lib/validacao';
 import { resumir } from '@/lib/tokens';
+import { registarErro } from '@/lib/registo';
 
 /**
  * Definir uma palavra-passe nova a partir de um token.
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: 'Palavra-passe alterada. Já pode entrar.' });
   } catch (erro) {
-    console.error('Erro ao repor palavra-passe:', erro);
+    registarErro('Erro ao repor palavra-passe:', erro);
     return NextResponse.json({ error: 'Erro ao repor a palavra-passe' }, { status: 500 });
   }
 }

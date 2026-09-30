@@ -221,11 +221,14 @@ export function Caixa({
   hint,
   checked,
   onChange,
+  required,
 }: {
   label: string;
   hint?: string;
   checked: boolean;
   onChange: (valor: boolean) => void;
+  /** O browser nao deixa submeter sem ela; o servidor verifica na mesma. */
+  required?: boolean;
 }) {
   const id = useId();
   return (
@@ -235,6 +238,7 @@ export function Caixa({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
+        required={required}
         aria-describedby={hint ? `${id}-dica` : undefined}
         className="h-6 w-6 shrink-0 rounded border-line accent-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600/40"
       />
