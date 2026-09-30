@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "seed": "tsx scripts/seed.ts",
+    "demo:pecas": "tsx scripts/demonstracao.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "check:env": "tsx scripts/check-env.ts",

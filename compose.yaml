@@ -1,0 +1,88 @@
+# Demonstracao da loja, no proprio computador. So precisa do Docker:
+#
+#   docker compose up --build
+#
+# O sitio fica em http://localhost:3001 e o correio em http://localhost:8026
+# — outras portas que as da montra, para as duas poderem estar abertas lado
+# a lado. Passo a passo em docs/DEMONSTRACAO.md.
+#
+# **Nao e configuracao de producao.** A loja fica em ensaio sem chave da
+# Stripe: mostra-se o catalogo e o carrinho, e o checkout diz o que falta
+# para abrir. O correio nao sai do computador, as pecas sao de exemplo e
+# dizem-no, e as portas so abrem neste computador.
+name: petalas-loja
+
+x-ambiente: &ambiente
+  MONGODB_URI: mongodb://mongo:27017/petalas
+  NEXTAUTH_URL: http://localhost:3001
+  LOJA_ENSAIO: "1"
+  SMTP_HOST: correio
+  SMTP_PORT: "1025"
+  SMTP_FROM: loja@exemplo.pt
+  ADMIN_EMAIL: loja@exemplo.pt
+  SITE_INDEXAVEL: "false"
+
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - dados:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Guarda o correio que o sitio envia e mostra-o numa pagina. Nada sai.
+  correio:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:8026:8025"
+
+  # Corre uma vez e sai: o segredo das sessoes, as pecas de exemplo e a
+  # conta de gestao. Repetir nao duplica nada.
+  preparar:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: http://localhost:3001
+    image: petalas-loja:demonstracao
+    user: root
+    environment: *ambiente
+    volumes:
+      - segredo:/segredo
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        # Gerado aqui, e nao escrito neste ficheiro: um segredo no repositorio
+        # deixa de o ser.
+        [ -s /segredo/nextauth ] || head -c 32 /dev/urandom | base64 > /segredo/nextauth
+        chmod 644 /segredo/nextauth
+        npm run -s demo:pecas
+        npm run -s admin -- criar gestao@exemplo.pt "Gestão da loja" || echo "A conta de gestão já existia."
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  sitio:
+    image: petalas-loja:demonstracao
+    environment: *ambiente
+    volumes:
+      - segredo:/segredo:ro
+    command:
+      - sh
+      - -c
+      - export NEXTAUTH_SECRET="$$(cat /segredo/nextauth)" && exec node_modules/.bin/next start -H 0.0.0.0 -p 3000
+    ports:
+      - "127.0.0.1:3001:3000"
+    depends_on:
+      preparar:
+        condition: service_completed_successfully
+      correio:
+        condition: service_started
+
+volumes:
+  dados:
+  segredo:

@@ -58,8 +58,8 @@ describe('promover a administrador', () => {
         return statSync(c).isDirectory() ? todos(c) : /\.(ts|tsx)$/.test(nome) ? [c] : [];
       });
     const culpados = todos(APP)
-      .filter((f) => /\bmudarPapel\b/.test(readFileSync(f, 'utf8')))
+      .filter((f) => /\b(mudarPapel|criarGestora)\b/.test(readFileSync(f, 'utf8')))
       .map((f) => relative(APP, f));
-    expect(culpados, 'mudarPapel chamado a partir da web').toEqual([]);
+    expect(culpados, 'mudarPapel ou criarGestora chamados a partir da web').toEqual([]);
   });
 });

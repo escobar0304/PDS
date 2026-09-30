@@ -296,3 +296,26 @@ export async function mudarPapel(
   );
   return 'mudou';
 }
+
+/**
+ * Cria uma conta de gestao. Como `mudarPapel`, **so pelo script** — e o
+ * mesmo teste o garante.
+ *
+ * O registo cria contas de cliente; esta e a porta de quem gere a loja, sem
+ * ter de se registar como cliente e ser promovida depois. A conta nasce **sem
+ * palavra-passe**, e a pessoa define-a pelo "Esqueci a password". Assim a palavra-passe nunca passa pela
+ * linha de comandos (fica no historico da shell e nos registos do servidor),
+ * e criar a conta prova logo que o email chega a quem a vai usar.
+ */
+export async function criarGestora(
+  email: string,
+  nome: string
+): Promise<'criada' | 'ja-existe'> {
+  await connectDB();
+
+  const normalizado = email.trim().toLowerCase();
+  if (await User.exists({ email: normalizado })) return 'ja-existe';
+
+  await User.create({ name: nome.trim(), email: normalizado, role: 'ADMIN', emailVerified: false });
+  return 'criada';
+}

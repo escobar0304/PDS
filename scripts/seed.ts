@@ -1,10 +1,8 @@
 // scripts/seed.ts
 // Execute com: npx tsx scripts/seed.ts
 
+import './ambiente';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
