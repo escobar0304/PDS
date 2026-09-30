@@ -27,7 +27,8 @@ vi.mock('@/services/mailer', async (original) => {
 });
 import { Category, Contador, MovimentoStock, Order, Product, Token, User } from '../models';
 import { moverStock } from '../stock';
-import { criarProduto, editarCategoria, editarProduto, listarProdutos, movimentar, mudarPapel } from '../gestao';
+import { PECAS_DE_EXEMPLO, PREFIXO_EXEMPLO, criarPecasDeExemplo } from '../demonstracao';
+import { criarProduto, editarCategoria, editarProduto, listarProdutos, movimentar, mudarPapel, criarGestora } from '../gestao';
 import {
   PRAZO_RESERVA_MS,
   calcularEncomenda,
@@ -799,6 +800,42 @@ executar('encomendas, contra a base de dados', () => {
   });
 });
 
+executar('as peças de exemplo da demonstração', () => {
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+  }, 30_000);
+
+  beforeEach(async () => {
+    await Promise.all([Product.deleteMany({}), Category.deleteMany({}), MovimentoStock.deleteMany({})]);
+  });
+
+  it('entram pelo mesmo caminho do painel, com o stock em movimentos, e correr outra vez não duplica', async () => {
+    const r = await criarPecasDeExemplo({ LOJA_ENSAIO: '1' });
+    expect(r).toEqual({ ok: true, criadas: PECAS_DE_EXEMPLO.length, jaExistiam: 0 });
+
+    const produtos = await listarProdutos();
+    expect(produtos).toHaveLength(PECAS_DE_EXEMPLO.length);
+    expect(produtos.every((p) => p.name.startsWith(PREFIXO_EXEMPLO))).toBe(true);
+    // O stock inicial entra como "entrada", como no painel: nunca por valor.
+    expect(await MovimentoStock.countDocuments({ motivo: 'entrada', por: 'demonstracao' })).toBe(PECAS_DE_EXEMPLO.length);
+
+    expect(await criarPecasDeExemplo({ LOJA_ENSAIO: '1' })).toEqual({
+      ok: true,
+      criadas: 0,
+      jaExistiam: PECAS_DE_EXEMPLO.length,
+    });
+    expect(await Product.countDocuments()).toBe(PECAS_DE_EXEMPLO.length);
+  });
+
+  it('não mexe numa categoria que já existe', async () => {
+    await Category.create({ name: 'Decoração da casa', slug: 'decoracao', order: 9 });
+    await criarPecasDeExemplo({ LOJA_ENSAIO: '1' });
+    expect(await Category.findOne({ slug: 'decoracao' }).lean()).toMatchObject({ name: 'Decoração da casa', order: 9 });
+  });
+});
+
 executar('o painel de gestão, contra a base de dados', () => {
   beforeAll(async () => {
     if (mongoose.connection.readyState !== 1) {
@@ -944,6 +981,21 @@ executar('o painel de gestão, contra a base de dados', () => {
     expect(u.versaoSessao).toBe(1);
 
     expect(await mudarPapel('ninguem@exemplo.pt', 'ADMIN')).toBe('nao-existe');
+  });
+
+  it('criar a conta de gestão: sem palavra-passe, e uma vez só', async () => {
+    await User.deleteMany({ email: 'gestao@exemplo.pt' });
+
+    expect(await criarGestora(' Gestao@Exemplo.pt ', ' Rosa ')).toBe('criada');
+    const u = (await User.findOne({ email: 'gestao@exemplo.pt' }).lean())!;
+    expect(u).toMatchObject({ name: 'Rosa', role: 'ADMIN' });
+    // Sem palavra-passe nao se entra: define-se pelo "Esqueci a password".
+    expect(u.password).toBeUndefined();
+
+    // Nao mexe numa conta que ja existe, nem no papel nem na palavra-passe.
+    await User.updateOne({ _id: u._id }, { $set: { role: 'USER', password: 'x' } });
+    expect(await criarGestora('gestao@exemplo.pt', 'Outra')).toBe('ja-existe');
+    expect((await User.findOne({ _id: u._id }).lean())).toMatchObject({ role: 'USER', password: 'x', name: 'Rosa' });
   });
 });
 

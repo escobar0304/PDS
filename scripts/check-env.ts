@@ -1,6 +1,6 @@
 // scripts/check-env.ts
 // Corre com `npm run check:env`. Falha com lista do que falta.
-import 'dotenv/config';
+import './ambiente';
 import { missingEnv, OPTIONAL_ENV, REQUIRED_ENV } from '../src/lib/env';
 
 const missing = missingEnv(REQUIRED_ENV);

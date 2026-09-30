@@ -78,6 +78,7 @@ código.
 |---|---|
 | `ROADMAP-V1.md` | as fases até à v1.0.0 e o que bloqueia cada uma |
 | `ROADMAP-V2.md` | a loja: o que se faz já, e o que espera por decisões ou por terceiros |
+| `DEMONSTRACAO.md` | mostrar a loja num computador, só com o Docker |
 | `DESIGN-AUDIT.md` | a auditoria inicial |
 | `PALETA.md` | as cores, derivadas do logótipo |
 | `MARCA.md` | o logótipo em vetor, e a decisão de tipografia em aberto |
