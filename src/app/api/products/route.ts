@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
+import { libertarSeForAltura } from '@/lib/encomenda';
 import { Category, Product } from '@/lib/models';
 import { CAMPOS_PUBLICOS_DO_PRODUTO, paraPublico } from '@/lib/catalogo';
 import { LIMITES, travar } from '@/lib/limites';
@@ -14,6 +15,8 @@ export async function GET(request: Request) {
 
   try {
     await connectDB();
+    // Uma reserva expirada nao pode continuar a dizer "Esgotado".
+    await libertarSeForAltura();
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');

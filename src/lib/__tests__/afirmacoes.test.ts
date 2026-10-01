@@ -31,9 +31,18 @@ function semComentarios(fonte: string): string {
     .replace(/(^|\s)\/\/.*$/gm, '$1');
 }
 
-const ALVOS = [...ficheiros(join(RAIZ, 'src')), join(RAIZ, 'scripts', 'seed.ts')];
+// Os textos que o seed e as pecas de exemplo poem na base de dados: estavam
+// em `scripts/seed.ts`, e quando passaram para `lib/` o teste deixou de os ver
+// sem ninguem dar por isso. Agora os ficheiros sao nomeados, e o teste falha
+// se um deles deixar de existir em vez de passar em vazio.
+const DADOS = ['src/lib/semente.ts', 'src/lib/demonstracao.ts'].map((f) => join(RAIZ, f));
+const ALVOS = [...ficheiros(join(RAIZ, 'src')), ...DADOS];
 
 describe('afirmações comerciais', () => {
+  it('os ficheiros de dados que vigia existem', () => {
+    for (const f of DADOS) expect(() => statSync(f), relative(RAIZ, f)).not.toThrow();
+  });
+
   it.each(RETIRADAS.map((r) => [r.frase.source, r] as const))(
     'ninguém volta a escrever /%s/',
     (_nome, { frase, porque }) => {

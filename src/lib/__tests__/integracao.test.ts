@@ -778,6 +778,22 @@ executar('encomendas, contra a base de dados', () => {
     expect(await MovimentoStock.countDocuments({ motivo: 'reserva-libertada' })).toBe(1);
   });
 
+  it('uma reserva expirada volta ao catálogo sem ninguém fazer outra encomenda', async () => {
+    const { esquecerUltimaLimpeza } = await import('../encomenda');
+    const { GET } = await import('../../app/api/products/[slug]/route');
+    const p = await peca({ stock: 1 });
+    const antes = new Date(Date.now() - 2 * PRAZO_RESERVA_MS);
+    await criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], CLIENTE, TABELA, antes);
+    expect(await stock(p._id)).toBe(0);
+
+    esquecerUltimaLimpeza();
+    const r = await GET(new Request(`http://localhost/api/products/${p.slug}`, { headers: { 'X-Forwarded-For': '10.6.0.2' } }), {
+      params: Promise.resolve({ slug: p.slug }),
+    });
+    expect(((await r.json()) as { stock: number }).stock).toBe(1);
+    expect((await Order.findOne().lean())!.status).toBe('CANCELLED');
+  });
+
   it('não se salta estados, e duas mudanças ao mesmo tempo não se atropelam', async () => {
     const p = await peca({ stock: 3 });
     const r = await criarEncomenda([{ id: p._id.toString(), quantidade: 1 }], CLIENTE, TABELA);

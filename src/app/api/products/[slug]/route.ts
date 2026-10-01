@@ -1,6 +1,7 @@
 // src/app/api/products/[slug]/route.ts
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
+import { libertarSeForAltura } from '@/lib/encomenda';
 import { CAMPOS_PUBLICOS_DO_PRODUTO, paraPublico } from '@/lib/catalogo';
 import { LIMITES, travar } from '@/lib/limites';
 import { Product } from '@/lib/models';
@@ -23,6 +24,8 @@ export async function GET(
 
   try {
     await connectDB();
+    // Uma reserva expirada nao pode continuar a dizer "Esgotado".
+    await libertarSeForAltura();
 
     const { slug } = await params;
     
