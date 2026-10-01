@@ -1,7 +1,7 @@
 import mongoose, { type FilterQuery } from 'mongoose';
 import { avisarExpedicao, avisarReembolso } from '@/lib/avisos';
 import connectDB from '@/lib/db';
-import { mudarEstado } from '@/lib/encomenda';
+import { libertarReservasExpiradas, mudarEstado } from '@/lib/encomenda';
 import { Order, type IOrder } from '@/lib/models';
 import { reembolsarPagamento } from '@/lib/pagamento';
 import type { Autor } from '@/lib/transicoes';
@@ -42,6 +42,8 @@ export function eFiltro(f: unknown): f is Filtro {
 /** As mais recentes primeiro. Duzentas chegam a uma loja deste tamanho. */
 export async function listarEncomendas(filtro: Filtro) {
   await connectDB();
+  // O painel nunca mostra por pagar o que ja expirou.
+  await libertarReservasExpiradas();
   return Order.find(FILTROS[filtro].consulta)
     .sort({ createdAt: -1 })
     .limit(200)
@@ -52,6 +54,8 @@ export async function listarEncomendas(filtro: Filtro) {
 /** Quantas ha em cada filtro que pede trabalho, para o painel as mostrar. */
 export async function contarEncomendas() {
   await connectDB();
+  // O painel nunca mostra por pagar o que ja expirou.
+  await libertarReservasExpiradas();
   const [porPreparar, aResolver] = await Promise.all([
     Order.countDocuments(FILTROS['por-preparar'].consulta),
     Order.countDocuments(FILTROS['a-resolver'].consulta),

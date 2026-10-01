@@ -95,6 +95,8 @@ export const RETIRADAS: { frase: RegExp; porque: string }[] = [
   { frase: /pedras? preciosas?/i, porque: 'quartzo e ametista não são pedras preciosas' },
   { frase: /benefícios energéticos/i, porque: 'alegação de efeito, em vez de tradição' },
   { frase: /atendimento personalizado/i, porque: 'serviço que ninguém confirmou prestar' },
+  { frase: /energia (original )?da terra|energia das pedras/i, porque: 'alegação de efeito das pedras, escrita pelo modelo inicial' },
+  { frase: /ideai?s? para (a )?medita/i, porque: 'alegação de efeito, em vez de tradição' },
   {
     frase: /\b\d{1,2}h\s*(-|às)/i,
     porque: 'horário escrito à mão: vive em EMPRESA.horario, e só aparece quando existir',

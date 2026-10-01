@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
+import { registarErro } from '@/lib/registo';
 import { CONDICOES, type Escalao } from '@/lib/condicoes';
 import { Contador, Order, Product } from '@/lib/models';
 import { portesPara } from '@/lib/portes';
@@ -426,6 +427,11 @@ export async function mudarEstado(
  * Cancela as encomendas por pagar cuja reserva expirou, e devolve-lhes o
  * stock. Pode correr duas vezes ao mesmo tempo: cada encomenda so e
  * cancelada — e o stock so e devolvido — por quem ganhar a `mudarEstado`.
+ *
+ * Nao ha tarefa agendada (depende do alojamento, que esta por decidir):
+ * corre antes de cada encomenda, quando o painel abre a lista, e antes de o
+ * catalogo mostrar stock a quem visita (`libertarSeForAltura`). Um pagamento
+ * que chegue depois ja e tratado: a encomenda vai para "a resolver".
  */
 export async function libertarReservasExpiradas(agora = new Date()): Promise<number> {
   await connectDB();
@@ -513,4 +519,38 @@ export async function lerEncomenda(id: string, chave: string): Promise<Encomenda
     shippingCents: e.shippingCents,
     totalCents: e.totalCents,
   };
+}
+
+/**
+ * A limpeza antes de mostrar stock a quem visita: no maximo uma vez por
+ * minuto, por servidor.
+ *
+ * Sem isto, so um pedido novo ou o painel aberto libertavam uma reserva
+ * expirada. Numa loja com poucas visitas, uma peca unica cuja reserva ja
+ * expirou ficava "Esgotado" para toda a gente — dias, se ninguem fizesse
+ * outro pedido. Com isto, o atraso maximo e de um minuto.
+ *
+ * Nunca faz falhar a leitura: se a limpeza falhar, regista-se e o catalogo
+ * mostra o que a base de dados tem.
+ */
+const INTERVALO_LIMPEZA_MS = 60_000;
+let ultimaLimpeza = 0;
+let limpezaEmCurso: Promise<void> | null = null;
+
+export async function libertarSeForAltura(agora = Date.now()): Promise<void> {
+  if (limpezaEmCurso) return limpezaEmCurso;
+  if (agora - ultimaLimpeza < INTERVALO_LIMPEZA_MS) return;
+  ultimaLimpeza = agora;
+  limpezaEmCurso = libertarReservasExpiradas(new Date(agora))
+    .then(() => undefined)
+    .catch((erro) => registarErro('Erro ao libertar reservas expiradas:', erro))
+    .finally(() => {
+      limpezaEmCurso = null;
+    });
+  return limpezaEmCurso;
+}
+
+/** So para os testes: esquece quando correu a ultima vez. */
+export function esquecerUltimaLimpeza(): void {
+  ultimaLimpeza = 0;
 }
