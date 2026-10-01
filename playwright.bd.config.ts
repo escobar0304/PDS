@@ -67,6 +67,8 @@ export default defineConfig({
       ADMIN_EMAIL: 'loja@exemplo.pt',
       NEXTAUTH_SECRET: 'segredo-apenas-para-testes-e2e',
       NEXTAUTH_URL: `http://127.0.0.1:${PORT}`,
+      // As fotografias carregadas nos testes: fora do repositorio de trabalho.
+      IMAGENS_DIR: 'test-results/imagens-bd',
     },
   },
 });

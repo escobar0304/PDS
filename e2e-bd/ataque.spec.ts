@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { encode } from 'next-auth/jwt';
 import { iniciarSessao } from '../e2e/fixtures/sessao';
 import { ADMIN_ID, BASE, CLIENTE_ID, SEM_IDADE_ID } from './contas';
+import sharp from 'sharp';
 
 /**
  * O sitio atacado a correr, com base de dados, como o faria alguem de fora.
@@ -415,6 +416,89 @@ test.describe('encomendas de outras pessoas', () => {
     for (const data of corpos) {
       const r = await request.post('/api/encomendas', { headers: outroIp(), data, failOnStatusCode: false });
       expect(r.status(), JSON.stringify(data)).toBe(400);
+    }
+  });
+});
+
+test.describe('as fotografias do painel', () => {
+  const jpeg = () =>
+    sharp({ create: { width: 20, height: 20, channels: 3, background: { r: 1, g: 2, b: 3 } } }).jpeg().toBuffer();
+
+  async function comPapel(browser: Browser, papel: 'ADMIN' | 'USER', userId: string) {
+    const contexto = await browser.newContext({ baseURL: BASE });
+    await iniciarSessao(contexto, papel, { base: BASE, userId });
+    return contexto;
+  }
+
+  test('sem sessão, ou com a de um cliente, não se carrega nada', async ({ browser, request }) => {
+    const anonimo = await request.post('/api/admin/imagens', {
+      headers: { ...outroIp(), 'Content-Type': 'image/jpeg' },
+      data: await jpeg(),
+      failOnStatusCode: false,
+    });
+    expect([401, 403]).toContain(anonimo.status());
+
+    const cliente = await comPapel(browser, 'USER', CLIENTE_ID);
+    const r = await cliente.request.post('/api/admin/imagens', {
+      headers: { 'Content-Type': 'image/jpeg' },
+      data: await jpeg(),
+      failOnStatusCode: false,
+    });
+    expect(r.status()).toBe(403);
+    await cliente.close();
+  });
+
+  test('só com um tipo de imagem: um formulário de outro sítio não consegue enviar uma', async ({ browser }) => {
+    const admin = await comPapel(browser, 'ADMIN', ADMIN_ID);
+    // `multipart` e `text/plain` sao o que um <form> de outro sitio envia
+    // sem o browser pedir autorizacao primeiro.
+    for (const tipo of ['multipart/form-data; boundary=x', 'text/plain', 'application/x-www-form-urlencoded', 'image/svg+xml']) {
+      const r = await admin.request.post('/api/admin/imagens', {
+        headers: { 'Content-Type': tipo },
+        data: await jpeg(),
+        failOnStatusCode: false,
+      });
+      expect(r.status(), tipo).toBe(415);
+    }
+    await admin.close();
+  });
+
+  test('o que diz ser JPEG e não é, recusa-se; e acima de 10 MB nem se abre', async ({ browser }) => {
+    const admin = await comPapel(browser, 'ADMIN', ADMIN_ID);
+    const falso = await admin.request.post('/api/admin/imagens', {
+      headers: { 'Content-Type': 'image/jpeg' },
+      data: Buffer.from('<html><script>alert(1)</script></html>'),
+      failOnStatusCode: false,
+    });
+    expect(falso.status()).toBe(400);
+
+    const enorme = await admin.request.post('/api/admin/imagens', {
+      headers: { 'Content-Type': 'image/jpeg' },
+      data: Buffer.alloc(10 * 1024 * 1024 + 1),
+      failOnStatusCode: false,
+    });
+    expect(enorme.status()).toBe(413);
+
+    const bom = await admin.request.post('/api/admin/imagens', {
+      headers: { 'Content-Type': 'image/jpeg' },
+      data: await jpeg(),
+    });
+    expect(bom.status()).toBe(201);
+    expect((await bom.json()).caminho).toMatch(/^\/imagens\/[a-f0-9]{64}\.webp$/);
+    await admin.close();
+  });
+
+  test('servir só lê nomes que o painel dá: nada de caminhos', async ({ request }) => {
+    for (const mau of [
+      '/imagens/..%2F..%2Fpackage.json',
+      '/imagens/%2e%2e%2f%2e%2e%2fetc%2fpasswd',
+      '/imagens/..%5C..%5Cpackage.json',
+      `/imagens/${'a'.repeat(64)}.png`,
+      `/imagens/${'f'.repeat(64)}.webp`,
+    ]) {
+      const r = await request.get(mau, { headers: outroIp(), failOnStatusCode: false });
+      expect(r.status(), mau).toBe(404);
+      expect(await r.text(), mau).not.toContain('"name"');
     }
   });
 });

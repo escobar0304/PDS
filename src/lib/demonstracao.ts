@@ -43,27 +43,27 @@ export const PECAS_DE_EXEMPLO: ReadonlyArray<{
   pesoGramas: number;
   /** Numa categoria de pecas unicas, e sempre 1. */
   stock: number;
-  /** Numa categoria com medidas, cada medida tem nome (`catalogo.ts`). */
-  medida: string;
+  /** So se a peca tiver tamanho; uma medida unica pode nao ter nome. */
+  medida?: string;
   imagem: string;
   destaque: boolean;
 }> = [
-  { nome: 'Ponta de ametista', slug: 'exemplo-ponta-de-ametista', categoria: 'cristais-em-bruto', precoCents: 3800, pesoGramas: 180, stock: 1, medida: 'Tamanho único', imagem: '/images/pedras-especiais.png', destaque: true },
-  { nome: 'Quartzo rosa em bruto', slug: 'exemplo-quartzo-rosa', categoria: 'cristais-em-bruto', precoCents: 1500, pesoGramas: 250, stock: 1, medida: 'Tamanho único', imagem: '/images/pedras-especiais.png', destaque: false },
+  { nome: 'Ponta de ametista', slug: 'exemplo-ponta-de-ametista', categoria: 'cristais-em-bruto', precoCents: 3800, pesoGramas: 180, stock: 1, imagem: '/images/pedras-especiais.png', destaque: true },
+  { nome: 'Quartzo rosa em bruto', slug: 'exemplo-quartzo-rosa', categoria: 'cristais-em-bruto', precoCents: 1500, pesoGramas: 250, stock: 1, imagem: '/images/pedras-especiais.png', destaque: false },
   { nome: 'Colar de ametista', slug: 'exemplo-colar-de-ametista', categoria: 'colares-aco-pedra', precoCents: 2900, pesoGramas: 40, stock: 2, medida: '45 cm', imagem: '/images/confianca.png', destaque: true },
   { nome: 'Colar de quartzo', slug: 'exemplo-colar-de-quartzo', categoria: 'colares-aco-pedra', precoCents: 2400, pesoGramas: 35, stock: 4, medida: '45 cm', imagem: '/images/confianca.png', destaque: false },
-  { nome: 'Drusa para decoração', slug: 'exemplo-drusa-decoracao', categoria: 'decoracao', precoCents: 6500, pesoGramas: 1400, stock: 1, medida: 'Tamanho único', imagem: '/images/pedras-especiais.png', destaque: true },
+  { nome: 'Drusa para decoração', slug: 'exemplo-drusa-decoracao', categoria: 'decoracao', precoCents: 6500, pesoGramas: 1400, stock: 1, imagem: '/images/pedras-especiais.png', destaque: true },
 ];
 
 /**
  * As medidas conforme a categoria: uma peca unica nao tem medida e tem uma
- * so unidade; num modelo com medidas, cada uma tem nome.
+ * so unidade; fora disso, a medida e a da peca, se a tiver.
  */
 export function variantes(
   p: (typeof PECAS_DE_EXEMPLO)[number],
   pecasUnicas: boolean
 ): Array<{ medida?: string; stock: number }> {
-  return pecasUnicas ? [{ stock: Math.min(p.stock, 1) }] : [{ medida: p.medida, stock: p.stock }];
+  return pecasUnicas ? [{ stock: Math.min(p.stock, 1) }] : [{ ...(p.medida ? { medida: p.medida } : {}), stock: p.stock }];
 }
 
 export type ResultadoDemonstracao =

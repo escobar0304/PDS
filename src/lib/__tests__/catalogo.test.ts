@@ -21,6 +21,9 @@ describe('modelos com medidas', () => {
   it('cada medida tem nome, e nenhuma se repete', () => {
     expect(problemasDasMedidas([{ medida: '14', stock: 3 }, { medida: '16', stock: 0 }], false)).toEqual([]);
     expect(problemasDasMedidas([{ medida: '14', stock: 3 }, { stock: 1 }], false)).toEqual(['medida-sem-nome']);
+    // Uma so, sem nome: nao ha nada a escolher, e nao se obriga a inventar um.
+    expect(problemasDasMedidas([{ stock: 5 }], false)).toEqual([]);
+    expect(problemasDasMedidas([{ medida: '  ', stock: 5 }], false)).toEqual([]);
     expect(problemasDasMedidas([{ medida: 'M', stock: 1 }, { medida: ' m ', stock: 1 }], false)).toEqual([
       'medida-repetida',
     ]);

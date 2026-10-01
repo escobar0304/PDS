@@ -42,6 +42,9 @@ Depois, **define a palavra-passe da gestão**:
    oferece "Falar connosco". É o que um cliente vê hoje.
 4. **O painel.** http://localhost:3001/admin: produtos, categorias, stock,
    vendas ao balcão.
+   Numa peça nova, "Carregar fotografias" aceita uma fotografia do
+   telemóvel: chega rodada como foi tirada e sem a localização GPS que o
+   telemóvel lhe pôs. Numa peça sem tamanhos, a medida pode ficar em branco.
 5. **A conta de cliente.** "Criar conta", com a declaração de idade; o email
    de confirmação chega ao correio (http://localhost:8026).
 6. **O que falta.** O rodapé e as páginas legais mostram a vermelho "por
