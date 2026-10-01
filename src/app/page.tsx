@@ -32,7 +32,7 @@ export default function Home() {
         {/* A vitrine: a mensagem a esquerda, a peca a direita, num arco. */}
         <section className="container-custom grid items-center gap-10 pb-16 pt-10 md:grid-cols-12 md:gap-8 md:pb-24 md:pt-16">
           <div className="fade-in md:col-span-7 lg:col-span-6">
-            <h1 className="pb-1 text-5xl leading-[1.05] text-ink sm:text-6xl lg:text-7xl">
+            <h1 className="pb-1 text-5xl leading-[1.05] text-ink sm:text-6xl sm:leading-none lg:text-7xl">
               Cristais e pedras, <em className="font-medium italic text-rose-700">uma a uma.</em>
             </h1>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-muted">
@@ -51,7 +51,7 @@ export default function Home() {
 
           <div className="md:col-span-5 lg:col-span-5 lg:col-start-8">
             {/* O arco e a forma da vitrine; o anel desviado e o vidro. */}
-            <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-b-lg rounded-t-full ring-1 ring-line ring-offset-[10px] ring-offset-surface">
+            <div className="relative mx-auto aspect-4/5 w-full max-w-md overflow-hidden rounded-b-lg rounded-t-full ring-1 ring-line ring-offset-10 ring-offset-surface">
               <Image
                 src="/images/hero-bg.png"
                 alt="Pedra em bruto iluminada de lado"
@@ -69,7 +69,7 @@ export default function Home() {
         {/* A frase que distingue esta loja, sozinha, em largura inteira. */}
         <section className="revelar bg-rose-100 py-20 md:py-28">
           <div className="container-custom grid gap-8 md:grid-cols-12">
-            <h2 className="text-4xl leading-tight text-rose-900 sm:text-5xl md:col-span-8 lg:text-6xl">
+            <h2 className="text-4xl leading-tight text-rose-900 sm:text-5xl sm:leading-none md:col-span-8 lg:text-6xl">
               {MESMO_STOCK.titulo}
             </h2>
             <p className="max-w-md self-end text-lg leading-relaxed text-rose-900 md:col-span-4">
@@ -80,7 +80,7 @@ export default function Home() {
 
         {/* Antes de escolher: uma peca grande e duas pequenas, nao tres iguais. */}
         <section aria-labelledby="antes" className="container-custom py-20 md:py-28">
-          <h2 id="antes" className="max-w-2xl text-4xl leading-tight text-ink md:text-5xl">
+          <h2 id="antes" className="max-w-2xl text-4xl leading-tight text-ink md:text-5xl md:leading-none">
             Antes de escolher
           </h2>
           <p className="mt-5 max-w-[60ch] text-lg leading-relaxed text-ink-muted">
@@ -90,7 +90,7 @@ export default function Home() {
 
           <div className="mt-12 grid gap-6 md:grid-cols-12 md:grid-rows-2">
             <article className="revelar flex flex-col md:col-span-7 md:row-span-2">
-              <div className="relative min-h-[18rem] flex-1 overflow-hidden rounded-lg md:min-h-[26rem]">
+              <div className="relative min-h-72 flex-1 overflow-hidden rounded-lg md:min-h-104">
                 <Image
                   src="/images/expertise.png"
                   alt="Mão com anéis pousada sobre pedras roxas em bruto"
@@ -107,7 +107,7 @@ export default function Home() {
             </article>
 
             <article className="revelar grid gap-6 sm:grid-cols-2 md:col-span-5 md:grid-cols-5 md:items-center">
-              <div className="relative min-h-[12rem] overflow-hidden rounded-lg md:col-span-2 md:h-full">
+              <div className="relative min-h-48 overflow-hidden rounded-lg md:col-span-2 md:h-full">
                 <Image
                   src="/images/personalizacao.png"
                   alt="Agregados de cristais cor-de-rosa, lilás e brancos sobre bases, numa mesa junto à janela"
@@ -138,7 +138,7 @@ export default function Home() {
         <section className="revelar border-t border-line">
           <div className="container-custom grid gap-12 py-20 md:grid-cols-12 md:py-24">
             <div className="md:col-span-6">
-              <h2 className="text-4xl leading-tight text-ink md:text-5xl">Uma dúvida sobre uma peça?</h2>
+              <h2 className="text-4xl leading-tight text-ink md:text-5xl md:leading-none">Uma dúvida sobre uma peça?</h2>
               <p className="mt-4 max-w-md text-lg leading-relaxed text-ink-muted">
                 {INFORMACAO_COMPRA.duvidas.detalhe}.
               </p>

@@ -45,7 +45,7 @@ export default function NotFound() {
               Se chegou aqui a partir de uma ligação nossa,{' '}
               <Link
                 href="/contacto"
-                className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+                className="text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700"
               >
                 diga-nos
               </Link>{' '}

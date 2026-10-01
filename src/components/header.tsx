@@ -35,7 +35,7 @@ export default function Header() {
     'flex h-11 w-11 items-center justify-center rounded text-ink transition-smooth hover:bg-surface-sunken hover:text-rose-700';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-surface/95 backdrop-blur supports-[not(backdrop-filter:blur(0))]:bg-surface">
+    <header className="sticky top-0 z-50 border-b border-line backdrop-blur-sm supports-[not(backdrop-filter:blur(0))]:bg-surface">
       <div className="container-custom">
         <div className="flex h-16 items-center justify-between gap-6 md:h-[72px]">
           <Link href="/" className="flex items-center text-[20px] text-rose-700 sm:text-[24px] md:text-[28px]">

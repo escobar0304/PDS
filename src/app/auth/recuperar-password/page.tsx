@@ -70,7 +70,7 @@ export default function RecuperarPasswordPage() {
           Lembrou-se dela?{' '}
           <Link
             href="/auth/login"
-            className="font-medium text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+            className="font-medium text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700"
           >
             Entrar
           </Link>

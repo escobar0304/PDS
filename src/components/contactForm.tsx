@@ -118,7 +118,7 @@ export default function ContactForm() {
         teclado e escondida dos leitores de ecra: uma pessoa nunca a preenche,
         e um programa que preenche todos os campos denuncia-se.
       */}
-      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+      <div aria-hidden="true" className="absolute left-[-9999px] h-px w-px overflow-hidden">
         <label htmlFor="contacto-sitio">Não preencha este campo</label>
         <input
           id="contacto-sitio"
@@ -147,7 +147,7 @@ export default function ContactForm() {
       */}
       <p className="text-xs text-ink-muted">
         Usamos o que escrever aqui para lhe responder, e mais nada. Veja a{' '}
-        <Link href="/privacidade" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">
+        <Link href="/privacidade" className="text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700">
           política de privacidade
         </Link>
         .

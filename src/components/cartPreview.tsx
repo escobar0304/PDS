@@ -54,7 +54,7 @@ export default function CartPreview() {
       {/* Overlay */}
       <div
         aria-hidden
-        className="fixed inset-0 z-40 bg-plum/60 transition-opacity"
+        className="fixed inset-0 z-40 transition-opacity"
         onClick={closeCart}
       />
 
@@ -88,7 +88,7 @@ export default function CartPreview() {
         <div className="flex-1 overflow-y-auto p-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <ShoppingBag className="mb-4 h-16 w-16 text-ink-muted/50" aria-hidden />
+              <ShoppingBag className="mb-4 h-16 w-16" aria-hidden />
               <p className="text-lg text-ink-muted mb-2">
                 Carrinho vazio
               </p>
@@ -115,7 +115,7 @@ export default function CartPreview() {
                     href={`/produto/${item.slug}`}
                     onClick={closeCart}
                     aria-label={item.name}
-                    className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden"
+                    className="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden"
                   >
                     {/* `/images/placeholder.jpg` nunca existiu: uma peca sem fotografia
                         dava um 404 e um erro do otimizador de imagens em cada carrinho. */}

@@ -250,7 +250,7 @@ export default function ProdutoPage() {
           <div className="mb-24 grid gap-10 md:grid-cols-12 md:gap-12">
             {/* A peca, na vitrine em arco da entrada. Nada escrito por cima. */}
             <div className="space-y-4 md:col-span-7">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-b-lg rounded-t-full bg-surface-sunken">
+              <div className="relative aspect-4/5 overflow-hidden rounded-b-lg rounded-t-full bg-surface-sunken">
                 {currentImage ? (
                   <Image
                     src={currentImage}
@@ -268,14 +268,14 @@ export default function ProdutoPage() {
                   <>
                     <button
                       onClick={prevImage}
-                      className="absolute bottom-4 left-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface/90 text-ink shadow-soft transition-smooth hover:bg-surface"
+                      className="absolute bottom-4 left-4 flex h-11 w-11 items-center justify-center rounded-full text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Imagem anterior"
                     >
                       <CaretLeft className="h-6 w-6" />
                     </button>
                     <button
                       onClick={nextImage}
-                      className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-surface/90 text-ink shadow-soft transition-smooth hover:bg-surface"
+                      className="absolute bottom-4 right-4 flex h-11 w-11 items-center justify-center rounded-full text-ink shadow-soft transition-smooth hover:bg-surface"
                       aria-label="Próxima imagem"
                     >
                       <CaretRight className="h-6 w-6" />
@@ -314,7 +314,7 @@ export default function ProdutoPage() {
                     {product.categoryId.name}
                   </Link>
                 )}
-                <h1 className="mt-2 pb-1 text-5xl leading-[1.05] text-ink lg:text-6xl">{product.name}</h1>
+                <h1 className="mt-2 pb-1 text-5xl leading-[1.05] text-ink lg:text-6xl lg:leading-none">{product.name}</h1>
 
                 <div className="mt-6 flex items-baseline gap-4">
                   <span className="tabular text-3xl font-semibold text-ink">{formatarPreco(product.priceCents)}</span>
@@ -464,7 +464,7 @@ export default function ProdutoPage() {
                   { Icone: ArrowCounterClockwise, ...INFORMACAO_COMPRA.livreResolucao },
                 ].map(({ Icone, titulo, detalhe }) => (
                   <div key={titulo} className="flex items-start gap-3">
-                    <Icone className="w-5 h-5 text-rose-700 flex-shrink-0 mt-0.5" aria-hidden />
+                    <Icone className="w-5 h-5 text-rose-700 shrink-0 mt-0.5" aria-hidden />
                     <div>
                       <p className="font-medium text-ink">{titulo}</p>
                       <p className="text-sm text-ink-muted">{detalhe}</p>
@@ -487,7 +487,7 @@ export default function ProdutoPage() {
                   <ul className="space-y-2">
                     {product.properties.beneficios.map((beneficio, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <Sparkle className="mt-1 h-3.5 w-3.5 flex-shrink-0 text-rose-700" aria-hidden />
+                        <Sparkle className="mt-1 h-3.5 w-3.5 shrink-0 text-rose-700" aria-hidden />
                         <span className="text-ink">{beneficio}</span>
                       </li>
                     ))}
@@ -511,7 +511,7 @@ export default function ProdutoPage() {
                   <ul className="space-y-2">
                     {product.properties.cuidados.map((cuidado, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <Dot className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                        <Dot className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden />
                         <span className="text-ink">{cuidado}</span>
                       </li>
                     ))}

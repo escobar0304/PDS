@@ -190,7 +190,7 @@ export default function Checkout({ informacao }: { informacao: InformacaoPrevia 
         <Header />
         <main id="conteudo" className="min-h-screen bg-surface py-16">
           <Container className="max-w-2xl text-center">
-            <ShoppingBag className="mx-auto mb-6 h-16 w-16 text-ink-muted/50" aria-hidden />
+            <ShoppingBag className="mx-auto mb-6 h-16 w-16" aria-hidden />
             <PageHeader title="Finalizar encomenda" lead="O carrinho está vazio." />
             <Link href="/loja" className={botaoClasses({ className: 'mt-8' })}>
               Ir às compras

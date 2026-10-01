@@ -80,7 +80,7 @@ export default function Carrinho({
           <div className="container-custom">
             {avisoDesistencia}
             <div className="mx-auto max-w-2xl py-16 text-center">
-              <ShoppingBag className="mx-auto mb-6 h-16 w-16 text-ink-muted/50" aria-hidden />
+              <ShoppingBag className="mx-auto mb-6 h-16 w-16" aria-hidden />
               <h1 className="mb-4 font-serif text-3xl text-rose-700 md:text-4xl">
                 Carrinho vazio
               </h1>
@@ -133,7 +133,7 @@ export default function Carrinho({
                     <Link
                       href={`/produto/${item.slug}`}
                       aria-label={item.name}
-                      className="relative w-24 h-24 md:w-32 md:h-32 flex-shrink-0 rounded-lg overflow-hidden"
+                      className="relative w-24 h-24 md:w-32 md:h-32 shrink-0 rounded-lg overflow-hidden"
                     >
                       {/* `/images/placeholder.jpg` nunca existiu: uma peca sem fotografia
                           dava um 404 e um erro do otimizador de imagens em cada carrinho. */}
@@ -155,7 +155,7 @@ export default function Carrinho({
                         </Link>
                         <button
                           onClick={() => removeItem(chaveDe(item))}
-                          className="p-2 hover:bg-danger-100 text-danger-700 rounded-lg transition-smooth flex-shrink-0"
+                          className="p-2 hover:bg-danger-100 text-danger-700 rounded-lg transition-smooth shrink-0"
                           aria-label="Remover item"
                         >
                           <Trash className="w-5 h-5" />
@@ -285,7 +285,7 @@ export default function Carrinho({
                   {/* Texto em `src/lib/afirmacoes.ts`, sem promessas de prazo nem de pagamento. */}
                   {[INFORMACAO_COMPRA.envios, INFORMACAO_COMPRA.livreResolucao].map((i) => (
                     <div key={i.titulo} className="flex items-start gap-2 text-sm text-ink-muted">
-                      <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-sage-600" aria-hidden />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-sage-600" aria-hidden />
                       <span>
                         <span className="font-medium text-ink">{i.titulo}:</span> {i.detalhe}
                       </span>

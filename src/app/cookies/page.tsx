@@ -106,7 +106,7 @@ export default function CookiesPage() {
                   role="region"
                   aria-label="Tabela do que guardamos"
                 >
-                  <table className="w-full min-w-[34rem] border-collapse text-sm">
+                  <table className="w-full min-w-136 border-collapse text-sm">
                     <thead>
                       <tr className="border-b border-line text-left">
                         <th scope="col" className="py-3 pr-4 font-medium">Nome</th>
@@ -132,7 +132,7 @@ export default function CookiesPage() {
               <section>
                 <h2 className="mb-3 font-serif text-2xl text-rose-700">O mapa da loja</h2>
                 <p className="leading-relaxed text-ink-muted">
-                  A página <Link href="/sobre-nos" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">Sobre Nós</Link>{' '}
+                  A página <Link href="/sobre-nos" className="text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700">Sobre Nós</Link>{' '}
                   mostra onde fica a loja num mapa da Google. Esse mapa é a única coisa neste
                   sítio que vem de fora, e por isso{' '}
                   <strong className="font-medium text-ink">não carrega sozinho</strong>: fica
@@ -158,7 +158,7 @@ export default function CookiesPage() {
                 <p className="leading-relaxed text-ink-muted">
                   Tudo o que está na tabela acima desaparece ao limpar os dados de navegação
                   do seu browser. O carrinho também se esvazia a partir da própria{' '}
-                  <Link href="/carrinho" className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700">página do carrinho</Link>.
+                  <Link href="/carrinho" className="text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700">página do carrinho</Link>.
                   Bloquear cookies por completo faz com que não consiga entrar na sua conta,
                   porque é com eles que o site sabe que é você entre uma página e a seguinte.
                 </p>

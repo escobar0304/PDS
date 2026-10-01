@@ -236,6 +236,53 @@ Mongoose, que declara o `socks` como *peer* opcional. O lockfile tinha o
 declaradas. Eu tinha escrito que não havia saída sem next-auth v5 — não tinha
 ido ver a árvore inteira.
 
+### A atualização de 01/10/2026: React 19, mongoose 9, Tailwind 4
+
+Feita por passos, com a suite inteira a cada um. **E com as páginas
+comparadas píxel a píxel**: 24 páginas (incluindo o registo, a área
+pessoal e o checkout, em ensaio contra o simulador da Stripe), em
+computador e em telemóvel,
+capturadas antes e depois (as duas séries de "antes" saíram iguais a 0%,
+por isso qualquer diferença vinha da atualização).
+
+- **mongoose 9.** `FilterQuery` passou a `QueryFilter`. A opção `new: true`
+  e o `validateSync` estão a sair, e foram trocados já. O `.lean()` passou a
+  ser tipado com mais rigor, e uma conversão em `lib/conta.ts` passa agora
+  por `unknown`. Os testes de injeção passaram sem mudança.
+- **React 19.** Nenhum erro de tipos, nenhum teste partido.
+- **Tailwind 4.** A ferramenta oficial de migração deixou a maioria das
+  páginas diferentes, com todos os testes verdes. As causas, e o que se fez:
+  - as utilitárias passaram para uma camada de CSS, e uma regra solta como
+    `a { color: inherit }` passou a ganhar-lhes: as ligações do rodapé perdiam
+    a cor e os títulos ficavam serifados. As regras de elemento foram para
+    `@layer base`;
+  - 32 classes com opacidade nas nossas cores (`decoration-rose-700/40`,
+    `bg-surface/95`, …) **nunca tinham gerado CSS** no Tailwind 3, porque as
+    cores são variáveis. O 4 aplicava-as de repente. Saíram, para o sítio
+    ficar como sempre se viu; ficaram as do anel de foco, onde o 3 caía no
+    azul por omissão, que era um acidente;
+  - num tamanho de ecrã maior, o tamanho de letra já não repõe a altura de
+    linha: a página inicial ficava 54 px mais alta. Reposto com
+    `sm:`/`md:`/`lg:leading-none` onde antes acontecia;
+  - o texto de exemplo dos campos, o cursor dos botões e a margem interior
+    das células de tabela mudavam por omissão. Repostos em `@layer base`.
+
+  Depois disto, as 48 capturas ficaram iguais (a pior a 0,025%, num botão de
+  escolher ficheiros, invisível).
+- **Não atualizados, de propósito:** ESLint 10, TypeScript 7 e
+  `@types/node` 26 (ver a razão, medida, em `.github/dependabot.yml`); o
+  dotenv 18, publicado a 17/09/2026, porque a regra do projeto é esperar 30
+  dias por uma versão maior (`cooldown` no `dependabot.yml`); e **a Stripe
+  23, publicada a 01/10/2026**, que além disso muda a versão da API de
+  pagamentos (`2026-09-30.endive`). Uma mudança da API de pagamentos não se
+  prova contra o simulador, que só imita o formato: entra num PR próprio,
+  depois dos 30 dias, com um pagamento de teste a sério.
+- **Classes coladas.** Um arrumo de espaços durante esta migração tirou o
+  espaço da junção de classes partidas em várias strings (`text-ink` +
+  `focus:…` passou a `text-inkfocus:…`), em cinco sítios. As capturas só
+  apanharam um, porque os outros não mudavam nada visível.
+  `classes.test.ts` falha agora se voltar a acontecer.
+
 ### O `overrides` no `package.json`
 
 O `next-auth@4.24.15` declara `nodemailer@^7.0.7` como *peerOptional*, o que

@@ -36,7 +36,7 @@ export default function Destaques() {
           </h2>
           <Link
             href="/loja"
-            className="inline-flex items-center gap-2 py-2 text-sm font-medium text-rose-700 underline decoration-rose-700/40 underline-offset-4 transition-smooth hover:decoration-rose-700"
+            className="inline-flex items-center gap-2 py-2 text-sm font-medium text-rose-700 underline underline-offset-4 transition-smooth hover:decoration-rose-700"
           >
             Todas as peças <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
@@ -48,7 +48,7 @@ export default function Destaques() {
       */}
       {/* O `scroll-px` e a margem da pagina: sem ele, o encaixe alinhava o
           primeiro cartao a borda do ecra, fora da coluna do titulo. */}
-      <ul className="container-custom flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] sm:scroll-px-6 lg:scroll-px-8">
+      <ul className="container-custom flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto pb-4 scrollbar-thin sm:scroll-px-6 lg:scroll-px-8">
         {pecas === null
           ? [1, 2, 3, 4].map((i) => (
               <li key={i} className="w-[78%] shrink-0 snap-start sm:w-[300px]">

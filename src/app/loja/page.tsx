@@ -242,7 +242,7 @@ function LojaContent() {
           <ul className="container-custom grid gap-8 sm:grid-cols-3">
             {GARANTIAS.map(({ Icone, titulo, detalhe }) => (
               <li key={titulo} className="flex gap-3">
-                <Icone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-700" aria-hidden />
+                <Icone className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" aria-hidden />
                 <div>
                   <h3 className="mb-1 text-base font-medium text-ink">{titulo}</h3>
                   <p className="text-sm text-ink-muted">{detalhe}</p>

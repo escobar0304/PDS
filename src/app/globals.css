@@ -1,6 +1,71 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-line: var(--line);
+  --color-line-plum: var(--plum-line);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+
+  --color-plum: var(--plum);
+  --color-paper: var(--paper);
+
+  --color-rose-100: var(--rose-100);
+  --color-rose-200: var(--rose-200);
+  --color-rose-300: var(--rose-300);
+  --color-rose-600: var(--rose-600);
+  --color-rose-700: var(--rose-700);
+  --color-rose-900: var(--rose-900);
+
+  --color-sage-100: var(--sage-100);
+  --color-sage-600: var(--sage-600);
+
+  --color-danger-100: var(--danger-100);
+  --color-danger-700: var(--danger-700);
+
+  --font-sans: var(--font-corpo), system-ui, sans-serif;
+  --font-serif: var(--font-exposicao), Georgia, serif;
+  --font-mono: var(--font-etiqueta), ui-monospace, monospace;
+
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius: 4px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  --radius-full: 9999px;
+
+  --shadow-soft: var(--shadow-soft);
+  --shadow-medium: var(--shadow-medium);
+  --shadow-strong: var(--shadow-strong);
+  --shadow-none: none;
+
+  --tracking-display: -0.02em;
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 /* ==========================================================================
    Tokens
@@ -101,49 +166,80 @@
    Base
    ========================================================================== */
 
-html {
-  scroll-behavior: smooth;
-}
+/* Em `@layer base`, como o Tailwind 3 as tinha na pratica: um seletor de
+   elemento perde para qualquer classe utilitaria. No Tailwind 4 as utilitarias
+   estao numa camada, e uma regra fora de camadas ganha-lhes sempre — um `a {
+   color: inherit }` solto passava por cima de `text-ink-muted` no rodape, e o
+   `h1, h2` por cima de `font-sans`. Medido nas capturas antes e depois. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
 
-body {
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-corpo), -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
-}
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-corpo), -apple-system, BlinkMacSystemFont, 'Segoe UI',
+      Roboto, 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
 
-/* Os titulos grandes sao da letra de etiqueta de museu (docs/MARCA.md). Os
-   pequenos, de h3 para baixo, ficam na letra do corpo: a Cormorant tem o
-   olho baixo e abaixo dos 20 px perde-se. Quem quiser um h3 de exposicao
-   pede `font-serif`. */
-h1, h2 {
-  font-family: var(--font-exposicao), Georgia, serif;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-}
+  /* Os titulos grandes sao da letra de etiqueta de museu (docs/MARCA.md). Os
+     pequenos, de h3 para baixo, ficam na letra do corpo: a Cormorant tem o
+     olho baixo e abaixo dos 20 px perde-se. Quem quiser um h3 de exposicao
+     pede `font-serif`. */
+  h1, h2 {
+    font-family: var(--font-exposicao), Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
 
-h3, h4, h5, h6 {
-  font-weight: 600;
-  text-wrap: balance;
-}
+  h3, h4, h5, h6 {
+    font-weight: 600;
+    text-wrap: balance;
+  }
 
-p {
-  text-wrap: pretty;
-}
+  p {
+    text-wrap: pretty;
+  }
 
-a {
-  text-decoration: none;
-  color: inherit;
-}
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--rose-700);
+    outline-offset: 2px;
+  }
+  /* Duas mudancas do Tailwind 4 que nao se pediram: o texto de exemplo dos
+     campos passava a cor do texto a 50% (era o gray-400), e os botoes a seta
+     em vez da mao. Ficam como estavam. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  /* O browser da 1px de margem interior as celulas de tabela; o Tailwind 3
+     deixava-a, o 4 tira-a (padding: 0 em tudo). Sem ela, as colunas da
+     tabela dos cookies mudavam de largura. */
+  td,
+  th {
+    padding: 1px;
+  }
 }
 
 /* Numeros alinham em colunas: precos, quantidades, totais */
@@ -151,10 +247,7 @@ img {
   font-variant-numeric: tabular-nums;
 }
 
-*:focus-visible {
-  outline: 2px solid var(--rose-700);
-  outline-offset: 2px;
-}
+
 
 /* O contorno do foco tem de continuar visivel sobre a superficie escura */
 .on-plum *:focus-visible,
