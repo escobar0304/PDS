@@ -128,7 +128,7 @@ describe('entrar pela Google', () => {
     // conseguia entrar pela Google pela primeira vez.
     const { User } = await import('../models');
     const u = new User({ name: 'A', email: 'a@exemplo.pt', emailVerified: true });
-    expect(u.validateSync()).toBeUndefined();
+    await expect(u.validate()).resolves.toBeUndefined();
   });
 
   it('já não há adaptador, nem a dependência que o trazia', () => {

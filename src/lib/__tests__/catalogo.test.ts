@@ -3,6 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { problemasDasMedidas, stockTotal, temDeEscolher } from '@/lib/catalogo';
 import { Product } from '@/lib/models';
 
+/**
+ * Os erros de validacao do esquema, sem base de dados, ou `undefined`. O
+ * `validateSync` que isto usava esta a sair do Mongoose (aviso no 9).
+ */
+async function errosDe(doc: { validate: () => Promise<void> }) {
+  try {
+    await doc.validate();
+    return undefined;
+  } catch (erro) {
+    return erro as { errors: Record<string, unknown> };
+  }
+}
+
 describe('peças únicas', () => {
   it('uma medida sem nome, stock 0 ou 1', () => {
     expect(problemasDasMedidas([{ stock: 1 }], true)).toEqual([]);
@@ -50,10 +63,10 @@ describe('na loja', () => {
 describe('o esquema', () => {
   const base = { name: 'x', slug: 'x', priceCents: 100, categoryId: new mongoose.Types.ObjectId() };
 
-  it('recusa um produto sem medidas, e stock negativo ou partido', () => {
-    expect(new Product({ ...base, variantes: [] }).validateSync()?.errors.variantes).toBeDefined();
-    expect(new Product({ ...base, variantes: [{ stock: -1 }] }).validateSync()).toBeDefined();
-    expect(new Product({ ...base, variantes: [{ stock: 1.5 }] }).validateSync()).toBeDefined();
-    expect(new Product({ ...base, variantes: [{ stock: 1 }] }).validateSync()).toBeUndefined();
+  it('recusa um produto sem medidas, e stock negativo ou partido', async () => {
+    expect((await errosDe(new Product({ ...base, variantes: [] })))?.errors.variantes).toBeDefined();
+    expect(await errosDe(new Product({ ...base, variantes: [{ stock: -1 }] }))).toBeDefined();
+    expect(await errosDe(new Product({ ...base, variantes: [{ stock: 1.5 }] }))).toBeDefined();
+    expect(await errosDe(new Product({ ...base, variantes: [{ stock: 1 }] }))).toBeUndefined();
   });
 });

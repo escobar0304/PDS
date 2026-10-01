@@ -280,7 +280,7 @@ export async function proximoNumero(agora = new Date()): Promise<string> {
   const c = await Contador.findOneAndUpdate(
     { _id: `encomenda-${ano}` },
     { $inc: { valor: 1 } },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   ).lean();
   return formatarNumero(ano, c!.valor);
 }

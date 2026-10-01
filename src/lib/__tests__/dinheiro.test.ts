@@ -3,6 +3,19 @@ import { describe, expect, it } from 'vitest';
 import { eCentimos, formatarPreco } from '@/lib/dinheiro';
 import { Order, Product } from '@/lib/models';
 
+/**
+ * Os erros de validacao do esquema, sem base de dados, ou `undefined`. O
+ * `validateSync` que isto usava esta a sair do Mongoose (aviso no 9).
+ */
+async function errosDe(doc: { validate: () => Promise<void> }) {
+  try {
+    await doc.validate();
+    return undefined;
+  } catch (erro) {
+    return erro as { errors: Record<string, unknown> };
+  }
+}
+
 describe('dinheiro', () => {
   it('formata como se escreve em Portugal', () => {
     // Espaco inseparavel antes do simbolo: o preco nunca parte em duas linhas.
@@ -21,7 +34,7 @@ describe('dinheiro', () => {
 });
 
 describe('os modelos recusam euros onde se esperam centimos', () => {
-  // `validateSync` corre as validacoes do esquema sem base de dados.
+  // `errosDe` corre as validacoes do esquema sem base de dados.
   const produto = {
     name: 'Quartzo rosa',
     slug: 'quartzo-rosa',
@@ -29,15 +42,15 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
     variantes: [{ stock: 1 }],
   };
 
-  it('produto', () => {
-    expect(new Product({ ...produto, priceCents: 1990 }).validateSync()).toBeUndefined();
-    expect(new Product({ ...produto, priceCents: 19.9 }).validateSync()?.errors.priceCents).toBeDefined();
-    expect(new Product({ ...produto, priceCents: -100 }).validateSync()?.errors.priceCents).toBeDefined();
+  it('produto', async () => {
+    expect(await errosDe(new Product({ ...produto, priceCents: 1990 }))).toBeUndefined();
+    expect((await errosDe(new Product({ ...produto, priceCents: 19.9 })))?.errors.priceCents).toBeDefined();
+    expect((await errosDe(new Product({ ...produto, priceCents: -100 })))?.errors.priceCents).toBeDefined();
   });
 
-  it('encomenda, nos totais e em cada linha', () => {
+  it('encomenda, nos totais e em cada linha', async () => {
     const encomenda = (over: Record<string, unknown>) =>
-      new Order({
+      errosDe(new Order({
         numero: '2026-000001',
         customerName: 'Marta Ferreira',
         customerEmail: 'marta@exemplo.pt',
@@ -47,15 +60,15 @@ describe('os modelos recusam euros onde se esperam centimos', () => {
         totalCents: 1990,
         items: [{ productId: new mongoose.Types.ObjectId(), varianteId: new mongoose.Types.ObjectId(), name: 'x', priceCents: 1990, quantity: 1 }],
         ...over,
-      }).validateSync();
+      }));
 
-    expect(encomenda({})).toBeUndefined();
-    expect(encomenda({ totalCents: 19.9 })?.errors.totalCents).toBeDefined();
-    expect(encomenda({ shippingCents: 3.5 })?.errors.shippingCents).toBeDefined();
+    expect(await encomenda({})).toBeUndefined();
+    expect((await encomenda({ totalCents: 19.9 }))?.errors.totalCents).toBeDefined();
+    expect((await encomenda({ shippingCents: 3.5 }))?.errors.shippingCents).toBeDefined();
     expect(
-      encomenda({
+      (await encomenda({
         items: [{ productId: new mongoose.Types.ObjectId(), varianteId: new mongoose.Types.ObjectId(), name: 'x', priceCents: 19.9, quantity: 1 }],
-      })?.errors['items.0.priceCents']
+      }))?.errors['items.0.priceCents']
     ).toBeDefined();
   });
 });
