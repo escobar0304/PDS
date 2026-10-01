@@ -54,7 +54,7 @@ export default function InterruptorMapa() {
         aria-labelledby="rotulo-mapa"
         onClick={alternar}
         disabled={!montado}
-        className={`relative mt-1 flex h-11 w-14 shrink-0 items-center rounded-full transition-smooth focus:outline-none focus:ring-2 focus:ring-rose-600/40 focus:ring-offset-2 focus:ring-offset-surface-raised disabled:opacity-50 ${
+        className={`relative mt-1 flex h-11 w-14 shrink-0 items-center rounded-full transition-smooth focus:outline-hidden focus:ring-2 focus:ring-rose-600/40 focus:ring-offset-2 focus:ring-offset-surface-raised disabled:opacity-50 ${
           ligado ? 'bg-sage-600' : 'bg-line'
         }`}
       >

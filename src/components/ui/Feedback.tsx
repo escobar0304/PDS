@@ -6,11 +6,11 @@ export type AlertTone = 'erro' | 'sucesso' | 'info';
 
 const TONS: Record<AlertTone, { caixa: string; Icone: typeof Info }> = {
   erro: {
-    caixa: 'border-danger-700/25 bg-danger-100 text-danger-700',
+    caixa: ' bg-danger-100 text-danger-700',
     Icone: WarningCircle,
   },
   sucesso: {
-    caixa: 'border-sage-600/25 bg-sage-100 text-sage-600',
+    caixa: ' bg-sage-100 text-sage-600',
     Icone: CheckCircle,
   },
   info: {
@@ -120,7 +120,7 @@ export function EmptyState({
   return (
     <div className="rounded-lg border border-line bg-surface-raised px-6 py-16 text-center">
       {icon && (
-        <div className="mb-5 flex justify-center text-ink-muted/60" aria-hidden>
+        <div className="mb-5 flex justify-center" aria-hidden>
           {icon}
         </div>
       )}

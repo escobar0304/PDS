@@ -1,6 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import sharp, { type OutputInfo } from 'sharp';
 
 /**
@@ -45,8 +44,15 @@ const QUALIDADE = 82;
 
 export const NOME_IMAGEM = /^[a-f0-9]{64}\.webp$/;
 
+/**
+ * Relativo a pasta onde o servidor arranca, e montado com texto simples. Com
+ * `process.cwd()` ou `path.join`/`path.resolve` sobre um valor que so se sabe
+ * a correr, o build do Next nao sabe que pasta e e junta o projeto inteiro ao
+ * pacote do servidor (aviso "Dynamic filesystem access"). Os nomes que se
+ * juntam a pasta sao sempre os de `NOME_IMAGEM`, validados antes.
+ */
 export function pastaDasImagens(env: Record<string, string | undefined> = process.env): string {
-  return path.resolve(env.IMAGENS_DIR || path.join(process.cwd(), 'dados', 'imagens'));
+  return env.IMAGENS_DIR || 'dados/imagens';
 }
 
 export type ResultadoImagem =
@@ -70,12 +76,12 @@ export async function guardarImagem(bytes: Buffer, pasta = pastaDasImagens()): P
   }
 
   const nome = `${createHash('sha256').update(saida.data).digest('hex')}.webp`;
-  const destino = path.join(pasta, nome);
+  const destino = `${pasta}/${nome}`;
   await mkdir(pasta, { recursive: true });
   if (!(await existe(destino))) {
     // Escrever ao lado e mudar o nome: quem pedir a imagem a meio da escrita
     // ve a anterior (nenhuma) ou a inteira, nunca metade.
-    const temporario = path.join(pasta, `.${nome}.${randomBytes(6).toString('hex')}`);
+    const temporario = `${pasta}/.${nome}.${randomBytes(6).toString('hex')}`;
     await writeFile(temporario, saida.data);
     await rename(temporario, destino);
   }
@@ -87,7 +93,7 @@ export async function guardarImagem(bytes: Buffer, pasta = pastaDasImagens()): P
 export async function lerImagem(nome: string, pasta = pastaDasImagens()): Promise<Buffer | null> {
   if (!NOME_IMAGEM.test(nome)) return null;
   try {
-    return await readFile(path.join(pasta, nome));
+    return await readFile(`${pasta}/${nome}`);
   } catch {
     return null;
   }

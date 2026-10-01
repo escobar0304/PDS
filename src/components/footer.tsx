@@ -68,11 +68,11 @@ export default function Footer() {
                 */}
                 <ul className="space-y-1 text-sm text-ink-muted">
                   <li className="flex items-start gap-2">
-                    <MapPin className="mt-1.5 h-4 w-4 flex-shrink-0" aria-hidden />
+                    <MapPin className="mt-1.5 h-4 w-4 shrink-0" aria-hidden />
                     <span className="py-1">{moradaFormatada() ?? 'Morada por preencher'}</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <Phone className="mt-1.5 h-4 w-4 flex-shrink-0" aria-hidden />
+                    <Phone className="mt-1.5 h-4 w-4 shrink-0" aria-hidden />
                     {EMPRESA.telefone ? (
                       <a href={`tel:${EMPRESA.telefone.replace(/\s/g, '')}`} className={ligacao}>
                         {EMPRESA.telefone}
@@ -82,7 +82,7 @@ export default function Footer() {
                     )}
                   </li>
                   <li className="flex items-start gap-2">
-                    <Envelope className="mt-1.5 h-4 w-4 flex-shrink-0" aria-hidden />
+                    <Envelope className="mt-1.5 h-4 w-4 shrink-0" aria-hidden />
                     {EMPRESA.email ? (
                       <a href={`mailto:${EMPRESA.email}`} className={`${ligacao} break-all`}>
                         {EMPRESA.email}

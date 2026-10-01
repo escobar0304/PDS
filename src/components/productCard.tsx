@@ -74,7 +74,7 @@ export default function ProductCard({ product }: { product: ProdutoDoCartao }) {
     <article className="group flex h-full flex-col">
       <Link
         href={`/produto/${product.slug}`}
-        className="relative block aspect-[4/5] shrink-0 overflow-hidden rounded-lg bg-surface-sunken"
+        className="relative block aspect-4/5 shrink-0 overflow-hidden rounded-lg bg-surface-sunken"
       >
         {imagem ? (
           <Image

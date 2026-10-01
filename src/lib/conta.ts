@@ -46,7 +46,7 @@ export async function exportarDados(idUtilizador: string): Promise<DadosExportad
   const utilizador = await User.findById(idUtilizador).lean();
   if (!utilizador) return null;
 
-  const conta = { ...(utilizador as Record<string, unknown>) };
+  const conta = { ...(utilizador as unknown as Record<string, unknown>) };
   for (const campo of NUNCA_EXPORTAR) delete conta[campo];
 
   const encomendas = await Order.find({ userId: idUtilizador }).lean();

@@ -272,7 +272,7 @@ export default function AreaPessoal() {
                     </a>
                   </Card>
 
-                  <Card className="border-danger-700/30 p-6 shadow-soft md:p-8">
+                  <Card className="p-6 shadow-soft md:p-8">
                     <h2 className="mb-2 font-serif text-2xl text-danger-700">Apagar a conta</h2>
                     <p className="mb-6 text-ink-muted">
                       Apaga a sua conta e os dados pessoais associados. Não há forma de

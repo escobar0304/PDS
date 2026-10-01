@@ -60,7 +60,7 @@ export default function Catalogo() {
             As famílias de cristais e pedras. Cada família reúne pedras parecidas na composição, mas
             nenhuma peça é igual a outra.
           </p>
-          <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded-lg md:aspect-[21/8]">
+          <div className="relative mt-10 aspect-video overflow-hidden rounded-lg md:aspect-21/8">
             <Image
               src="/images/hero-catalogo.png"
               alt="Pedras roladas de ametista sobre um pano de linho"
@@ -174,7 +174,7 @@ export default function Catalogo() {
             <ul className="grid gap-8 sm:grid-cols-3">
               {CARACTERISTICAS.map(({ Icone, titulo, detalhe }) => (
                 <li key={titulo} className="flex gap-3">
-                  <Icone className="mt-0.5 h-5 w-5 flex-shrink-0 text-rose-700" aria-hidden />
+                  <Icone className="mt-0.5 h-5 w-5 shrink-0 text-rose-700" aria-hidden />
                   <div>
                     <h3 className="mb-1 text-base font-medium text-ink">{titulo}</h3>
                     <p className="text-sm text-ink-muted">{detalhe}</p>

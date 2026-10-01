@@ -150,7 +150,7 @@ export default function ContactoPage() {
                         href={EMPRESA.entidadeRal.sitio}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+                        className="text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700"
                       >
                         {EMPRESA.entidadeRal.nome}
                       </a>
@@ -164,7 +164,7 @@ export default function ContactoPage() {
                         href={LIVRO_RECLAMACOES.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700"
+                        className="text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700"
                       >
                         Livro de Reclamações Eletrónico
                       </a>

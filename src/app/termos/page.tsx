@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 const VERSAO = '25 de setembro de 2026';
 
 const ligacao =
-  'text-rose-700 underline decoration-rose-700/40 underline-offset-2 transition-smooth hover:decoration-rose-700';
+  'text-rose-700 underline underline-offset-2 transition-smooth hover:decoration-rose-700';
 
 function Falta() {
   return <span className="text-danger-700">por preencher</span>;

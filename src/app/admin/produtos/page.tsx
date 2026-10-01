@@ -74,7 +74,7 @@ export default async function AdminProdutosPage() {
                           key={String(v._id)}
                           className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-3 text-sm"
                         >
-                          <span className="min-w-[5rem] font-medium">{v.medida ?? 'Única'}</span>
+                          <span className="min-w-20 font-medium">{v.medida ?? 'Única'}</span>
                           <span className="tabular">Em stock: {v.stock}</span>
                           <span className="tabular">
                             Reservado online:{' '}

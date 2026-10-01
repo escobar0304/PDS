@@ -43,51 +43,44 @@ updates:
       semver-patch-days: 2
 
     ignore:
-      # O salto para o Next 15 fecha mais de vinte avisos, um deles critico,
-      # mas traz mudancas de API — `params` passa a assincrono, entre outras.
-      # E trabalho com PR proprio e a suite a validar cada passo, nao uma
-      # atualizacao automatica. Ver "Por fazer" em docs/SEGURANCA.md.
+      # As versoes maiores destes pacotes nao sao atualizacoes automaticas:
+      # cada uma foi feita num PR proprio, com a suite inteira e a comparacao
+      # visual de todas as paginas (01/10/2026: Next 16, React 19, mongoose 9,
+      # Tailwind 4). A proxima de cada um merece o mesmo.
+      #
+      # O par React / React DOM nunca pode ser automatico: o Dependabot ja
+      # abriu um PR que subia o `react` e deixava o `react-dom` para tras, e
+      # fundi-lo partia o site.
+      #
+      # O Tailwind 4 mostrou porque e preciso comparar as paginas: a migracao
+      # oficial deixava a pagina inicial 54 px mais alta, os titulos do rodape
+      # serifados e as celulas das tabelas mais estreitas, com todos os testes
+      # verdes. Ver "As dependencias" em docs/SEGURANCA.md.
       - dependency-name: "next"
         update-types: ["version-update:semver-major"]
-      # O mongoose 9 e o mesmo caso: major com mudancas de comportamento no
-      # casting, e este projeto depende disso para a defesa contra injeccao.
-      - dependency-name: "mongoose"
-        update-types: ["version-update:semver-major"]
-      # O React 18 -> 19 sao 28 componentes de cliente, e ha que confirmar o
-      # next-auth@4 e o @phosphor-icons/react antes. O next@15 aceita o React
-      # 18, por isso nada forca a mao.
-      #
-      # Esta regra faltava, e o Dependabot mostrou porque: abriu um PR que
-      # subia `react` e `@types/react` para 19 e **deixava o `react-dom` no
-      # 18**. Fundi-lo partia o site. Um major que divide um par de pacotes
-      # nunca pode ser automatico.
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-dom"
         update-types: ["version-update:semver-major"]
-      # O Tailwind 4 nao e um upgrade, e uma reescrita: a configuracao passa a
-      # ser em CSS. Todo o sistema de cores, raios, sombras e espacamentos
-      # deste projeto vive em tokens no globals.css, derivados do logotipo
-      # (docs/PALETA.md). Merece medicao propria e um PR onde uma regressao
-      # visual seja visivel.
+      - dependency-name: "mongoose"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "tailwindcss"
         update-types: ["version-update:semver-major"]
       # O ESLint 10 e o TypeScript 7 partem o `npm run lint`, e a culpa nao e
-      # nossa: o `eslint-config-next` traz o `eslint-plugin-react`, que so
-      # aceita o ESLint ate ao 9, e o `typescript-eslint`, que so aceita o
-      # TypeScript abaixo do 6.1. Medido a 29/09/2026 com as ultimas versoes
-      # de ambos (7.37.5 e 8.71.0). Os PRs #41 e #42 falharam exactamente
-      # ai. Levantar estas regras quando `npm view eslint-plugin-react
-      # peerDependencies` e `npm view typescript-eslint peerDependencies` os
-      # aceitarem.
+      # nossa: o `eslint-config-next` traz o `eslint-plugin-react`, o
+      # `jsx-a11y` e o `import`, que so aceitam o ESLint ate ao 9, e o
+      # `typescript-eslint`, que so aceita o TypeScript abaixo do 6.1. Medido
+      # a 29/09 e outra vez a 01/10/2026 (7.37.5, 6.10.2, 2.32.0 e 8.71.0).
+      # Levantar quando `npm view eslint-plugin-react peerDependencies` e
+      # `npm view typescript-eslint peerDependencies` os aceitarem.
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
       # Os tipos do Node descrevem o Node que corre o codigo, e esse e o 22
-      # (o CI; o alojamento ainda nao esta escolhido). Com os tipos do 26, o
-      # `tsc` aceitava APIs que o 22 nao tem, e o erro so aparecia em
-      # producao. Sobem quando o Node do CI subir, no mesmo PR.
+      # (o CI e a imagem Docker). Com os tipos do 26, o `tsc` aceitava APIs
+      # que o 22 nao tem, e o erro so aparecia em producao. Sobem quando o
+      # Node do CI subir, no mesmo PR.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
 

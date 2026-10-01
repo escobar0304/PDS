@@ -84,7 +84,7 @@ export async function criarPecasDeExemplo(
     const doc = await Category.findOneAndUpdate(
       { slug: c.slug },
       { $setOnInsert: { name: c.name, slug: c.slug, order: c.order, pecasUnicas: c.pecasUnicas } },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     ).lean();
     categorias.set(c.slug, { id: String(doc!._id), pecasUnicas: Boolean(doc!.pecasUnicas) });
   }

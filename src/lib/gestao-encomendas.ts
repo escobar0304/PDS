@@ -1,4 +1,4 @@
-import mongoose, { type FilterQuery } from 'mongoose';
+import mongoose, { type QueryFilter } from 'mongoose';
 import { avisarExpedicao, avisarReembolso } from '@/lib/avisos';
 import connectDB from '@/lib/db';
 import { libertarReservasExpiradas, mudarEstado } from '@/lib/encomenda';
@@ -17,7 +17,7 @@ import { registarErro } from '@/lib/registo';
 
 export type Filtro = 'por-preparar' | 'a-resolver' | 'enviadas' | 'por-pagar' | 'todas';
 
-export const FILTROS: Record<Filtro, { rotulo: string; consulta: FilterQuery<IOrder> }> = {
+export const FILTROS: Record<Filtro, { rotulo: string; consulta: QueryFilter<IOrder> }> = {
   'por-preparar': { rotulo: 'Por preparar', consulta: { status: 'PROCESSING' } },
   // Pago mas cancelado (chegou tarde, ou o reembolso falhou a meio), ou pago
   // com outro valor: dinheiro que alguem tem de resolver.

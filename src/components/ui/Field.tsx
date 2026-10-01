@@ -4,10 +4,10 @@ import { forwardRef, useId } from 'react';
 
 const CONTROLO =
   'w-full rounded border border-line bg-surface-raised px-4 py-3 text-ink ' +
-  'placeholder:text-ink-muted/70 transition-smooth ' +
-  'focus:border-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-600/40 ' +
+  'transition-smooth ' +
+  'focus:border-rose-600 focus:outline-hidden focus:ring-2 focus:ring-rose-600/40 ' +
   'disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-ink-muted ' +
-  'aria-[invalid=true]:border-danger-700 aria-[invalid=true]:ring-danger-700/30';
+  'aria-invalid:border-danger-700 aria-invalid:ring-danger-700/30';
 
 interface BaseProps {
   label: string;
@@ -123,7 +123,7 @@ export const Ficheiro = forwardRef<HTMLInputElement, FicheiroProps>(function Fic
           'block w-full text-sm text-ink-muted ' +
           'file:mr-4 file:min-h-[44px] file:cursor-pointer file:rounded file:border file:border-rose-700 ' +
           'file:bg-surface-raised file:px-4 file:py-2 file:text-sm file:font-medium file:text-rose-700 ' +
-          'hover:file:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600/40 ' +
+          'hover:file:bg-rose-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-rose-600/40 ' +
           `disabled:cursor-not-allowed disabled:opacity-60 ${className}`
         }
         {...resto}
@@ -175,7 +175,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         id={id}
         aria-invalid={error ? true : undefined}
         aria-describedby={descrito(id, hint, error)}
-        className={`${CONTROLO} cursor-pointer appearance-none bg-[length:1rem] bg-[right_0.875rem_center] bg-no-repeat pr-10 ${className}`}
+        className={`${CONTROLO} cursor-pointer appearance-none bg-size-[1rem] bg-position-[right_0.875rem_center] bg-no-repeat pr-10 ${className}`}
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23705c61' stroke-width='1.5'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E\")",
@@ -223,8 +223,8 @@ export function Escolha({
           <label
             key={o.valor}
             className={
-              'relative inline-flex min-h-[2.75rem] min-w-[2.75rem] items-center justify-center rounded border px-3 text-sm transition-smooth ' +
-              'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-rose-600/40 ' +
+              'relative inline-flex min-h-11 min-w-11 items-center justify-center rounded border px-3 text-sm transition-smooth ' +
+              'has-focus-visible:ring-2 has-focus-visible:ring-rose-600/40 ' +
               (o.indisponivel
                 ? 'cursor-not-allowed border-line bg-surface-sunken text-ink-muted line-through'
                 : valor === o.valor
@@ -275,7 +275,7 @@ export function Caixa({
         onChange={(e) => onChange(e.target.checked)}
         required={required}
         aria-describedby={hint ? `${id}-dica` : undefined}
-        className="h-6 w-6 shrink-0 rounded border-line accent-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-600/40"
+        className="h-6 w-6 shrink-0 rounded border-line accent-rose-700 focus:outline-hidden focus:ring-2 focus:ring-rose-600/40"
       />
       <div>
         <label htmlFor={id} className="text-sm font-medium text-ink">

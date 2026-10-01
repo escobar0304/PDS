@@ -44,7 +44,7 @@ export default function SobreNos() {
             </div>
           </div>
           <div className="md:col-span-5 lg:col-start-8">
-            <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-b-lg rounded-t-full ring-1 ring-line ring-offset-[10px] ring-offset-surface">
+            <div className="relative mx-auto aspect-4/5 w-full max-w-md overflow-hidden rounded-b-lg rounded-t-full ring-1 ring-line ring-offset-10 ring-offset-surface">
               <Image
                 src="/images/nossa-historia.png"
                 alt="Pedra roxa lapidada sobre uma almofada, à luz do fim de tarde"
@@ -58,7 +58,7 @@ export default function SobreNos() {
         </section>
 
         <div className="container-custom">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-lg md:aspect-[21/8]">
+          <div className="relative aspect-video overflow-hidden rounded-lg md:aspect-21/8">
             <Image
               src="/images/sobre-nos-hero.png"
               alt="Pedras roxas, cinzentas e brancas dispostas em círculos sobre madeira"
@@ -116,7 +116,7 @@ export default function SobreNos() {
                   <h3 className="mb-6 font-serif text-3xl text-ink">Informações</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Morada</p>
                         <p className={moradaFormatada() ? 'text-sm text-ink-muted' : 'text-sm text-danger-700'}>
@@ -125,7 +125,7 @@ export default function SobreNos() {
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Envelope className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                      <Envelope className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Email</p>
                         {EMPRESA.email ? (
@@ -141,7 +141,7 @@ export default function SobreNos() {
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
-                      <Phone className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                      <Phone className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden />
                       <div>
                         <p className="font-medium text-ink">Telefone</p>
                         {EMPRESA.telefone ? (
@@ -158,7 +158,7 @@ export default function SobreNos() {
                     </div>
                     {EMPRESA.horario && (
                       <div className="flex items-start gap-3">
-                        <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-700" aria-hidden />
+                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" aria-hidden />
                         <div>
                           <p className="font-medium text-ink">Horário</p>
                           <p className="text-sm text-ink-muted">{EMPRESA.horario}</p>
