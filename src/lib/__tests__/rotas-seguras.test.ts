@@ -30,6 +30,8 @@ const ISENTAS: Record<string, string> = {
     'Delega no NextAuth. A validação das credenciais está em src/lib/auth.ts.',
   'pagamentos/aviso/route.ts':
     'A assinatura da Stripe é sobre o texto tal como chegou; é ela que o valida, em src/lib/pagamento.ts.',
+  'admin/imagens/route.ts':
+    'O corpo é uma imagem, não JSON: o tipo é verificado contra uma lista, o tamanho é limitado ao ler, e o sharp descodifica-a de verdade antes de se guardar (src/lib/imagens.ts).',
 };
 
 describe('rotas de API', () => {
@@ -47,7 +49,7 @@ describe('rotas de API', () => {
       if (ISENTAS[relativo]) continue;
 
       const fonte = readFileSync(caminho, 'utf8');
-      const leCorpo = /\.json\(\)|\.formData\(\)|\.text\(\)/.test(
+      const leCorpo = /\.json\(\)|\.formData\(\)|\.text\(\)|\.arrayBuffer\(\)|\.blob\(\)|request\.body\b/.test(
         fonte.replace(/NextResponse\.json\([^)]*\)/g, ''),
       );
       if (!leCorpo) continue;

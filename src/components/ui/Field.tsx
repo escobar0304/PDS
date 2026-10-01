@@ -97,6 +97,41 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   );
 });
 
+export type FicheiroProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id' | 'type'> & BaseProps;
+
+/**
+ * Escolher ficheiros. O controlo e o do browser, com o botao estilizado
+ * pelos tokens: um botao feito a mao por cima de um input escondido perde o
+ * teclado e o leitor de ecra, e o nativo ja os tem.
+ */
+export const Ficheiro = forwardRef<HTMLInputElement, FicheiroProps>(function Ficheiro(
+  { label, hint, error, labelOculta, className = '', ...resto },
+  ref,
+) {
+  const reagido = useId();
+  const id = resto.name ? `campo-${resto.name}` : reagido;
+
+  return (
+    <Envolucro id={id} label={label} hint={hint} error={error} labelOculta={labelOculta}>
+      <input
+        ref={ref}
+        id={id}
+        type="file"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={descrito(id, hint, error)}
+        className={
+          'block w-full text-sm text-ink-muted ' +
+          'file:mr-4 file:min-h-[44px] file:cursor-pointer file:rounded file:border file:border-rose-700 ' +
+          'file:bg-surface-raised file:px-4 file:py-2 file:text-sm file:font-medium file:text-rose-700 ' +
+          'hover:file:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-600/40 ' +
+          `disabled:cursor-not-allowed disabled:opacity-60 ${className}`
+        }
+        {...resto}
+      />
+    </Envolucro>
+  );
+});
+
 export interface TextareaProps
   extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'>,
     BaseProps {}

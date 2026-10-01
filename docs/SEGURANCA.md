@@ -581,6 +581,36 @@ prova de que cada um apanha alguma coisa, e não só que passa.
   compra sem conta (que o checkout permite) também deve pedi-la, é uma
   pergunta para quem for validar os termos.
 
+## As fotografias do painel — 01/10/2026
+
+Até aqui uma fotografia nova só entrava no sítio por um programador, porque o
+painel só aceitava caminhos de ficheiros já no repositório. Passa a carregar:
+`POST /api/admin/imagens`, tratado em `src/lib/imagens.ts`.
+
+- **Só administradores**, com o limite de escritas do painel.
+- **O corpo é a imagem, com o tipo no cabeçalho**, e não um `multipart`. Um
+  `<form>` de outro sítio envia `multipart` sem o browser pedir autorização;
+  um `image/jpeg` não. É a mesma defesa do `lerCorpo`, para um corpo que não é
+  JSON. `rotas-seguras.test.ts` passou a reconhecer também `.arrayBuffer()`,
+  `.blob()` e `request.body`: antes, uma rota que lesse o corpo assim passava
+  sem ser vista.
+- **O tamanho conta-se ao ler**, e não só pelo `Content-Length`, que quem
+  ataca escreve como quiser: acima de 10 MB, 413.
+- **Descodificada a sério** (`sharp`, `failOn: 'error'`), com um limite de
+  50 megapíxeis contra imagens pequenas em bytes que abrem em gigabytes.
+- **Sem metadados à saída.** Uma fotografia de telemóvel leva a localização
+  GPS de onde foi tirada, muitas vezes a casa de quem a tirou, e o sítio
+  publicava-a. Roda-se segundo o EXIF e o EXIF sai todo.
+- **O nome é o resumo SHA-256 do resultado.** Nenhum nome escolhido por quem
+  carrega chega ao disco, e servir (`/imagens/<resumo>.webp`) só lê nomes com
+  essa forma: o `e2e-bd/ataque.spec.ts` tenta sair da pasta por quatro
+  codificações diferentes.
+
+**Guardadas em disco**, porque o alojamento está por decidir. Num alojamento
+sem disco permanente (Vercel, por exemplo), as fotografias perdiam-se a cada
+publicação: aí muda-se `lib/imagens.ts` para um armazenamento de ficheiros, e
+mais nada. No Docker da demonstração há um volume para elas.
+
 ## Por fazer
 
 - ~~**Manipulação de preço**, quando o checkout existir.~~ Feito com a E5, ver

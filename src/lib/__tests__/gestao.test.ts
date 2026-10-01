@@ -50,9 +50,15 @@ describe('o painel só manda o que pode mandar', () => {
       '/images/../../etc/passwd.png',
       '/images/x.svg',
       'javascript:alert(1)',
+      // As carregadas pelo painel: so o nome que `lib/imagens.ts` da.
+      '/imagens/../../etc/passwd',
+      `/imagens/${'a'.repeat(63)}.webp`,
+      `/imagens/${'a'.repeat(64)}.png`,
+      `/imagens/${'g'.repeat(64)}.webp`,
     ]) {
       expect(esquemaNovoProduto.safeParse({ ...produto, images: [mau] }).success, mau).toBe(false);
     }
+    expect(esquemaNovoProduto.safeParse({ ...produto, images: [`/imagens/${'a1'.repeat(32)}.webp`] }).success).toBe(true);
   });
 
   it('a categoria nova tem de dizer se as peças são únicas', () => {

@@ -36,8 +36,13 @@ export function problemasDasMedidas(
     return problemas;
   }
 
-  // Num modelo com medidas, cada uma tem nome — senao a pessoa nao sabe o
-  // que escolhe — e nenhuma se repete, sem distinguir maiusculas.
+  // Uma so medida nao precisa de nome: nao ha nada a escolher (`temDeEscolher`
+  // da falso), e obrigar a escrever "Tamanho unico" num colar sem tamanhos
+  // era trabalho a mais em cada produto.
+  if (variantes.length === 1) return [];
+
+  // Com mais do que uma, cada uma tem nome — senao a pessoa nao sabe o que
+  // escolhe — e nenhuma se repete, sem distinguir maiusculas.
   const problemas: ProblemaCatalogo[] = [];
   const nomes = variantes.map((v) => v.medida?.trim().toLowerCase() ?? '');
   if (nomes.some((n) => n === '')) problemas.push('medida-sem-nome');

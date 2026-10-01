@@ -28,6 +28,7 @@ vi.mock('@/services/mailer', async (original) => {
 import { Category, Contador, MovimentoStock, Order, Product, Token, User } from '../models';
 import { moverStock } from '../stock';
 import { PECAS_DE_EXEMPLO, PREFIXO_EXEMPLO, criarPecasDeExemplo } from '../demonstracao';
+import { CATEGORIAS_INICIAIS, semearCategorias } from '../semente';
 import { criarProduto, editarCategoria, editarProduto, listarProdutos, movimentar, mudarPapel, criarGestora } from '../gestao';
 import {
   PRAZO_RESERVA_MS,
@@ -797,6 +798,34 @@ executar('encomendas, contra a base de dados', () => {
     expect(e.historico).toHaveLength(2);
     // Se foi o cancelamento a ganhar, o stock voltou; se foi o pagamento, nao.
     expect(await stock(p._id)).toBe(e.status === 'CANCELLED' ? 3 : 2);
+  });
+});
+
+executar('o seed das categorias', () => {
+  beforeAll(async () => {
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(URI as string, { dbName: 'pds-testes' });
+    }
+  }, 30_000);
+
+  beforeEach(async () => {
+    await Promise.all([Product.deleteMany({}), Category.deleteMany({}), MovimentoStock.deleteMany({})]);
+  });
+
+  it('correr com produtos já criados não os deixa sem categoria, nem muda uma categoria editada', async () => {
+    expect((await semearCategorias()).criadas).toHaveLength(CATEGORIAS_INICIAIS.length);
+    await criarPecasDeExemplo({ LOJA_ENSAIO: '1' });
+    await Category.updateOne({ slug: 'decoracao' }, { $set: { name: 'Decoração da casa' } });
+    const antes = new Map((await Category.find().lean()).map((c) => [c.slug, String(c._id)]));
+
+    // A versao anterior apagava e reinseria: novos _id, e os produtos orfaos.
+    expect(await semearCategorias()).toEqual({ criadas: [], jaExistiam: CATEGORIAS_INICIAIS.map((c) => c.slug) });
+    const depois = new Map((await Category.find().lean()).map((c) => [c.slug, String(c._id)]));
+    expect(depois).toEqual(antes);
+    expect((await Category.findOne({ slug: 'decoracao' }).lean())!.name).toBe('Decoração da casa');
+
+    const ids = new Set(depois.values());
+    for (const p of await Product.find().lean()) expect(ids.has(String(p.categoryId)), p.slug).toBe(true);
   });
 });
 

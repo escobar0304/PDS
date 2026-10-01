@@ -60,6 +60,7 @@ services:
         # deixa de o ser.
         [ -s /segredo/nextauth ] || head -c 32 /dev/urandom | base64 > /segredo/nextauth
         chmod 644 /segredo/nextauth
+        npm run -s seed
         npm run -s demo:pecas
         npm run -s admin -- criar gestao@exemplo.pt "Gestão da loja" || echo "A conta de gestão já existia."
     depends_on:
@@ -71,6 +72,9 @@ services:
     environment: *ambiente
     volumes:
       - segredo:/segredo:ro
+      # As fotografias carregadas no painel: ficam entre arranques, e saem
+      # com `docker compose down -v`.
+      - imagens:/app/dados/imagens
     command:
       - sh
       - -c
@@ -86,3 +90,4 @@ services:
 volumes:
   dados:
   segredo:
+  imagens:

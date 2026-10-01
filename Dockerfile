@@ -29,6 +29,10 @@ RUN --mount=type=secret,id=ca,uid=1000 \
     if [ -s /run/secrets/ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/ca; fi; \
     npm run build
 
+# Onde ficam as fotografias carregadas pelo painel (`lib/imagens.ts`). Criada
+# aqui, como `node`, para o volume do compose nascer com o dono certo.
+RUN mkdir -p /app/dados/imagens
+
 ENV NODE_ENV=production
 EXPOSE 3000
 CMD ["node_modules/.bin/next", "start", "-H", "0.0.0.0", "-p", "3000"]

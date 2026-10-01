@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Alert, Button, Caixa, Input, Select, Textarea } from '@/components/ui';
 import { centimosDeTexto, textoDeCentimos } from '@/lib/dinheiro';
+import CarregarFotografias from './CarregarFotografias';
 import { pedir } from './pedir';
 
 export interface CategoriaOpcao {
@@ -207,9 +208,13 @@ export default function FormularioProduto({
       <Textarea
         label="Fotografias"
         rows={3}
-        hint="Uma por linha, do próprio sítio: /images/nome.webp. Têm de ser desta peça."
+        hint="Uma por linha; a primeira é a da montra. Carregue-as abaixo, ou escreva o caminho de uma que já esteja no sítio. Têm de ser desta peça."
         value={imagens}
         onChange={(e) => setImagens(e.target.value)}
+      />
+      <CarregarFotografias
+        caminhos={imagens.split('\n').map((l) => l.trim()).filter(Boolean)}
+        onCarregada={(c) => setImagens((t) => (t.trim() ? `${t.trimEnd()}\n${c}` : c))}
       />
 
       <fieldset className="space-y-3">
@@ -227,6 +232,7 @@ export default function FormularioProduto({
             {!unica && (
               <Input
                 label={`Medida ${i + 1}`}
+                hint={medidas.length === 1 ? 'Opcional, se for a única: por exemplo, um colar sem tamanhos' : undefined}
                 value={m.medida}
                 onChange={(e) => mudarMedida(i, 'medida', e.target.value)}
               />

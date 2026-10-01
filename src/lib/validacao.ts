@@ -169,15 +169,19 @@ export const esquemaPedido = z
 const idMongo = z.string().regex(/^[a-f0-9]{24}$/i, 'Identificador inválido');
 
 /**
- * Imagens so do proprio sitio, enquanto nao houver alojamento de imagens
- * decidido. Um URL de fora e um terceiro contactado por cada visita (ver
- * `e2e/privacidade.spec.ts`), e o `next/image` nao o serve.
+ * Imagens so do proprio sitio. Um URL de fora e um terceiro contactado por
+ * cada visita (ver `e2e/privacidade.spec.ts`), e o `next/image` nao o serve.
+ * Ou estao no repositorio (`/images/...`), ou foram carregadas pelo painel e
+ * tem o nome que `lib/imagens.ts` lhes da (`/imagens/<resumo>.webp`).
  */
 const imagem = z
   .string()
   .trim()
   .max(300)
-  .regex(/^\/images\/[a-z0-9][a-z0-9/_-]*\.(?:webp|png|jpe?g|avif)$/i, 'Imagem inválida');
+  .regex(
+    /^(?:\/images\/[a-z0-9][a-z0-9/_-]*\.(?:webp|png|jpe?g|avif)|\/imagens\/[a-f0-9]{64}\.webp)$/i,
+    'Imagem inválida'
+  );
 
 const propriedades = z
   .object({

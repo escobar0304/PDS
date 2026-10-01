@@ -48,3 +48,6 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# As fotografias carregadas pelo painel (lib/imagens.ts): dados, nao codigo.
+/dados/

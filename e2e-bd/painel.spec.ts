@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import sharp from 'sharp';
 import { iniciarSessao } from '../e2e/fixtures/sessao';
 import { ADMIN_ID, BASE, CLIENTE_ID } from './contas';
 
@@ -80,6 +81,57 @@ test.describe('com a conta de administrador', () => {
     await vender.click();
     await expect(page.getByRole('status').filter({ hasText: 'Registado.' })).toBeVisible();
     await expect(vender).toBeDisabled();
+  });
+
+  test('um colar sem medidas, com uma fotografia do telemóvel: a loja mostra-a sem a localização', async ({ page }) => {
+    const categoria = `Fios ${sufixo}`;
+    const nome = `Fio ${sufixo}`;
+    const slug = `fio-${sufixo}`;
+    await criarCategoria(page, categoria, false);
+
+    // Como sai de um telemovel: de lado no ficheiro, direita no EXIF, e com
+    // a localizacao de onde foi tirada.
+    const fotografia = await sharp({ create: { width: 600, height: 400, channels: 3, background: { r: 140, g: 90, b: 170 } } })
+      .jpeg()
+      .keepExif()
+      .withExif({ IFD0: { Copyright: `casa-${sufixo}` }, IFD3: { GPSLatitudeRef: 'N', GPSLongitudeRef: 'W' } })
+      .withMetadata({ orientation: 6 })
+      .toBuffer();
+
+    await page.goto('/admin/produtos/novo');
+    await page.getByLabel('Categoria').selectOption({ label: `${categoria} (com medidas)` });
+    await page.getByLabel('Nome', { exact: true }).fill(nome);
+    await page.getByLabel('Preço, com IVA').fill('29,00');
+    await page.getByLabel('Peso, em gramas').fill('40');
+    // Uma medida so: o nome pode ficar em branco.
+    await expect(page.getByLabel('Medida 1', { exact: true })).toHaveValue('');
+    await page.getByLabel('Stock da medida 1').fill('3');
+
+    await page.getByLabel('Carregar fotografias').setInputFiles({ name: 'IMG_0001.jpg', mimeType: 'image/jpeg', buffer: fotografia });
+    await expect(page.getByLabel('Fotografias', { exact: true })).toHaveValue(/^\/imagens\/[a-f0-9]{64}\.webp$/);
+    await expect(page.getByRole('img', { name: 'Fotografia 1, a da montra' })).toBeVisible();
+    const caminho = await page.getByLabel('Fotografias', { exact: true }).inputValue();
+
+    await page.getByRole('button', { name: 'Criar produto' }).click();
+    await expect(page).toHaveURL(/\/admin\/produtos\/[a-f0-9]{24}$/);
+
+    // Na loja: compra-se sem escolher medida, e a fotografia e a carregada.
+    await page.goto(`/produto/${slug}`);
+    await expect(page.getByRole('heading', { level: 1, name: nome })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Medida' })).toHaveCount(0);
+    // A da pagina passa pelo otimizador do Next (`/_next/image`), e carrega.
+    const naPagina = page.getByRole('img', { name: nome, exact: true });
+    await expect.poll(() => naPagina.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth)).toBeGreaterThan(0);
+
+    const servida = await page.request.get(caminho);
+    expect(servida.status()).toBe(200);
+    expect(servida.headers()['content-type']).toBe('image/webp');
+    expect(servida.headers()['cache-control']).toContain('immutable');
+    const bytes = await servida.body();
+    const meta = await sharp(bytes).metadata();
+    expect(meta.exif).toBeUndefined();
+    expect([meta.width, meta.height]).toEqual([400, 600]);
+    expect(bytes.includes(Buffer.from(`casa-${sufixo}`))).toBe(false);
   });
 
   test('uma peça única não passa de uma unidade, e o servidor diz porquê', async ({ page }) => {
