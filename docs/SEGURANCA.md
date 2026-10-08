@@ -277,6 +277,17 @@ por isso qualquer diferença vinha da atualização).
   pagamentos (`2026-09-30.endive`). Uma mudança da API de pagamentos não se
   prova contra o simulador, que só imita o formato: entra num PR próprio,
   depois dos 30 dias, com um pagamento de teste a sério.
+- **O simulador da Stripe ficou fixado na 0.205.0** (08/10/2026). Estava em
+  `latest`, e a 0.206.0, publicada a 01/10/2026 às 18h, já segue a API
+  `2026-09-30.endive`. Nela, `payment_method_types` passou a
+  `allowed_payment_method_types`, e o simulador recusava todos os
+  pagamentos da loja: os dois PRs seguintes do Dependabot ficaram vermelhos
+  sem tocarem em nada disto. A Stripe a sério respeita a versão da API do
+  pacote (`2026-08-26.dahlia`, na 22); o simulador só conhece a mais
+  recente. Por isso o simulador sobe **com** o pacote `stripe`, no mesmo
+  PR, e nunca sozinho. Medido a correr o pedido contra as duas versões: a
+  0.205.0 aceita o campo, a 0.206.0 recusa-o com
+  `additional properties are not allowed`.
 - **Classes coladas.** Um arrumo de espaços durante esta migração tirou o
   espaço da junção de classes partidas em várias strings (`text-ink` +
   `focus:…` passou a `text-inkfocus:…`), em cinco sítios. As capturas só
