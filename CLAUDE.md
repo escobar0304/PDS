@@ -57,13 +57,17 @@ não se descarregam deste ambiente, mas as imagens Docker sim — medido em
 ```
 dockerd &                                   # se o daemon não estiver a correr
 docker run -d --name pds-mongo -p 27017:27017 mongo:7
-docker run -d --name pds-stripe -p 12111:12111 stripe/stripe-mock:latest
+docker run -d --name pds-stripe -p 12111:12111 stripe/stripe-mock:v0.205.0
 docker run -d --name pds-mail -p 1025:1025 -p 8025:8025 axllent/mailpit:latest
 MONGODB_URI=mongodb://127.0.0.1:27017 STRIPE_API_HOST=127.0.0.1 \
   SMTP_HOST=127.0.0.1 SMTP_PORT=1025 SMTP_FROM=loja@exemplo.pt \
   MAILPIT_API=http://127.0.0.1:8025 npm test
 MONGODB_URI=mongodb://127.0.0.1:27017/pds-e2e npm run test:e2e:bd
 ```
+
+O simulador da Stripe está fixado numa versão, e não em `latest`: só conhece a
+API mais recente, e tem de corresponder à do pacote `stripe`. Sobem juntos
+(`docs/SEGURANCA.md`).
 
 Correm também no CI, em contentor, e **é o CI que decide**: uma alteração que
 lhes toque, testada só aqui, diz-se "passou localmente", e não "está

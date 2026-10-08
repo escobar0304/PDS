@@ -63,8 +63,16 @@ jobs:
           --health-retries 10
       # O simulador oficial da Stripe, para a sessao de pagamento: este CI,
       # como o ambiente de desenvolvimento, nao fala com a Stripe a serio.
+      #
+      # Fixado, e nao `latest`: o simulador so conhece a versao mais recente
+      # da API, e a loja usa a do pacote `stripe` (2026-08-26.dahlia, no 22).
+      # A 0.206.0 (01/10/2026) ja segue a 2026-09-30.endive, que mudou
+      # `payment_method_types` para `allowed_payment_method_types`, e recusava
+      # todos os pagamentos: um teste vermelho que nao era da loja. A Stripe a
+      # serio respeita a versao fixada; o simulador nao. Sobe com o `stripe`,
+      # no mesmo PR, nunca sozinho (docs/SEGURANCA.md).
       stripe:
-        image: stripe/stripe-mock:latest
+        image: stripe/stripe-mock:v0.205.0@sha256:ff32647993847be491e68533e2881c90434fa8d5df40246ee5f7d41253422081
         ports:
           - 12111:12111
 
@@ -153,7 +161,8 @@ jobs:
           --health-retries 10
 
       stripe:
-        image: stripe/stripe-mock:latest
+        # A mesma versao do job de cima, e pela mesma razao.
+        image: stripe/stripe-mock:v0.205.0@sha256:ff32647993847be491e68533e2881c90434fa8d5df40246ee5f7d41253422081
         ports:
           - 12111:12111
 
