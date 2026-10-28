@@ -79,7 +79,15 @@ export default function Header() {
                 openCart();
               }}
               className={`relative ${icone}`}
-              aria-label="Carrinho de Compras"
+              // O contador ve-se, por isso tem de estar no nome: so com
+              // "Carrinho de Compras", o leitor de ecra nunca dizia quantas
+              // pecas la estavam, e quem comanda por voz nao podia dizer o
+              // numero que via (WCAG 2.5.3).
+              aria-label={
+                itemCount > 0
+                  ? `Carrinho de Compras, ${itemCount} ${itemCount === 1 ? 'peça' : 'peças'}`
+                  : 'Carrinho de Compras'
+              }
             >
               <ShoppingCart className="h-6 w-6" />
               {itemCount > 0 && (
