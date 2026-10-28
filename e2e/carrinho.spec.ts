@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const contador = (page: import('@playwright/test').Page) =>
-  page.getByRole('banner').locator('[aria-label="Carrinho de Compras"] span');
+  page.getByRole('banner').locator('[aria-label^="Carrinho de Compras"] span');
 
 test('adicionar da loja abre o painel e conta a unidade', async ({ page }) => {
   await page.goto('/loja');

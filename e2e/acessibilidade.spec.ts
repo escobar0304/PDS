@@ -166,6 +166,29 @@ test.describe('alvos de toque', () => {
   });
 });
 
+test('com peças no carrinho, o contador ouve-se e o cabeçalho continua sem violações', async ({ page }) => {
+  // As rotas acima correm com o carrinho vazio, e o contador nao aparece. Com
+  // ele a vista, o `aria-label` tapava-o: quem usa leitor de ecra nunca o
+  // ouvia, e quem comanda por voz nao podia dizer o numero que via (WCAG
+  // 2.5.3). Foi o axe 4.14 que o apanhou, e so no teste com base de dados.
+  await mockApi(page);
+  await page.goto('/loja');
+  await page
+    .locator('div')
+    .filter({ has: page.getByRole('heading', { name: 'Quartzo Rosa Bruto' }) })
+    .last()
+    .getByRole('button', { name: 'Adicionar ao carrinho' })
+    .click();
+  await page.keyboard.press('Escape');
+
+  await expect(
+    page.getByRole('banner').getByRole('link', { name: 'Carrinho de Compras, 1 peça', exact: true }),
+  ).toBeVisible();
+
+  const r = await new AxeBuilder({ page }).include('header').withTags(NORMAS).analyze();
+  expect(r.violations.map((v) => `[${v.impact}] ${v.id}: ${v.nodes[0]?.html.slice(0, 80)}`)).toEqual([]);
+});
+
 test('o painel do carrinho devolve o foco a quem o abriu', async ({ page }) => {
   await mockApi(page);
   await page.goto('/loja');
