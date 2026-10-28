@@ -157,3 +157,21 @@ O produto tem o nome da peça, lido no servidor — e, sem base de dados, fica
 A guarda está em `e2e/acessibilidade.spec.ts`: falha se duas páginas tiverem o
 mesmo título. Verificada retirando dois dos `layout.tsx`: falhou a apontar
 exatamente essas duas.
+
+## 2.5.3, o contador que não se ouvia
+
+**O ícone do carrinho mostra quantas peças lá estão, e o nome acessível
+não as dizia.** O `aria-label="Carrinho de Compras"` substitui o conteúdo da ligação,
+por isso o número no círculo nunca chegava ao leitor de ecrã, e quem comanda
+o computador pela voz não podia dizer «Carrinho de Compras 2», porque o «2» que via
+não fazia parte do nome. É o 2.5.3 Label in Name, nível A. O nome passou a ser
+«Carrinho de Compras, 2 peças», e fica só «Carrinho de Compras» quando está vazio.
+
+Apanhou-o o `axe` 4.14 (28/10/2026), que passou a correr a regra
+`label-content-name-mismatch` dentro das normas WCAG 2.1. **O 4.13 não a
+corria, e mesmo o 4.14 só a viu em `e2e-bd/checkout.spec.ts`:** as rotas de
+`e2e/acessibilidade.spec.ts` correm com o carrinho vazio, e sem peças o contador
+não aparece. Ficou lá um teste que junta uma peça e verifica o nome e o
+cabeçalho. Verificado sem a correção: falha com o 4.14, pela regra e pelo
+nome, e passa com ela no 4.13 e no 4.14.
+
